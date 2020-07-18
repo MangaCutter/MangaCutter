@@ -70,7 +70,6 @@ public class WebtoonDownloader {
         frame.setLocationRelativeTo(null);
         frame.setResizable(false);
         frame.setContentPane(mainPanel);
-
         frame.addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
@@ -86,6 +85,19 @@ public class WebtoonDownloader {
                 System.exit(0);
             }
         });
+
+        JMenuBar bar = new JMenuBar();
+        JMenu menu = new JMenu("Помощь");
+        JMenuItem menuItem = new JMenuItem("О программе");
+        menu.add(menuItem);
+        bar.add(menu);
+        frame.setJMenuBar(bar);
+        menuItem.addActionListener(actionEvent -> {
+            JOptionPane.showMessageDialog(null, "WebtoonDownloader\n" +
+                    "Программа для скачивания и склейки сканов с корейского вебтуна\nАвтор: MasterLogick\n" +
+                    "https://github.com/MasterLogick/WebtoonDownloader");
+        });
+
 
         cancelButton.addActionListener(e -> new Thread(() -> {
             cancel = true;
