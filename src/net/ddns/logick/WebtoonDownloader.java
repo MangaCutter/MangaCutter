@@ -24,6 +24,8 @@ import java.util.concurrent.TimeUnit;
 public class WebtoonDownloader {
     private static final String startToken = "<div class=\"wt_viewer\" style=\"background:#FFFFFF\">";
     private static CloseableHttpClient client;
+    private final JFrame frame;
+    private final JFileChooser fileChooser;
     private JTextField urlTextField;
     private JTextField fileTextField;
     private JButton browseButton;
@@ -31,8 +33,6 @@ public class WebtoonDownloader {
     private JButton cancelButton;
     private JProgressBar progressBar;
     private JPanel mainPanel;
-    private JFrame frame;
-    private JFileChooser fileChooser;
     private boolean cancel = false;
     private Thread thread;
 
@@ -44,13 +44,7 @@ public class WebtoonDownloader {
     }
 
     public WebtoonDownloader() {
-        thread = new Thread(() -> {
-            try {
-                download(urlTextField.getText());
-            } catch (IOException | InterruptedException e) {
-                e.printStackTrace();//todo make better capturing
-            }
-        });
+        thread = new Thread(() -> download(urlTextField.getText()));
 
         fileChooser = new JFileChooser();
         fileChooser.setDialogTitle("Куда сохранить?");
@@ -81,11 +75,13 @@ public class WebtoonDownloader {
             @Override
             public void windowClosing(WindowEvent e) {
                 cancel = true;
-                try {
-                    thread.join();
-                } catch (InterruptedException interruptedException) {
-                    interruptedException.printStackTrace();//todo make better capturing
-                }
+                if (thread.isAlive()) {
+                    try {
+                        thread.join();
+                    } catch (InterruptedException ex) {
+                        ex.printStackTrace();
+                    }
+                } else thread.interrupt();
                 frame.dispose();
                 System.exit(0);
             }
@@ -93,11 +89,13 @@ public class WebtoonDownloader {
 
         cancelButton.addActionListener(e -> new Thread(() -> {
             cancel = true;
-            try {
-                thread.join();
-            } catch (InterruptedException interruptedException) {
-                interruptedException.printStackTrace();//todo make better capturing
-            }
+            if (thread.isAlive()) {
+                try {
+                    thread.join();
+                } catch (InterruptedException ex) {
+                    ex.printStackTrace();
+                }
+            } else thread.interrupt();
             progressBar.setEnabled(false);
             progressBar.setMaximum(0);
             progressBar.setValue(0);
@@ -108,11 +106,7 @@ public class WebtoonDownloader {
         startButton.addActionListener(e -> {
             startButton.setEnabled(false);
             thread = new Thread(() -> {
-                try {
-                    download(urlTextField.getText());
-                } catch (IOException | InterruptedException ex) {
-                    ex.printStackTrace();//todo make better capturing
-                }
+                download(urlTextField.getText());
                 startButton.setEnabled(true);
             });
             thread.start();
@@ -139,13 +133,19 @@ public class WebtoonDownloader {
         new WebtoonDownloader().show();
     }
 
-    public void download(String path) throws IOException, InterruptedException {
+    public void download(String path) {
         progressBar.setEnabled(true);
         progressBar.setString("Скачивание главной страницы");
         progressBar.setMaximum(1);
         progressBar.setValue(0);
 
-        String sb = sendRequest(path);
+        String sb = null;
+        try {
+            sb = sendRequest(path);
+        } catch (IOException e) {
+            JOptionPane.showMessageDialog(null, "Не удалось скачать главную страницу: " + e.getMessage());
+            e.printStackTrace();
+        }
 
         progressBar.setValue(1);
 
@@ -161,11 +161,20 @@ public class WebtoonDownloader {
         int width = 0, height = 0;
         for (int i = 0; i < images.length; i++) {
             if (cancel) return;
-            images[i] = ImageIO.read(client.execute(new HttpGet(urls.get(i))).getEntity().getContent());
-            progressBar.setString("Скачивание страниц " + (i + 1) + " / " + urls.size());
+            try {
+                images[i] = ImageIO.read(client.execute(new HttpGet(urls.get(i))).getEntity().getContent());
+            } catch (IOException e) {
+                JOptionPane.showMessageDialog(null, "Не удалось скачать фрагмент изображения: " + e.getMessage());
+                e.printStackTrace();
+            }
+            progressBar.setString("Скачивание фрагментов " + (i + 1) + " / " + urls.size());
             progressBar.setValue(i + 1);
             if (images[i] == null) {
-                System.out.println("lol");
+                JOptionPane.showMessageDialog(null, "Не удалось скачать фрагмент изображения. Скачивание прервано.");
+                progressBar.setEnabled(false);
+                progressBar.setMaximum(0);
+                progressBar.setValue(0);
+                progressBar.setString("");
             }
             width = Math.max(images[i].getWidth(), width);
             height += images[i].getHeight();
@@ -187,7 +196,12 @@ public class WebtoonDownloader {
 
         progressBar.setString("Сброс на диск");
 
-        ImageIO.write(dst, "PNG", new File(fileTextField.getText()));
+        try {
+            ImageIO.write(dst, "PNG", new File(fileTextField.getText()));
+        } catch (IOException e) {
+            JOptionPane.showMessageDialog(null, "Не удалось сбросить файл на диск: " + e.getLocalizedMessage());
+            e.printStackTrace();
+        }
 
         progressBar.setEnabled(false);
         progressBar.setMaximum(0);
