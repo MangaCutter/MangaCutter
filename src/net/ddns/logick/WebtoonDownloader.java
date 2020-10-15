@@ -13,10 +13,7 @@ import java.awt.*;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.image.BufferedImage;
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -45,7 +42,6 @@ public class WebtoonDownloader {
 
     public WebtoonDownloader() {
         thread = new Thread(() -> download(urlTextField.getText()));
-
         fileChooser = new JFileChooser();
         fileChooser.setDialogTitle("Куда сохранить?");
         fileChooser.setDialogType(JFileChooser.SAVE_DIALOG);
@@ -137,11 +133,6 @@ public class WebtoonDownloader {
                 .setUserAgent("Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:78.0) Gecko/20100101 Firefox/78.0")
                 .setConnectionTimeToLive(20, TimeUnit.SECONDS)
                 .build();
-                /*.version(HttpClient.Version.HTTP_1_1)
-                .followRedirects(HttpClient.Redirect.NORMAL)
-                .connectTimeout(Duration.ofSeconds(20))
-                .build();*/
-
         new WebtoonDownloader().show();
     }
 
