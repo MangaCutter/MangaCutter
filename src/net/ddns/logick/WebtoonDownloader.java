@@ -123,6 +123,9 @@ public class WebtoonDownloader {
         browseButton.addActionListener(e -> {
             if (fileChooser.showDialog(frame, "Сохранить") == JFileChooser.APPROVE_OPTION) {
                 fileTextField.setText(fileChooser.getSelectedFile().getAbsolutePath());
+                if (!fileChooser.getSelectedFile().getAbsoluteFile().getName().toLowerCase().endsWith(".png")) {
+                    fileTextField.setText(fileChooser.getSelectedFile().getAbsolutePath() + ".png");
+                }
             }
         });
     }
@@ -137,6 +140,14 @@ public class WebtoonDownloader {
     }
 
     public void download(String path) {
+        String outputPath = fileTextField.getText();
+        if(outputPath.isEmpty()){
+            JOptionPane.showMessageDialog(null, "Не выбран путь на диске для сохранения скана!");
+            return;
+        }
+        if (!new File(outputPath).getName().toLowerCase().endsWith(".png")) {
+            outputPath += ".png";
+        }
         progressBar.setEnabled(true);
         progressBar.setString("Скачивание главной страницы");
         progressBar.setMaximum(1);
@@ -200,7 +211,7 @@ public class WebtoonDownloader {
         progressBar.setString("Сброс на диск");
 
         try {
-            ImageIO.write(dst, "PNG", new File(fileTextField.getText()));
+            ImageIO.write(dst, "PNG", new File(outputPath));
         } catch (IOException e) {
             JOptionPane.showMessageDialog(null, "Не удалось сбросить файл на диск: " + e.getLocalizedMessage());
             e.printStackTrace();
