@@ -40,7 +40,7 @@ public class JobManager {
     }
 
     public static void startJob(String uri, String out) {
-        Service s = ServiceManager.getService(uri);
+        /*Service s = ServiceManager.getService(uri);
         if (s == null) {
             ViewManager.showMessage("Неправильная ссылка или скачка с данного сервиса не поддерживается.\n" +
                     "Полный список поддерживаемых сервисов есть в Справке");
@@ -52,19 +52,18 @@ public class JobManager {
 
         state = State.DOWNLOADING;
         Downloader downloader = new SimpleDownloader();
-        BufferedImage[] fragments = downloader.downloadFragments(fragmentPathList);
-        /*BufferedImage[] fragments = new BufferedImage[87];
+        BufferedImage[] fragments = downloader.downloadFragments(fragmentPathList);*/
+        BufferedImage[] fragments = new BufferedImage[87];
         for (int i = 0; i < fragments.length; i++) {
             try {
                 fragments[i]=ImageIO.read(new File("/home/user/test/" + i + ".png"));
             } catch (IOException e) {
                 e.printStackTrace();
             }
-        }*/
+        }
 
         state = State.CUTTING;
-        Cutter cutter = new OneScanCutter();
-//        Cutter cutter = new LongCutter();
+        Cutter cutter = new LongCutter();
         BufferedImage[] destImg = cutter.cutScans(fragments);
 
         state = State.DROPPING_TO_DISK;
