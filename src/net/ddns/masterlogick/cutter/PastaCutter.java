@@ -6,9 +6,8 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 
-public class LongCutter implements Cutter {
+public class PastaCutter implements Cutter {
     boolean cancel = false;
-    private static final int SKIP_THROTTLE = 15;
     private static final int MAX_HEIGHT = 10000;
 
     @Override
@@ -29,6 +28,7 @@ public class LongCutter implements Cutter {
             data = fragments[i].getRaster().getPixels(0, 0, fragments[i].getWidth(), fragments[i].getHeight(), (int[]) null);
             x:
             for (int j = 0; j < fragments[i].getHeight(); j++) {
+                if (cancel) return null;
                 for (int k = 0; k < fragments[i].getWidth(); k++) {
                     int left = j * fragments[i].getWidth();
                     int right = j * fragments[i].getWidth() + k;
@@ -37,15 +37,15 @@ public class LongCutter implements Cutter {
                         if (scanlineOnWhite) {
                             current.toY = j;
                             current.toIndex = i;
-                            current = fixHeight(fragments, current);
+                            current.fixHeight(fragments);
                             if (frameInfo.size() != 0) {
                                 Frame f = frameInfo.get(frameInfo.size() - 1);
-                                Frame frame = getFirstHalf(fragments, current);
+                                Frame frame = current.getFirstHalf(fragments);
                                 f.toIndex = frame.toIndex;
                                 f.toY = frame.toY;
-                                f = fixHeight(fragments, f);
+                                f.fixHeight(fragments);
                                 frameInfo.set(frameInfo.size() - 1, f);
-                                current = getSecondHalf(fragments, current);
+                                current = current.getSecondHalf(fragments);
                             }
                             scanlineOnWhite = false;
                         }
@@ -63,7 +63,7 @@ public class LongCutter implements Cutter {
                         current.toIndex = i;
                         current.toY = j - 1;
                     }
-                    current = fixHeight(fragments, current);
+                    current.fixHeight(fragments);
                     frameInfo.add(current);
                     current = new Frame();
                     current.fromIndex = i;
@@ -77,8 +77,8 @@ public class LongCutter implements Cutter {
         if (scanlineOnWhite) {
             if (frameInfo.size() != 0) {
                 Frame f = frameInfo.get(frameInfo.size() - 1);
-                f.toIndex = current.toIndex;
-                f.toY = current.toY;
+                f.toIndex = fragments.length - 1;
+                f.toY = fragments[f.toIndex].getHeight() - 1;
                 frameInfo.set(frameInfo.size() - 1, f);
             }
         } else {
@@ -92,8 +92,10 @@ public class LongCutter implements Cutter {
         int curHeight = 0;
         int prevEnd = -1;
         for (int i = 0; i < frameInfo.size(); i++) {
+            if (cancel) return null;
             if (curHeight + frameInfo.get(i).height < MAX_HEIGHT && i != frameInfo.size() - 1) {
                 curHeight += frameInfo.get(i).height;
+                ViewManager.startProgress(frameInfo.size(), "Склейка сканов: " + (i + 1) + "/" + frameInfo.size());
             } else {
                 Frame from = frameInfo.get(prevEnd + 1);
                 Frame to;
@@ -101,12 +103,14 @@ public class LongCutter implements Cutter {
                     to = frameInfo.get(i - 1);
                     prevEnd = i - 1;
                 } else {
+                    ViewManager.startProgress(frameInfo.size(), "Склейка сканов: " + (i + 1) + "/" + frameInfo.size());
                     to = frameInfo.get(i);
                     prevEnd = i;
                 }
+                curHeight = 0;
                 from.toY = to.toY;
                 from.toIndex = to.toIndex;
-                from = fixHeight(fragments, from);
+                from.fixHeight(fragments);
                 BufferedImage bf = new BufferedImage(fragments[from.fromIndex].getWidth(), from.height, BufferedImage.TYPE_INT_RGB);
                 Graphics g = bf.getGraphics();
                 drawFrame(g, fragments, from);
@@ -116,6 +120,11 @@ public class LongCutter implements Cutter {
         BufferedImage[] buff = new BufferedImage[arr.size()];
         buff = arr.toArray(buff);
         return buff;
+    }
+
+    @Override
+    public void cancel() {
+        cancel = true;
     }
 
     private void drawFrame(Graphics g, BufferedImage[] fragments, Frame f) {
@@ -130,81 +139,76 @@ public class LongCutter implements Cutter {
             int y = 0;
             g.drawImage(fragments[f.fromIndex],
                     0, 0,
-                    fragments[f.fromIndex].getWidth() - 1, fragments[f.fromIndex].getHeight() - f.fromY - 1,
+                    fragments[f.fromIndex].getWidth() - 1, fragments[f.fromIndex].getHeight() - f.fromY,
                     0, f.fromY,
-                    fragments[f.fromIndex].getWidth() - 1, fragments[f.fromIndex].getHeight() - 1,
+                    fragments[f.fromIndex].getWidth() - 1, fragments[f.fromIndex].getHeight(),
                     null);
-            y += fragments[f.fromIndex].getHeight() - f.fromY-1;
+            y += fragments[f.fromIndex].getHeight() - f.fromY;
             for (int i = f.fromIndex + 1; i < f.toIndex; i++) {
+                if (cancel) return;
                 g.drawImage(fragments[i],
                         0, y,
-                        fragments[i].getWidth() - 1, y + fragments[i].getHeight() - 1,
+                        fragments[i].getWidth() - 1, y + fragments[i].getHeight(),
                         0, 0,
-                        fragments[i].getWidth() - 1, fragments[i].getHeight() - 1,
+                        fragments[i].getWidth() - 1, fragments[i].getHeight(),
                         null);
-                y += fragments[i].getHeight()-1;
+                y += fragments[i].getHeight();
             }
             g.drawImage(fragments[f.toIndex],
                     0, y,
-                    fragments[f.toIndex].getWidth() - 1, y + f.toY,
+                    fragments[f.toIndex].getWidth() - 1, y + f.toY + 1,
                     0, 0,
-                    fragments[f.toIndex].getWidth() - 1, f.toY,
+                    fragments[f.toIndex].getWidth() - 1, f.toY + 1,
                     null);
         }
     }
 
-    private Frame getFirstHalf(BufferedImage[] fragments, Frame frame) {
-        int newHeight = frame.height / 2 + frame.height % 2;
-        Frame f = new Frame();
-        f.fromIndex = frame.fromIndex;
-        f.fromY = frame.fromY;
-        f.toIndex = f.fromIndex;
-        f.toY = f.fromY + newHeight - 1;
-        f.height = newHeight;
-        while (f.toY >= fragments[f.toIndex].getHeight()) {
-            f.toY -= fragments[f.toIndex].getHeight();
-            f.toIndex++;
-        }
-        return f;
-    }
-
-    private Frame getSecondHalf(BufferedImage[] fragments, Frame frame) {
-        int newHeight = frame.height / 2;
-        Frame f = new Frame();
-        f.toIndex = frame.toIndex;
-        f.toY = frame.toY;
-        f.height = newHeight;
-        f.fromIndex = f.toIndex;
-        f.fromY = f.toY - newHeight + 1;
-        while (f.fromY < 0) {
-            f.fromIndex--;
-            f.fromY += fragments[f.fromIndex].getHeight();
-        }
-        return f;
-    }
-
-    private Frame fixHeight(BufferedImage[] fragments, Frame current) {
-        if (current.fromIndex == current.toIndex) {
-            current.height = current.toY - current.fromY + 1;
-        } else {
-            current.height = fragments[current.fromIndex].getHeight() - current.fromY + current.toY + 1;
-            for (int k = current.fromIndex + 1; k < current.toIndex; k++) {
-                current.height += fragments[k].getHeight();
-            }
-        }
-        return current;
-    }
-
-    @Override
-    public void cancel() {
-        cancel = true;
-    }
-
-    private class Frame {
+    private static class Frame {
         int fromIndex = -1;
         int fromY = -1;
         int toIndex = -1;
         int toY = -1;
         int height = 0;
+
+        void fixHeight(BufferedImage[] fragments) {
+            if (fromIndex == toIndex) {
+                height = toY - fromY + 1;
+            } else {
+                height = fragments[fromIndex].getHeight() - fromY + toY + 1;
+                for (int k = fromIndex + 1; k < toIndex; k++) {
+                    height += fragments[k].getHeight();
+                }
+            }
+        }
+
+        Frame getFirstHalf(BufferedImage[] fragments) {
+            int newHeight = height / 2 + height % 2;
+            Frame f = new Frame();
+            f.fromIndex = fromIndex;
+            f.fromY = fromY;
+            f.toIndex = f.fromIndex;
+            f.toY = f.fromY + newHeight - 1;
+            f.height = newHeight;
+            while (f.toY >= fragments[f.toIndex].getHeight()) {
+                f.toY -= fragments[f.toIndex].getHeight();
+                f.toIndex++;
+            }
+            return f;
+        }
+
+        Frame getSecondHalf(BufferedImage[] fragments) {
+            int newHeight = height / 2;
+            Frame f = new Frame();
+            f.toIndex = toIndex;
+            f.toY = toY;
+            f.height = newHeight;
+            f.fromIndex = f.toIndex;
+            f.fromY = f.toY - newHeight + 1;
+            while (f.fromY < 0) {
+                f.fromIndex--;
+                f.fromY += fragments[f.fromIndex].getHeight();
+            }
+            return f;
+        }
     }
 }

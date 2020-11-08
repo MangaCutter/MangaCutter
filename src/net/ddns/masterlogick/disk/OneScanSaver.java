@@ -8,7 +8,6 @@ import java.io.File;
 import java.io.IOException;
 
 public class OneScanSaver implements ScanSaver {
-    private boolean cancel = false;
 
     @Override
     public void saveToDisk(BufferedImage[] images, String path) {

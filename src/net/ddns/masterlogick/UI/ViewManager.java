@@ -110,9 +110,7 @@ public class ViewManager {
                 "https://github.com/MasterLogick/WebtoonDownloader"));
 
         JMenuItem supportedServicesItem = new JMenuItem("Поддерживаемые сервисы");
-        supportedServicesItem.addActionListener(actionEvent -> {
-            ViewManager.showMessage("Список поддерживаемых сервисов:\n" + ServiceManager.getSupportedServicesList());
-        });
+        supportedServicesItem.addActionListener(actionEvent -> ViewManager.showMessage("Список поддерживаемых сервисов:\n" + ServiceManager.getSupportedServicesList()));
 
         menu.add(aboutItem);
         menu.add(supportedServicesItem);

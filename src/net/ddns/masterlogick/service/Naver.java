@@ -30,7 +30,7 @@ public class Naver implements Service {
     }
 
     @Override
-    public void stop() {
+    public void cancel() {
         cancel = true;
     }
 }

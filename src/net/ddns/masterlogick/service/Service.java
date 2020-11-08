@@ -8,17 +8,17 @@ public interface Service {
      * Parses manga page and return resolved URIs to images in logical order
      * @param uri
      */
-    public List<String> parsePage(String uri);
+    List<String> parsePage(String uri);
 
     /**
      * Whether the given uri is belongs to this service
      */
-    public static boolean accept(String uri) {
+    static boolean accept(String uri) {
         return false;
     }
 
     /**
      * Stops current parsing job
      */
-    public void stop();
+    void cancel();
 }
