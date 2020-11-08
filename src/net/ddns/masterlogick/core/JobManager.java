@@ -2,8 +2,10 @@ package net.ddns.masterlogick.core;
 
 import net.ddns.masterlogick.UI.ViewManager;
 import net.ddns.masterlogick.cutter.Cutter;
+import net.ddns.masterlogick.cutter.OneScanCutter;
 import net.ddns.masterlogick.cutter.PastaCutter;
 import net.ddns.masterlogick.disk.MultiScanSaver;
+import net.ddns.masterlogick.disk.OneScanSaver;
 import net.ddns.masterlogick.disk.ScanSaver;
 import net.ddns.masterlogick.downloader.Downloader;
 import net.ddns.masterlogick.downloader.SimpleDownloader;
@@ -45,13 +47,22 @@ public class JobManager {
         }
     }
 
-    public static void startJob(String uri, String out) {
+    public static void startJob(String uri, String out, String prefix, String perfectSize) {
         cancel = false;
         s = ServiceManager.getService(uri);
         if (s == null) {
-            ViewManager.showMessage("Неправильная ссылка или скачка с данного сервиса не поддерживается.\n" +
+            ViewManager.showMessage("Неправильная ссылка или скачивание с данного сервиса не поддерживается.\n" +
                     "Полный список поддерживаемых сервисов есть в Справке");
             return;
+        }
+        int perfectHeight = -1;
+        if (!perfectSize.isEmpty()) {
+            try {
+                perfectHeight = Integer.parseInt(perfectSize);
+            } catch (NumberFormatException e) {
+                ViewManager.showMessage("Неправильно указана высота: " + e.getMessage());
+                return;
+            }
         }
 
         state = State.PARSING;
@@ -67,16 +78,23 @@ public class JobManager {
             return;
         }
 
-        cutter = new PastaCutter();
+        if (!perfectSize.isEmpty()) {
+            cutter = new PastaCutter(perfectHeight);
+            saver = new MultiScanSaver(prefix);
+        } else {
+            cutter = new OneScanCutter();
+            saver = new OneScanSaver();
+        }
+
         state = State.CUTTING;
         BufferedImage[] destImg = cutter.cutScans(fragments);
         if (cancel) {
             return;
         }
 
-        saver = new MultiScanSaver();
         state = State.DROPPING_TO_DISK;
         saver.saveToDisk(destImg, out);
+
         cancel = false;
     }
 }

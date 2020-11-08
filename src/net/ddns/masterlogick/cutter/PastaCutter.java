@@ -8,7 +8,11 @@ import java.util.ArrayList;
 
 public class PastaCutter implements Cutter {
     boolean cancel = false;
-    private static final int MAX_HEIGHT = 10000;
+    private final int perfectHeight;
+
+    public PastaCutter(int perfectHeight) {
+        this.perfectHeight = perfectHeight;
+    }
 
     @Override
     public BufferedImage[] cutScans(BufferedImage[] fragments) {
@@ -93,13 +97,13 @@ public class PastaCutter implements Cutter {
         int prevEnd = -1;
         for (int i = 0; i < frameInfo.size(); i++) {
             if (cancel) return null;
-            if (curHeight + frameInfo.get(i).height < MAX_HEIGHT && i != frameInfo.size() - 1) {
+            if (curHeight + frameInfo.get(i).height < perfectHeight && i != frameInfo.size() - 1) {
                 curHeight += frameInfo.get(i).height;
                 ViewManager.startProgress(frameInfo.size(), "Склейка сканов: " + (i + 1) + "/" + frameInfo.size());
             } else {
                 Frame from = frameInfo.get(prevEnd + 1);
                 Frame to;
-                if (curHeight > 0 && MAX_HEIGHT - curHeight <= frameInfo.get(i).height + curHeight - MAX_HEIGHT) {
+                if (curHeight > 0 && perfectHeight - curHeight <= frameInfo.get(i).height + curHeight - perfectHeight) {
                     to = frameInfo.get(i - 1);
                     prevEnd = i - 1;
                 } else {

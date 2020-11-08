@@ -6,6 +6,7 @@ import net.ddns.masterlogick.service.ServiceManager;
 import javax.swing.*;
 import javax.swing.filechooser.FileFilter;
 import javax.swing.filechooser.FileSystemView;
+import java.awt.event.ItemEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.File;
@@ -13,7 +14,8 @@ import java.io.File;
 public class ViewManager {
     private static JFrame frame;
     private static MainView view;
-    private static JFileChooser fileChooser;
+    private static JFileChooser singleFileChooser;
+    private static JFileChooser multipleFileChooser;
 
     public static void startProgress(int max, String message) {
         view.progressBar.setValue(0);
@@ -39,18 +41,20 @@ public class ViewManager {
     }
 
     public static void createView() {
-        constructFileChooser();
+        constructSingleFileChooser();
+        constructMultipleFileChooser();
         constructFrame();
         frame.setJMenuBar(constructMenu());
         view = new MainView();
+        configureComboBox();
         frame.setContentPane(view.mainPanel);
         frame.pack();
         frame.setVisible(true);
     }
 
-    public static void showFileChooser() {
-        if (fileChooser.showDialog(frame, "Сохранить") == JFileChooser.APPROVE_OPTION) {
-            String path = fileChooser.getSelectedFile().getAbsolutePath();
+    public static void showSingleFileChooser() {
+        if (singleFileChooser.showDialog(frame, "Сохранить") == JFileChooser.APPROVE_OPTION) {
+            String path = singleFileChooser.getSelectedFile().getAbsolutePath();
             if (!path.toLowerCase().endsWith(".png"))
                 path += ".png";
             if (new File(path).exists()) {
@@ -58,7 +62,13 @@ public class ViewManager {
                     return;
                 }
             }
-            view.fileTextField.setText(path);
+            view.singleFileTextField.setText(path);
+        }
+    }
+
+    public static void showMultipleFileChooser() {
+        if (multipleFileChooser.showDialog(frame, "Сохранить") == JFileChooser.APPROVE_OPTION) {
+            view.multiDirTextField.setText(multipleFileChooser.getSelectedFile().getAbsolutePath());
         }
     }
 
@@ -79,15 +89,15 @@ public class ViewManager {
         }
     }
 
-    private static void constructFileChooser() {
-        fileChooser = new JFileChooser();
-        fileChooser.setDialogTitle("Куда сохранить?");
-        fileChooser.setDialogType(JFileChooser.SAVE_DIALOG);
-        fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
-        fileChooser.setAcceptAllFileFilterUsed(false);
-        fileChooser.setMultiSelectionEnabled(false);
-        fileChooser.setFileSystemView(FileSystemView.getFileSystemView());
-        fileChooser.addChoosableFileFilter(new FileFilter() {
+    private static void constructSingleFileChooser() {
+        singleFileChooser = new JFileChooser();
+        singleFileChooser.setDialogTitle("Куда сохранить?");
+        singleFileChooser.setDialogType(JFileChooser.SAVE_DIALOG);
+        singleFileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+        singleFileChooser.setAcceptAllFileFilterUsed(false);
+        singleFileChooser.setMultiSelectionEnabled(false);
+        singleFileChooser.setFileSystemView(FileSystemView.getFileSystemView());
+        singleFileChooser.addChoosableFileFilter(new FileFilter() {
             @Override
             public boolean accept(File f) {
                 return f.isDirectory() || f.getName().toLowerCase().endsWith(".png");
@@ -98,6 +108,16 @@ public class ViewManager {
                 return "PNG file";
             }
         });
+    }
+
+    private static void constructMultipleFileChooser() {
+        multipleFileChooser = new JFileChooser();
+        multipleFileChooser.setDialogTitle("Куда сохранить?");
+        multipleFileChooser.setDialogType(JFileChooser.SAVE_DIALOG);
+        multipleFileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+        multipleFileChooser.setAcceptAllFileFilterUsed(false);
+        multipleFileChooser.setMultiSelectionEnabled(false);
+        multipleFileChooser.setFileSystemView(FileSystemView.getFileSystemView());
     }
 
     private static JMenuBar constructMenu() {
@@ -116,5 +136,30 @@ public class ViewManager {
         menu.add(supportedServicesItem);
         bar.add(menu);
         return bar;
+    }
+
+    private static void configureComboBox() {
+        String pastaVariant = "несколько коротких кусков";
+        String singlePageVariant = "один длинный скан";
+        view.pathSelector.insertItemAt(pastaVariant, 0);
+        view.pathSelector.insertItemAt(singlePageVariant, 1);
+        view.pathSelector.addItemListener(e -> {
+            if (e.getStateChange() == ItemEvent.SELECTED) {
+                if (e.getItem().equals(singlePageVariant)) {
+                    view.singlePagePanel.setVisible(true);
+                    view.multiPagePanel.setVisible(false);
+                    frame.pack();
+                } else if (e.getItem().equals(pastaVariant)) {
+                    view.singlePagePanel.setVisible(false);
+                    view.multiPagePanel.setVisible(true);
+                    frame.pack();
+                } else {
+                    view.singlePagePanel.setVisible(false);
+                    view.multiPagePanel.setVisible(false);
+                    frame.pack();
+                }
+            }
+        });
+        view.pathSelector.setSelectedIndex(0);
     }
 }
