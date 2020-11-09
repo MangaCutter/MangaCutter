@@ -47,7 +47,7 @@ public class JobManager {
         }
     }
 
-    public static boolean startJob(String uri, String out, String prefix, String perfectSize, int selectedIndex) {
+    public static boolean startJob(String uri, String out, String perfectSize, int selectedIndex) {
         cancel = false;
         s = ServiceManager.getService(uri);
         if (s == null) {
@@ -67,7 +67,7 @@ public class JobManager {
                 ViewManager.showMessage("Неправильно указана высота: " + e.getMessage());
                 return false;
             }
-            if(perfectHeight<0){
+            if (perfectHeight < 0) {
                 ViewManager.showMessage("Высота не может быть отрицательной!");
                 return false;
             }
@@ -87,8 +87,8 @@ public class JobManager {
         }
 
         if (!perfectSize.isEmpty()) {
-            cutter = new PastaCutter(perfectHeight);
-            saver = new MultiScanSaver(prefix);
+            cutter = new PastaCutter(perfectHeight, false);
+            saver = new MultiScanSaver();
         } else {
             cutter = new OneScanCutter();
             saver = new OneScanSaver();

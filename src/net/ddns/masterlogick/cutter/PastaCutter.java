@@ -5,17 +5,29 @@ import net.ddns.masterlogick.UI.ViewManager;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
+import java.util.List;
 
 public class PastaCutter implements Cutter {
     boolean cancel = false;
     private final int perfectHeight;
+    private final boolean gradientAsFrame;
 
-    public PastaCutter(int perfectHeight) {
+    public PastaCutter(int perfectHeight, boolean gradientAsFrame) {
         this.perfectHeight = perfectHeight;
+        this.gradientAsFrame = gradientAsFrame;
     }
 
     @Override
     public BufferedImage[] cutScans(BufferedImage[] fragments) {
+        return drawFrames(fragments, recognizeFrames(fragments));
+    }
+
+    @Override
+    public void cancel() {
+        cancel = true;
+    }
+
+    private List<Frame> recognizeFrames(BufferedImage[] fragments) {
         ViewManager.startProgress(fragments.length, "Рассчёт высот сканов: 0/" + fragments.length);
         ArrayList<Frame> frameInfo = new ArrayList<>();
         boolean scanlineOnWhite = true;
@@ -28,6 +40,7 @@ public class PastaCutter implements Cutter {
                 scanlineOnWhite = false;
             }
         }
+
         for (int i = 0; i < fragments.length; i++) {
             data = fragments[i].getRaster().getPixels(0, 0, fragments[i].getWidth(), fragments[i].getHeight(), (int[]) null);
             x:
@@ -90,25 +103,28 @@ public class PastaCutter implements Cutter {
             current.toY = fragments[current.toIndex].getHeight() - 1;
             frameInfo.add(frameInfo.size() - 1, current);
         }
+        return frameInfo;
+    }
 
-        ViewManager.startProgress(frameInfo.size(), "Склейка сканов: 0/" + frameInfo.size());
+    private BufferedImage[] drawFrames(BufferedImage[] fragments, List<Frame> frames) {
+        ViewManager.startProgress(frames.size(), "Склейка сканов: 0/" + frames.size());
         ArrayList<BufferedImage> arr = new ArrayList<>();
         int curHeight = 0;
         int prevEnd = -1;
-        for (int i = 0; i < frameInfo.size(); i++) {
+        for (int i = 0; i < frames.size(); i++) {
             if (cancel) return null;
-            if (curHeight + frameInfo.get(i).height < perfectHeight && i != frameInfo.size() - 1) {
-                curHeight += frameInfo.get(i).height;
-                ViewManager.startProgress(frameInfo.size(), "Склейка сканов: " + (i + 1) + "/" + frameInfo.size());
+            if (curHeight + frames.get(i).height < perfectHeight && i != frames.size() - 1) {
+                curHeight += frames.get(i).height;
+                ViewManager.startProgress(frames.size(), "Склейка сканов: " + (i + 1) + "/" + frames.size());
             } else {
-                Frame from = frameInfo.get(prevEnd + 1);
+                Frame from = frames.get(prevEnd + 1);
                 Frame to;
-                if (curHeight > 0 && perfectHeight - curHeight <= frameInfo.get(i).height + curHeight - perfectHeight) {
-                    to = frameInfo.get(i - 1);
+                if (curHeight > 0 && perfectHeight - curHeight <= frames.get(i).height + curHeight - perfectHeight) {
+                    to = frames.get(i - 1);
                     prevEnd = i - 1;
                 } else {
-                    ViewManager.startProgress(frameInfo.size(), "Склейка сканов: " + (i + 1) + "/" + frameInfo.size());
-                    to = frameInfo.get(i);
+                    ViewManager.startProgress(frames.size(), "Склейка сканов: " + (i + 1) + "/" + frames.size());
+                    to = frames.get(i);
                     prevEnd = i;
                 }
                 curHeight = 0;
@@ -124,11 +140,6 @@ public class PastaCutter implements Cutter {
         BufferedImage[] buff = new BufferedImage[arr.size()];
         buff = arr.toArray(buff);
         return buff;
-    }
-
-    @Override
-    public void cancel() {
-        cancel = true;
     }
 
     private void drawFrame(Graphics g, BufferedImage[] fragments, Frame f) {
@@ -213,6 +224,11 @@ public class PastaCutter implements Cutter {
                 f.fromY += fragments[f.fromIndex].getHeight();
             }
             return f;
+        }
+
+        @Override
+        public String toString() {
+            return "[(" + fromIndex + "," + fromY + "),(" + toIndex + "," + toY + ")," + height + "]";
         }
     }
 }

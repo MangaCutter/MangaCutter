@@ -10,18 +10,13 @@ import java.io.IOException;
 
 public class MultiScanSaver implements ScanSaver {
     private boolean cancel = false;
-    private String prefix;
-
-    public MultiScanSaver(String prefix) {
-        this.prefix = prefix + "-";
-    }
 
     @Override
     public void saveToDisk(BufferedImage[] images, String path) {
         ViewManager.startProgress(images.length, "Сброс на диск: 0/" + images.length);
         for (int i = 0; i < images.length; i++) {
             try {
-                File f = new File(path + File.separator + prefix + String.format("%04d", (i+1)) + ".png");
+                File f = new File(path + File.separator + String.format("%03d", (i + 1)) + ".png");
                 if (f.exists()) {
                     if (JOptionPane.showConfirmDialog(null, "Файл " + f.getName() + " уже существует.\n"
                             + "Перезаписать?", "Внимание!", JOptionPane.YES_NO_OPTION) != JOptionPane.OK_OPTION) {

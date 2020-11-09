@@ -42,10 +42,11 @@ public class MainView {
             switch (pathSelector.getSelectedIndex()) {
                 case ViewManager.MULTI_INDEX:
                     success = JobManager.startJob(urlTextField.getText(), multiDirTextField.getText(),
-                            multiPrefixTextField.getText(), perfectHeightTextField.getText(), pathSelector.getSelectedIndex());
+                            perfectHeightTextField.getText(), pathSelector.getSelectedIndex());
                     break;
                 case 1:
-                    success = JobManager.startJob(urlTextField.getText(), singleFileTextField.getText(), "", "", pathSelector.getSelectedIndex());
+                    success = JobManager.startJob(urlTextField.getText(), singleFileTextField.getText(),
+                            "", pathSelector.getSelectedIndex());
                     break;
             }
             if (success) ViewManager.showMessage("Глава успешно скачана!");
