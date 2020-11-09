@@ -76,7 +76,7 @@ public class ViewManager {
 
     private static void constructFrame() {
         if (frame == null) {
-            frame = new JFrame("Webtoon Downloader");
+            frame = new JFrame("MangaCutter");
             frame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
             frame.setLocationRelativeTo(null);
             frame.setResizable(false);
@@ -127,9 +127,9 @@ public class ViewManager {
         JMenu menu = new JMenu("Справка");
 
         JMenuItem aboutItem = new JMenuItem("О программе");
-        aboutItem.addActionListener(actionEvent -> ViewManager.showMessage("WebtoonDownloader\n" +
+        aboutItem.addActionListener(actionEvent -> ViewManager.showMessage("MangaCutter\n" +
                 "Программа для скачивания и склейки сканов с корейского вебтуна\nАвтор: MasterLogick\n" +
-                "https://github.com/MasterLogick/WebtoonDownloader"));
+                "https://github.com/MasterLogick/MangaCutter"));
 
         JMenuItem supportedServicesItem = new JMenuItem("Поддерживаемые сервисы");
         supportedServicesItem.addActionListener(actionEvent -> ViewManager.showMessage("Список поддерживаемых сервисов:\n" + ServiceManager.getSupportedServicesList()));

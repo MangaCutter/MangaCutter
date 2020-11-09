@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/WebtoonDownloader.iml" filepath="$PROJECT_DIR$/WebtoonDownloader.iml" />
+      <module fileurl="file://$PROJECT_DIR$/MangaCutter.iml" filepath="$PROJECT_DIR$/MangaCutter.iml" />
     </modules>
   </component>
 </project>
