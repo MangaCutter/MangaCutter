@@ -47,7 +47,7 @@ public class JobManager {
         }
     }
 
-    public static boolean startJob(String uri, String out, String perfectSize, int selectedIndex) {
+    public static boolean startJob(String uri, String out, String perfectSize, int selectedIndex,boolean cutOnGradient) {
         cancel = false;
         s = ServiceManager.getService(uri);
         if (s == null) {
@@ -87,7 +87,7 @@ public class JobManager {
         }
 
         if (!perfectSize.isEmpty()) {
-            cutter = new PastaCutter(perfectHeight, false);
+            cutter = new PastaCutter(perfectHeight, cutOnGradient);
             saver = new MultiScanSaver();
         } else {
             cutter = new OneScanCutter();
@@ -101,7 +101,7 @@ public class JobManager {
         }
 
         state = State.DROPPING_TO_DISK;
-        saver.saveToDisk(destImg, out);
+        saver.saveToDisk(destImg, "/home/user/test/000.png");
 
         cancel = false;
         return true;

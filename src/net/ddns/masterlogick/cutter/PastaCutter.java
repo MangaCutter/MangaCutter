@@ -10,11 +10,13 @@ import java.util.List;
 public class PastaCutter implements Cutter {
     boolean cancel = false;
     private final int perfectHeight;
-    private final boolean gradientAsFrame;
+    private final boolean cutOnGradient;
+    private static final int COLOR_THRESHOLD = 5;
+    private static final int MIN_HEIGHT = 30;
 
-    public PastaCutter(int perfectHeight, boolean gradientAsFrame) {
+    public PastaCutter(int perfectHeight, boolean cutOnGradient) {
         this.perfectHeight = perfectHeight;
-        this.gradientAsFrame = gradientAsFrame;
+        this.cutOnGradient = cutOnGradient;
     }
 
     @Override
@@ -36,26 +38,58 @@ public class PastaCutter implements Cutter {
         current.fromIndex = 0;
         int[] data = fragments[0].getRaster().getPixels(0, 0, fragments[0].getWidth(), fragments[0].getHeight(), (int[]) null);
         for (int k = 0; k < fragments[0].getWidth(); k++) {
-            if (data[0] != data[3 * k] || data[1] != data[3 * k + 1] || data[2] != data[3 * k + 2]) {
+            if (!equalsWithEpsilon(data, 0, data, k)) {
                 scanlineOnWhite = false;
             }
         }
+
+        int[] prevColor = new int[3];
+        prevColor[0] = data[0];
+        prevColor[1] = data[1];
+        prevColor[2] = data[2];
 
         for (int i = 0; i < fragments.length; i++) {
             data = fragments[i].getRaster().getPixels(0, 0, fragments[i].getWidth(), fragments[i].getHeight(), (int[]) null);
             x:
             for (int j = 0; j < fragments[i].getHeight(); j++) {
                 if (cancel) return null;
+                int left = j * fragments[i].getWidth();
+                if (scanlineOnWhite && !cutOnGradient && !equalsWithEpsilon(data, left, prevColor, 0)) {
+                    current.toY = j;
+                    current.toIndex = i;
+                    current.fixHeight(fragments);
+                    if (current.height <= MIN_HEIGHT) {
+                        Frame prev = current;
+                        if (frameInfo.size() != 0) {
+                            prev = frameInfo.remove(frameInfo.size() - 1);
+                        }
+                        current = prev;
+                    } else if (frameInfo.size() != 0) {
+                        Frame f = frameInfo.get(frameInfo.size() - 1);
+                        Frame frame = current.getFirstHalf(fragments);
+                        f.toIndex = frame.toIndex;
+                        f.toY = frame.toY;
+                        f.fixHeight(fragments);
+                        frameInfo.set(frameInfo.size() - 1, f);
+                        current = current.getSecondHalf(fragments);
+                    }
+                    scanlineOnWhite = false;
+                    continue;
+                }
                 for (int k = 0; k < fragments[i].getWidth(); k++) {
-                    int left = j * fragments[i].getWidth();
                     int right = j * fragments[i].getWidth() + k;
-                    if (data[3 * left] != data[3 * right] || data[3 * left + 1] != data[3 * right + 1] ||
-                            data[3 * left + 2] != data[3 * right + 2]) {
+                    if (!equalsWithEpsilon(data, left, data, right)) {
                         if (scanlineOnWhite) {
                             current.toY = j;
                             current.toIndex = i;
                             current.fixHeight(fragments);
-                            if (frameInfo.size() != 0) {
+                            if (current.height <= MIN_HEIGHT) {
+                                Frame prev = current;
+                                if (frameInfo.size() != 0) {
+                                    prev = frameInfo.remove(frameInfo.size() - 1);
+                                }
+                                current = prev;
+                            } else if (frameInfo.size() != 0) {
                                 Frame f = frameInfo.get(frameInfo.size() - 1);
                                 Frame frame = current.getFirstHalf(fragments);
                                 f.toIndex = frame.toIndex;
@@ -69,6 +103,18 @@ public class PastaCutter implements Cutter {
                         continue x;
                     }
                 }
+
+                if (!scanlineOnWhite && !cutOnGradient && !equalsWithEpsilon(data, left, prevColor, 0)) {
+                    prevColor[0] = data[3 * left];
+                    prevColor[1] = data[3 * left + 1];
+                    prevColor[2] = data[3 * left + 2];
+                    continue;
+                }
+
+                prevColor[0] = data[3 * left];
+                prevColor[1] = data[3 * left + 1];
+                prevColor[2] = data[3 * left + 2];
+
                 if (i == 0 && j == 0) {//reached only if scanlineOnWhite == true. see first loop in this method
                     continue;
                 }
@@ -107,6 +153,7 @@ public class PastaCutter implements Cutter {
     }
 
     private BufferedImage[] drawFrames(BufferedImage[] fragments, List<Frame> frames) {
+        if (cancel) return null;
         ViewManager.startProgress(frames.size(), "Склейка сканов: 0/" + frames.size());
         ArrayList<BufferedImage> arr = new ArrayList<>();
         int curHeight = 0;
@@ -131,10 +178,7 @@ public class PastaCutter implements Cutter {
                 from.toY = to.toY;
                 from.toIndex = to.toIndex;
                 from.fixHeight(fragments);
-                BufferedImage bf = new BufferedImage(fragments[from.fromIndex].getWidth(), from.height, BufferedImage.TYPE_INT_RGB);
-                Graphics g = bf.getGraphics();
-                drawFrame(g, fragments, from);
-                arr.add(bf);
+                arr.add(copyImageFromFrame(fragments, from));
             }
         }
         BufferedImage[] buff = new BufferedImage[arr.size()];
@@ -142,40 +186,53 @@ public class PastaCutter implements Cutter {
         return buff;
     }
 
-    private void drawFrame(Graphics g, BufferedImage[] fragments, Frame f) {
-        if (f.fromIndex == f.toIndex) {
-            g.drawImage(fragments[f.fromIndex],
+    private BufferedImage copyImageFromFrame(BufferedImage[] fragments, Frame frame) {
+        int destWidth = 0;
+        for (int i = frame.fromIndex; i <= frame.toIndex; i++) {
+            destWidth = Math.max(destWidth, fragments[i].getWidth());
+        }
+        BufferedImage image = new BufferedImage(destWidth, frame.height, BufferedImage.TYPE_INT_RGB);
+        Graphics g = image.getGraphics();
+        if (frame.fromIndex == frame.toIndex) {
+            g.drawImage(fragments[frame.fromIndex],
                     0, 0,
-                    fragments[f.fromIndex].getWidth() - 1, f.height - 1,
-                    0, f.fromY,
-                    fragments[f.fromIndex].getWidth() - 1, f.toY,
+                    destWidth, frame.height - 1,
+                    0, frame.fromY,
+                    fragments[frame.fromIndex].getWidth(), frame.toY,
                     null);
         } else {
             int y = 0;
-            g.drawImage(fragments[f.fromIndex],
+            g.drawImage(fragments[frame.fromIndex],
                     0, 0,
-                    fragments[f.fromIndex].getWidth() - 1, fragments[f.fromIndex].getHeight() - f.fromY,
-                    0, f.fromY,
-                    fragments[f.fromIndex].getWidth() - 1, fragments[f.fromIndex].getHeight(),
+                    destWidth, fragments[frame.fromIndex].getHeight() - frame.fromY,
+                    0, frame.fromY,
+                    fragments[frame.fromIndex].getWidth(), fragments[frame.fromIndex].getHeight(),
                     null);
-            y += fragments[f.fromIndex].getHeight() - f.fromY;
-            for (int i = f.fromIndex + 1; i < f.toIndex; i++) {
-                if (cancel) return;
+            y += fragments[frame.fromIndex].getHeight() - frame.fromY;
+            for (int i = frame.fromIndex + 1; i < frame.toIndex; i++) {
+                if (cancel) return null;
                 g.drawImage(fragments[i],
                         0, y,
-                        fragments[i].getWidth() - 1, y + fragments[i].getHeight(),
+                        destWidth, y + fragments[i].getHeight(),
                         0, 0,
-                        fragments[i].getWidth() - 1, fragments[i].getHeight(),
+                        fragments[i].getWidth(), fragments[i].getHeight(),
                         null);
                 y += fragments[i].getHeight();
             }
-            g.drawImage(fragments[f.toIndex],
+            g.drawImage(fragments[frame.toIndex],
                     0, y,
-                    fragments[f.toIndex].getWidth() - 1, y + f.toY + 1,
+                    destWidth, y + frame.toY + 1,
                     0, 0,
-                    fragments[f.toIndex].getWidth() - 1, f.toY + 1,
+                    fragments[frame.toIndex].getWidth(), frame.toY + 1,
                     null);
         }
+        return image;
+    }
+
+    private static boolean equalsWithEpsilon(int[] color1, int i1, int[] color2, int i2) {
+        return Math.abs(color1[3 * i1] - color2[3 * i2]) <= COLOR_THRESHOLD &&
+                Math.abs(color1[3 * i1 + 1] - color2[3 * i2 + 1]) <= COLOR_THRESHOLD &&
+                Math.abs(color1[3 * i1 + 2] - color2[3 * i2 + 2]) <= COLOR_THRESHOLD;
     }
 
     private static class Frame {
