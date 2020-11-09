@@ -38,19 +38,18 @@ public class MainView {
         startButton.addActionListener(e -> new Thread(() -> {
             startButton.setEnabled(false);
             cancelButton.setEnabled(true);
+            boolean success = false;
             switch (pathSelector.getSelectedIndex()) {
-                case 0:
-                    JobManager.startJob(urlTextField.getText(), multiDirTextField.getText(),
-                            multiPrefixTextField.getText(), perfectHeightTextField.getText());
-                    ViewManager.showMessage("Глава успешно скачана!");
-                    ViewManager.resetProgress();
+                case ViewManager.MULTI_INDEX:
+                    success = JobManager.startJob(urlTextField.getText(), multiDirTextField.getText(),
+                            multiPrefixTextField.getText(), perfectHeightTextField.getText(), pathSelector.getSelectedIndex());
                     break;
                 case 1:
-                    JobManager.startJob(urlTextField.getText(), singleFileTextField.getText(), "", "");
-                    ViewManager.showMessage("Глава успешно скачана!");
-                    ViewManager.resetProgress();
+                    success = JobManager.startJob(urlTextField.getText(), singleFileTextField.getText(), "", "", pathSelector.getSelectedIndex());
                     break;
             }
+            if (success) ViewManager.showMessage("Глава успешно скачана!");
+            ViewManager.resetProgress();
             cancelButton.setEnabled(false);
             startButton.setEnabled(true);
         }).start());

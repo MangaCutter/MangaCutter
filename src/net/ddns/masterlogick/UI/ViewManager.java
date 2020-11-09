@@ -16,6 +16,8 @@ public class ViewManager {
     private static MainView view;
     private static JFileChooser singleFileChooser;
     private static JFileChooser multipleFileChooser;
+    public static final int SINGLE_INDEX = 1;
+    public static final int MULTI_INDEX = 0;
 
     public static void startProgress(int max, String message) {
         view.progressBar.setValue(0);
@@ -141,8 +143,8 @@ public class ViewManager {
     private static void configureComboBox() {
         String pastaVariant = "несколько коротких кусков";
         String singlePageVariant = "один длинный скан";
-        view.pathSelector.insertItemAt(pastaVariant, 0);
-        view.pathSelector.insertItemAt(singlePageVariant, 1);
+        view.pathSelector.insertItemAt(pastaVariant, MULTI_INDEX);
+        view.pathSelector.insertItemAt(singlePageVariant, SINGLE_INDEX);
         view.pathSelector.addItemListener(e -> {
             if (e.getStateChange() == ItemEvent.SELECTED) {
                 if (e.getItem().equals(singlePageVariant)) {

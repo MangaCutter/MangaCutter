@@ -21,7 +21,7 @@ public class MultiScanSaver implements ScanSaver {
         ViewManager.startProgress(images.length, "Сброс на диск: 0/" + images.length);
         for (int i = 0; i < images.length; i++) {
             try {
-                File f = new File(path + File.separator + prefix + i + ".png");
+                File f = new File(path + File.separator + prefix + String.format("%04d", (i+1)) + ".png");
                 if (f.exists()) {
                     if (JOptionPane.showConfirmDialog(null, "Файл " + f.getName() + " уже существует.\n"
                             + "Перезаписать?", "Внимание!", JOptionPane.YES_NO_OPTION) != JOptionPane.OK_OPTION) {

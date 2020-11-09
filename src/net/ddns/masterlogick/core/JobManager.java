@@ -47,35 +47,43 @@ public class JobManager {
         }
     }
 
-    public static void startJob(String uri, String out, String prefix, String perfectSize) {
+    public static boolean startJob(String uri, String out, String prefix, String perfectSize, int selectedIndex) {
         cancel = false;
         s = ServiceManager.getService(uri);
         if (s == null) {
             ViewManager.showMessage("Неправильная ссылка или скачивание с данного сервиса не поддерживается.\n" +
                     "Полный список поддерживаемых сервисов есть в Справке");
-            return;
+            return false;
         }
         int perfectHeight = -1;
-        if (!perfectSize.isEmpty()) {
+        if (selectedIndex == ViewManager.MULTI_INDEX) {
+            if (perfectSize.isEmpty()) {
+                ViewManager.showMessage("Не указана высота!");
+                return false;
+            }
             try {
                 perfectHeight = Integer.parseInt(perfectSize);
             } catch (NumberFormatException e) {
                 ViewManager.showMessage("Неправильно указана высота: " + e.getMessage());
-                return;
+                return false;
+            }
+            if(perfectHeight<0){
+                ViewManager.showMessage("Высота не может быть отрицательной!");
+                return false;
             }
         }
 
         state = State.PARSING;
         List<String> fragmentPathList = s.parsePage(uri);
         if (cancel) {
-            return;
+            return false;
         }
 
         downloader = new SimpleDownloader();
         state = State.DOWNLOADING;
         BufferedImage[] fragments = downloader.downloadFragments(fragmentPathList);
         if (cancel) {
-            return;
+            return false;
         }
 
         if (!perfectSize.isEmpty()) {
@@ -89,12 +97,13 @@ public class JobManager {
         state = State.CUTTING;
         BufferedImage[] destImg = cutter.cutScans(fragments);
         if (cancel) {
-            return;
+            return false;
         }
 
         state = State.DROPPING_TO_DISK;
         saver.saveToDisk(destImg, out);
 
         cancel = false;
+        return true;
     }
 }
