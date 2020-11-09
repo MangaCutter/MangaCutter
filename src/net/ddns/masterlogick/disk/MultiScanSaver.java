@@ -14,9 +14,24 @@ public class MultiScanSaver implements ScanSaver {
     @Override
     public void saveToDisk(BufferedImage[] images, String path) {
         ViewManager.startProgress(images.length, "Сброс на диск: 0/" + images.length);
+        File directory = new File(path);
+        try {
+            if (directory.exists() && directory.isFile()) {
+                ViewManager.showMessage(path + "\nПо указанному пути находится файл, а не папка.\nСохранение приостановлено.");
+                return;
+            }
+            if (!directory.exists()) {
+                if (!directory.mkdirs()) {
+                    ViewManager.showMessage(path + "\nНе удалось создать указанную папку.");
+                }
+            }
+        } catch (SecurityException e) {
+            ViewManager.showMessage(path + "\nНе удалось открыть указанную папку.\n" + e.getMessage());
+            e.printStackTrace();
+        }
         for (int i = 0; i < images.length; i++) {
             try {
-                File f = new File(path + File.separator + String.format("%03d", (i + 1)) + ".png");
+                File f = new File(directory, String.format("%03d", (i + 1)) + ".png");
                 if (f.exists()) {
                     if (JOptionPane.showConfirmDialog(null, "Файл " + f.getName() + " уже существует.\n"
                             + "Перезаписать?", "Внимание!", JOptionPane.YES_NO_OPTION) != JOptionPane.OK_OPTION) {
