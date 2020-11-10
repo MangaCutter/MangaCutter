@@ -39,6 +39,10 @@ public class MultiScanSaver implements ScanSaver {
                     }
                 }
                 ImageIO.write(images[i], "PNG", f);
+
+                images[i] = null;
+                System.gc();
+
                 ViewManager.incrementProgress("Сброс на диск: " + (i + 1) + "/" + images.length);
                 if (cancel) return;
             } catch (IOException e) {

@@ -3,7 +3,7 @@ package net.ddns.masterlogick.core;
 import net.ddns.masterlogick.UI.ViewManager;
 import net.ddns.masterlogick.cutter.Cutter;
 import net.ddns.masterlogick.cutter.OneScanCutter;
-import net.ddns.masterlogick.cutter.PastaCutter;
+import net.ddns.masterlogick.cutter.pasta.PastaCutter;
 import net.ddns.masterlogick.disk.MultiScanSaver;
 import net.ddns.masterlogick.disk.OneScanSaver;
 import net.ddns.masterlogick.disk.ScanSaver;
@@ -13,10 +13,11 @@ import net.ddns.masterlogick.service.Service;
 import net.ddns.masterlogick.service.ServiceManager;
 
 import java.awt.image.BufferedImage;
+import java.util.Arrays;
 import java.util.List;
 
 public class JobManager {
-    private static Service s;
+    private static Service service;
     private static Downloader downloader;
     private static Cutter cutter;
     private static ScanSaver saver;
@@ -34,7 +35,7 @@ public class JobManager {
             case NO_JOB:
                 return;
             case PARSING:
-                s.cancel();
+                service.cancel();
                 return;
             case DOWNLOADING:
                 downloader.cancel();
@@ -47,10 +48,10 @@ public class JobManager {
         }
     }
 
-    public static boolean startJob(String uri, String out, String perfectSize, int selectedIndex,boolean cutOnGradient) {
+    public static boolean startJob(String uri, String out, String perfectSize, int selectedIndex, boolean cutOnGradient) {
         cancel = false;
-        s = ServiceManager.getService(uri);
-        if (s == null) {
+        service = ServiceManager.getService(uri);
+        if (service == null) {
             ViewManager.showMessage("Неправильная ссылка или скачивание с данного сервиса не поддерживается.\n" +
                     "Полный список поддерживаемых сервисов есть в Справке");
             return false;
@@ -74,7 +75,7 @@ public class JobManager {
         }
 
         state = State.PARSING;
-        List<String> fragmentPathList = s.parsePage(uri);
+        List<String> fragmentPathList = service.parsePage(uri);
         if (cancel) {
             return false;
         }
@@ -85,6 +86,7 @@ public class JobManager {
         if (cancel) {
             return false;
         }
+        fragmentPathList.clear();
 
         if (!perfectSize.isEmpty()) {
             cutter = new PastaCutter(perfectHeight, cutOnGradient);
@@ -99,9 +101,18 @@ public class JobManager {
         if (cancel) {
             return false;
         }
+        Arrays.fill(fragments, null);
+        System.gc();
 
         state = State.DROPPING_TO_DISK;
-        saver.saveToDisk(destImg, "/home/user/test/000.png");
+        saver.saveToDisk(destImg, out);
+
+        state = State.NO_JOB;
+        service = null;
+        downloader = null;
+        cutter = null;
+        saver = null;
+        System.gc();
 
         cancel = false;
         return true;
