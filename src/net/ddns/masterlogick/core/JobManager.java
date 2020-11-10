@@ -88,21 +88,28 @@ public class JobManager {
         }
         fragmentPathList.clear();
 
-        if (!perfectSize.isEmpty()) {
+        if (selectedIndex == ViewManager.MULTI_INDEX) {
             cutter = new PastaCutter(perfectHeight, cutOnGradient, tolerance);
             saver = new MultiScanSaver();
-        } else {
+        } else if (selectedIndex == ViewManager.SINGLE_INDEX) {
             cutter = new OneScanCutter();
             saver = new OneScanSaver();
+        } else if (selectedIndex == ViewManager.AS_IS_INDEX) {
+            saver = new MultiScanSaver();
         }
 
-        state = State.CUTTING;
-        BufferedImage[] destImg = cutter.cutScans(fragments);
-        if (cancel) {
-            return false;
+        BufferedImage[] destImg;
+        if (selectedIndex != ViewManager.AS_IS_INDEX) {
+            state = State.CUTTING;
+            destImg = cutter.cutScans(fragments);
+            if (cancel) {
+                return false;
+            }
+            Arrays.fill(fragments, null);
+            System.gc();
+        } else {
+            destImg = fragments;
         }
-        Arrays.fill(fragments, null);
-        System.gc();
 
         state = State.DROPPING_TO_DISK;
         saver.saveToDisk(destImg, out);
