@@ -10,14 +10,16 @@ import java.util.List;
 
 public class PastaCutter implements Cutter {
     boolean cancel = false;
+    int tolerance;
     private final int perfectHeight;
     private final boolean cutOnGradient;
     private static final int MIN_HEIGHT = 30;
     private static final int BORDERS_WIDTH = 10;
 
-    public PastaCutter(int perfectHeight, boolean cutOnGradient) {
+    public PastaCutter(int perfectHeight, boolean cutOnGradient, int tolerance) {
         this.perfectHeight = perfectHeight;
         this.cutOnGradient = cutOnGradient;
+        this.tolerance = tolerance;
     }
 
     @Override
@@ -39,7 +41,7 @@ public class PastaCutter implements Cutter {
         current.fromIndex = 0;
         ImageColorStream ics = new ImageColorStream(fragments[0]);
         for (int x = BORDERS_WIDTH; x < fragments[0].getWidth() - BORDERS_WIDTH; x++) {
-            if (!ics.equalsColorsWithEpsilon(0, fragments[0].getWidth() / 2, x)) {
+            if (!ics.equalsColorsWithEpsilon(0, fragments[0].getWidth() / 2, x, tolerance)) {
                 scanlineOnWhite = false;
             }
         }
@@ -52,7 +54,7 @@ public class PastaCutter implements Cutter {
             for (int y = 0; y < fragments[i].getHeight(); y++) {
                 if (cancel) return null;
                 int middle = fragments[i].getWidth() / 2;
-                if (scanlineOnWhite && !cutOnGradient && !ics.equalsColorsWithEpsilon(middle, y, prevColor)) {
+                if (scanlineOnWhite && !cutOnGradient && !ics.equalsColorsWithEpsilon(middle, y, prevColor, tolerance)) {
                     current.toY = y;
                     current.toIndex = i;
                     current.fixHeight(fragments);
@@ -75,7 +77,7 @@ public class PastaCutter implements Cutter {
                     continue;
                 }
                 for (int x = BORDERS_WIDTH; x < fragments[i].getWidth() - BORDERS_WIDTH; x++) {
-                    if (!ics.equalsColorsWithEpsilon(y, middle, x)) {
+                    if (!ics.equalsColorsWithEpsilon(y, middle, x, tolerance)) {
                         if (scanlineOnWhite) {
                             current.toY = y;
                             current.toIndex = i;
@@ -101,7 +103,7 @@ public class PastaCutter implements Cutter {
                     }
                 }
 
-                if (!scanlineOnWhite && !cutOnGradient && !ics.equalsColorsWithEpsilon(middle, y, prevColor)) {
+                if (!scanlineOnWhite && !cutOnGradient && !ics.equalsColorsWithEpsilon(middle, y, prevColor, tolerance)) {
                     prevColor = ics.getColor(middle, y);
                     continue;
                 }

@@ -48,7 +48,7 @@ public class JobManager {
         }
     }
 
-    public static boolean startJob(String uri, String out, String perfectSize, int selectedIndex, boolean cutOnGradient) {
+    public static boolean startJob(String uri, String out, String perfectSize, int selectedIndex, boolean cutOnGradient, int tolerance) {
         cancel = false;
         service = ServiceManager.getService(uri);
         if (service == null) {
@@ -89,7 +89,7 @@ public class JobManager {
         fragmentPathList.clear();
 
         if (!perfectSize.isEmpty()) {
-            cutter = new PastaCutter(perfectHeight, cutOnGradient);
+            cutter = new PastaCutter(perfectHeight, cutOnGradient, tolerance);
             saver = new MultiScanSaver();
         } else {
             cutter = new OneScanCutter();

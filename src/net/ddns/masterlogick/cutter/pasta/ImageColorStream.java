@@ -5,7 +5,6 @@ import java.awt.image.Raster;
 
 class ImageColorStream {
     private static final int BUFFER_HEIGHT = 512;
-    private static final int TOLERANCE = 20;
 
     Raster raster;
     int[] buffer;
@@ -16,20 +15,20 @@ class ImageColorStream {
         raster = src.getData();
     }
 
-    public boolean equalsColorsWithEpsilon(int y, int x, int x1) {
+    public boolean equalsColorsWithEpsilon(int y, int x, int x1, int tolerance) {
         update(y);
         int rowStartIndex = (y - from) * raster.getWidth();
-        return Math.abs(buffer[3 * (rowStartIndex + x)] - buffer[3 * (rowStartIndex + x1)]) <= TOLERANCE &&
-                Math.abs(buffer[3 * (rowStartIndex + x) + 1] - buffer[3 * (rowStartIndex + x1) + 1]) <= TOLERANCE &&
-                Math.abs(buffer[3 * (rowStartIndex + x) + 2] - buffer[3 * (rowStartIndex + x1) + 2]) <= TOLERANCE;
+        return Math.abs(buffer[3 * (rowStartIndex + x)] - buffer[3 * (rowStartIndex + x1)]) <= tolerance &&
+                Math.abs(buffer[3 * (rowStartIndex + x) + 1] - buffer[3 * (rowStartIndex + x1) + 1]) <= tolerance &&
+                Math.abs(buffer[3 * (rowStartIndex + x) + 2] - buffer[3 * (rowStartIndex + x1) + 2]) <= tolerance;
     }
 
-    public boolean equalsColorsWithEpsilon(int x, int y, int[] color) {
+    public boolean equalsColorsWithEpsilon(int x, int y, int[] color, int tolerance) {
         update(y);
         int rowStartIndex = (y - from) * raster.getWidth();
-        return Math.abs(buffer[3 * (rowStartIndex + x)] - color[0]) <= TOLERANCE &&
-                Math.abs(buffer[3 * (rowStartIndex + x) + 1] - color[1]) <= TOLERANCE &&
-                Math.abs(buffer[3 * (rowStartIndex + x) + 2] - color[2]) <= TOLERANCE;
+        return Math.abs(buffer[3 * (rowStartIndex + x)] - color[0]) <= tolerance &&
+                Math.abs(buffer[3 * (rowStartIndex + x) + 1] - color[1]) <= tolerance &&
+                Math.abs(buffer[3 * (rowStartIndex + x) + 2] - color[2]) <= tolerance;
     }
 
     public int[] getColor(int x, int y) {
