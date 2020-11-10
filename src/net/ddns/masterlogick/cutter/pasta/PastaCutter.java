@@ -54,7 +54,7 @@ public class PastaCutter implements Cutter {
             for (int y = 0; y < fragments[i].getHeight(); y++) {
                 if (cancel) return null;
                 int middle = fragments[i].getWidth() / 2;
-                if (scanlineOnWhite && !cutOnGradient && !ics.equalsColorsWithEpsilon(middle, y, prevColor, tolerance)) {
+                if (scanlineOnWhite && !cutOnGradient && !ics.equalsColorsWithEpsilon(middle, y, prevColor, 0)) {
                     current.toY = y;
                     current.toIndex = i;
                     current.fixHeight(fragments);
@@ -103,7 +103,7 @@ public class PastaCutter implements Cutter {
                     }
                 }
 
-                if (!scanlineOnWhite && !cutOnGradient && !ics.equalsColorsWithEpsilon(middle, y, prevColor, tolerance)) {
+                if (!scanlineOnWhite && !cutOnGradient && !ics.equalsColorsWithEpsilon(middle, y, prevColor, 0)) {
                     prevColor = ics.getColor(middle, y);
                     continue;
                 }

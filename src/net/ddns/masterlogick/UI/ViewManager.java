@@ -52,6 +52,7 @@ public class ViewManager {
         frame.setJMenuBar(constructMenu());
         view = new MainView();
         configureComboBox();
+        gradientCheckBoxSwitched();
         frame.setContentPane(view.mainPanel);
         frame.pack();
         frame.setVisible(true);
@@ -80,6 +81,19 @@ public class ViewManager {
     public static void showAsIsFileChooser() {
         if (asIsFileChooser.showDialog(frame, "Сохранить") == JFileChooser.APPROVE_OPTION) {
             view.asIsDirTextField.setText(asIsFileChooser.getSelectedFile().getAbsolutePath());
+        }
+    }
+
+    public static void gradientCheckBoxSwitched() {
+        if (view.cutGradientCheckBox.isSelected()) {
+            view.toleranceLabel.setEnabled(true);
+            view.toleranceSlider.setEnabled(true);
+            view.toleranceStaticLabel.setEnabled(true);
+        } else {
+            view.toleranceLabel.setEnabled(false);
+            view.toleranceSlider.setEnabled(false);
+            view.toleranceStaticLabel.setEnabled(false);
+            view.toleranceSlider.setValue(0);
         }
     }
 
