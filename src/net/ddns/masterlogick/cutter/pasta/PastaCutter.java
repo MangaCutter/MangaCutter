@@ -11,6 +11,7 @@ import java.util.List;
 public class PastaCutter implements Cutter {
     boolean cancel = false;
     int tolerance;
+    private Frame current;
     private final int perfectHeight;
     private final boolean cutOnGradient;
     private static final int MIN_HEIGHT = 30;
@@ -36,7 +37,7 @@ public class PastaCutter implements Cutter {
         ViewManager.startProgress(fragments.length, "Рассчёт высот сканов: 0/" + fragments.length);
         ArrayList<Frame> frameInfo = new ArrayList<>();
         boolean scanlineOnWhite = true;
-        Frame current = new Frame();
+        current = new Frame();
         current.fromY = 0;
         current.fromIndex = 0;
         ImageColorStream ics = new ImageColorStream(fragments[0]);
@@ -55,48 +56,14 @@ public class PastaCutter implements Cutter {
                 if (cancel) return null;
                 int middle = fragments[i].getWidth() / 2;
                 if (scanlineOnWhite && !cutOnGradient && !ics.equalsColorsWithEpsilon(middle, y, prevColor, 0)) {
-                    current.toY = y;
-                    current.toIndex = i;
-                    current.fixHeight(fragments);
-                    if (current.height <= MIN_HEIGHT) {
-                        Frame prev = current;
-                        if (frameInfo.size() != 0) {
-                            prev = frameInfo.remove(frameInfo.size() - 1);
-                        }
-                        current = prev;
-                    } else if (frameInfo.size() != 0) {
-                        Frame f = frameInfo.get(frameInfo.size() - 1);
-                        Frame frame = current.getFirstHalf(fragments);
-                        f.toIndex = frame.toIndex;
-                        f.toY = frame.toY;
-                        f.fixHeight(fragments);
-                        frameInfo.set(frameInfo.size() - 1, f);
-                        current = current.getSecondHalf(fragments);
-                    }
+                    newFrameStart(fragments, frameInfo, i, y);
                     scanlineOnWhite = false;
                     continue;
                 }
                 for (int x = BORDERS_WIDTH; x < fragments[i].getWidth() - BORDERS_WIDTH; x++) {
                     if (!ics.equalsColorsWithEpsilon(y, middle, x, tolerance)) {
                         if (scanlineOnWhite) {
-                            current.toY = y;
-                            current.toIndex = i;
-                            current.fixHeight(fragments);
-                            if (current.height <= MIN_HEIGHT) {
-                                Frame prev = current;
-                                if (frameInfo.size() != 0) {
-                                    prev = frameInfo.remove(frameInfo.size() - 1);
-                                }
-                                current = prev;
-                            } else if (frameInfo.size() != 0) {
-                                Frame f = frameInfo.get(frameInfo.size() - 1);
-                                Frame frame = current.getFirstHalf(fragments);
-                                f.toIndex = frame.toIndex;
-                                f.toY = frame.toY;
-                                f.fixHeight(fragments);
-                                frameInfo.set(frameInfo.size() - 1, f);
-                                current = current.getSecondHalf(fragments);
-                            }
+                            newFrameStart(fragments, frameInfo, i, y);
                             scanlineOnWhite = false;
                         }
                         continue x_label;
@@ -145,6 +112,27 @@ public class PastaCutter implements Cutter {
             frameInfo.add(frameInfo.size() - 1, current);
         }
         return frameInfo;
+    }
+
+    private void newFrameStart(BufferedImage[] fragments, ArrayList<Frame> frameInfo, int i, int y) {
+        current.toY = y;
+        current.toIndex = i;
+        current.fixHeight(fragments);
+        if (current.height <= MIN_HEIGHT) {
+            Frame prev = current;
+            if (frameInfo.size() != 0) {
+                prev = frameInfo.remove(frameInfo.size() - 1);
+            }
+            current = prev;
+        } else if (frameInfo.size() != 0) {
+            Frame f = frameInfo.get(frameInfo.size() - 1);
+            Frame frame = current.getFirstHalf(fragments);
+            f.toIndex = frame.toIndex;
+            f.toY = frame.toY;
+            f.fixHeight(fragments);
+            frameInfo.set(frameInfo.size() - 1, f);
+            current = current.getSecondHalf(fragments);
+        }
     }
 
     private BufferedImage[] drawFrames(BufferedImage[] fragments, List<Frame> frames) {
