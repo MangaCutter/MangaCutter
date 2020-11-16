@@ -6,7 +6,8 @@ public interface Service {
 
     /**
      * Parses manga page and return resolved URIs to images in logical order
-     * @param uri
+     *
+     * @param uri link to manga chapter of this service
      */
     List<String> parsePage(String uri);
 
@@ -15,6 +16,15 @@ public interface Service {
      */
     static boolean accept(String uri) {
         return false;
+    }
+
+    /**
+     * Returns service name and address separated with colon
+     *
+     * @return short oneline info about service parser
+     */
+    static String getInfo() {
+        return "Unimplemented service: example.com";
     }
 
     /**

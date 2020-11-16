@@ -29,6 +29,10 @@ public class Naver implements Service {
         return URI.create(uri).getHost().equals("comic.naver.com");
     }
 
+    public static String getInfo() {
+        return "Korean Naver: comic.naver.com";
+    }
+
     @Override
     public void cancel() {
         cancel = true;

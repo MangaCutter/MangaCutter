@@ -10,6 +10,6 @@ public class ServiceManager {
     }
 
     public static String getSupportedServicesList() {
-        return "Korean Naver: comic.naver.com";
+        return Naver.getInfo();
     }
 }
