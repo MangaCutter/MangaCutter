@@ -20,25 +20,30 @@ public class MainView {
     private JComboBox<String> pathSelector;
     private JPanel selectableFormPannel;
     private Form currentForm;
+    private Thread t;
 
     public MainView() {
         cancelButton.addActionListener(e -> new Thread(() -> {
             JobManager.cancel();
+            if (t != null && t.isAlive()) t.interrupt();
             ViewManager.resetProgress();
             startButton.setEnabled(true);
             cancelButton.setEnabled(false);
         }).start());
-        startButton.addActionListener(e -> new Thread(() -> {
-            startButton.setEnabled(false);
-            cancelButton.setEnabled(true);
-            if (validateInput()) {
-                if (JobManager.runJob(urlTextField.getText(), currentForm.getConfiguredPipeline()))
-                    ViewManager.showMessage("Глава успешно скачана!");
-            }
-            ViewManager.resetProgress();
-            cancelButton.setEnabled(false);
-            startButton.setEnabled(true);
-        }).start());
+        startButton.addActionListener(e -> {
+            t = new Thread(() -> {
+                startButton.setEnabled(false);
+                cancelButton.setEnabled(true);
+                if (validateInput()) {
+                    if (JobManager.runJob(urlTextField.getText(), currentForm.getConfiguredPipeline()))
+                        ViewManager.showMessage("Глава успешно скачана!");
+                }
+                ViewManager.resetProgress();
+                cancelButton.setEnabled(false);
+                startButton.setEnabled(true);
+            });
+            t.start();
+        });
         Iterator<Form> forms = Main.getForms().iterator();
         for (int i = 0; forms.hasNext(); i++) {
             pathSelector.insertItemAt(forms.next().getDescription(), i);
