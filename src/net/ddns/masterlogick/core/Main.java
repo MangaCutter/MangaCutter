@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.Set;
 
 public class Main {
+    public static final String VERSION = "v2.1.0";
     private static List<Form> forms;
     private static List<Service> services;
 
@@ -26,6 +27,8 @@ public class Main {
         rf = new Reflections(Service.class.getPackage().getName());
         Set<Class<? extends Service>> servicesSet = rf.getSubTypesOf(Service.class);
         services = Collections.unmodifiableList(getInstances(servicesSet));
+
+        IOManager.checkUpdates();
 
         IOManager.initClient();
         ViewManager.createView();

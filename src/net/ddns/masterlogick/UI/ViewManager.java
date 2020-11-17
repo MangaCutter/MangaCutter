@@ -1,8 +1,8 @@
 package net.ddns.masterlogick.UI;
 
 import net.ddns.masterlogick.core.JobManager;
+import net.ddns.masterlogick.core.Main;
 import net.ddns.masterlogick.service.ServiceManager;
-import org.reflections.Reflections;
 
 import javax.swing.*;
 import javax.swing.filechooser.FileFilter;
@@ -10,7 +10,6 @@ import javax.swing.filechooser.FileSystemView;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.File;
-import java.util.Set;
 
 public class ViewManager {
     private static JFrame frame = null;
@@ -116,9 +115,12 @@ public class ViewManager {
         JMenu menu = new JMenu("Справка");
 
         JMenuItem aboutItem = new JMenuItem("О программе");
-        aboutItem.addActionListener(actionEvent -> ViewManager.showMessage("MangaCutter\n" +
-                "Программа для скачивания и склейки сканов с корейского вебтуна\nАвтор: MasterLogick\n" +
-                "https://github.com/MasterLogick/MangaCutter"));
+        aboutItem.addActionListener(actionEvent -> ViewManager.showMessage(
+                "MangaCutter\n" +
+                        "Программа для скачивания и склейки сканов с корейского вебтуна\n" +
+                        "Автор: MasterLogick\n" +
+                        Main.VERSION + "\n" +
+                        "https://github.com/MasterLogick/MangaCutter"));
 
         JMenuItem supportedServicesItem = new JMenuItem("Поддерживаемые сервисы");
         supportedServicesItem.addActionListener(actionEvent -> ViewManager.showMessage("Список поддерживаемых сервисов:\n" + ServiceManager.getSupportedServicesList()));
