@@ -9,7 +9,6 @@ import net.ddns.masterlogick.service.Service;
 import net.ddns.masterlogick.service.ServiceManager;
 
 import java.awt.image.BufferedImage;
-import java.util.HashMap;
 import java.util.List;
 
 public class JobManager {
@@ -65,7 +64,6 @@ public class JobManager {
         if (cancel) {
             return false;
         }
-        fragmentPathList.clear();
 
         state = State.CUTTING;
         BufferedImage[] destImg = pipeline.cutter.cutScans(fragments);

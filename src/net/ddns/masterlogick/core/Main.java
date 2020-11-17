@@ -14,9 +14,14 @@ import java.util.List;
 import java.util.Set;
 
 public class Main {
-    public static final String VERSION = "v2.1.0";
+    public static final String VERSION = "v2.1.1";
     private static List<Form> forms;
     private static List<Service> services;
+
+    static {
+        System.setProperty("org.apache.commons.logging.Log",
+                "org.apache.commons.logging.impl.NoOpLog");
+    }
 
     public static void main(String[] args) {
         Reflections rf = new Reflections(Form.class.getPackage().getName());
