@@ -3,10 +3,12 @@ package net.ddns.masterlogick.core;
 import net.ddns.masterlogick.UI.Form;
 import net.ddns.masterlogick.UI.MainView;
 import net.ddns.masterlogick.UI.ViewManager;
-import net.ddns.masterlogick.service.IOManager;
 import net.ddns.masterlogick.service.Service;
 import org.reflections.Reflections;
 
+import javax.swing.*;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -14,7 +16,7 @@ import java.util.List;
 import java.util.Set;
 
 public class Main {
-    public static final String VERSION = "v2.1.1";
+    public static final String VERSION = "v2.1.2";
     private static List<Form> forms;
     private static List<Service> services;
 
@@ -24,6 +26,13 @@ public class Main {
     }
 
     public static void main(String[] args) {
+        Thread.setDefaultUncaughtExceptionHandler((t, e) -> {
+            e.printStackTrace();
+            StringWriter sw = new StringWriter();
+            PrintWriter pw = new PrintWriter(sw);
+            e.printStackTrace(pw);
+            JOptionPane.showMessageDialog(null, "Ошибка: " + sw.toString());
+        });
         Reflections rf = new Reflections(Form.class.getPackage().getName());
         Set<Class<? extends Form>> formsSet = rf.getSubTypesOf(Form.class);
         formsSet.removeIf(aClass -> aClass.equals(MainView.class));

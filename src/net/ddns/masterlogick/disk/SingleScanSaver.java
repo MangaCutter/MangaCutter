@@ -20,7 +20,7 @@ public class SingleScanSaver implements ScanSaver {
         try {
             ImageIO.write(images[0], "PNG", out);
         } catch (IOException e) {
-            ViewManager.showMessage("Не удалось сохранить скан: " + e.getMessage());
+            ViewManager.showMessage("Не удалось сохранить скан: " + e.toString());
             e.printStackTrace();
         }
     }

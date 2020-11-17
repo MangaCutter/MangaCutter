@@ -1,9 +1,11 @@
 package net.ddns.masterlogick.service;
 
 import net.ddns.masterlogick.UI.ViewManager;
+import net.ddns.masterlogick.core.IOManager;
 import org.jsoup.Jsoup;
 
 import javax.swing.*;
+import java.io.IOException;
 import java.net.URI;
 import java.util.List;
 
@@ -18,8 +20,8 @@ public class Naver extends Service {
             if (cancel) return null;
             ViewManager.incrementProgress("Скачана главная страница");
             return Jsoup.parse(sb).selectFirst("div.wt_viewer").select("img").eachAttr("src");
-        } catch (Exception e) {
-            JOptionPane.showMessageDialog(null, "Не удалось скачать главную страницу: " + e.getMessage());
+        } catch (IOException e) {
+            JOptionPane.showMessageDialog(null, "Не удалось скачать главную страницу: " + e.toString());
             e.printStackTrace();
         }
         return null;

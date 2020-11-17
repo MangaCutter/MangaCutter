@@ -1,10 +1,13 @@
 package net.ddns.masterlogick.service;
 
 import net.ddns.masterlogick.UI.ViewManager;
+import net.ddns.masterlogick.core.IOManager;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
 
+import java.io.IOException;
 import java.net.URI;
 import java.util.Arrays;
 import java.util.List;
@@ -22,7 +25,11 @@ public class Daum extends Service {
             String[] list = new String[data.size()];
             data.forEach(o -> list[((int) ((long) ((JSONObject) o).get("imageOrder"))) - 1] = (String) ((JSONObject) o).get("url"));
             return Arrays.asList(list);
-        } catch (Exception e) {
+        } catch (ParseException e) {
+            ViewManager.showMessage("Не удалось получить ссылки на фрагменты: " + e.toString());
+            e.printStackTrace();
+        } catch (IOException e) {
+            ViewManager.showMessage("Не удалось скачать главную страницу: " + e.toString());
             e.printStackTrace();
         }
         return null;

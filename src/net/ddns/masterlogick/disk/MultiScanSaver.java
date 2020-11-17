@@ -31,7 +31,7 @@ public class MultiScanSaver implements ScanSaver {
                 }
             }
         } catch (SecurityException e) {
-            ViewManager.showMessage(path + "\nНе удалось открыть указанную папку.\n" + e.getMessage());
+            ViewManager.showMessage(path + "\nНе удалось открыть указанную папку.\n" + e.toString());
             e.printStackTrace();
         }
         for (int i = 0; i < images.length; i++) {
@@ -51,7 +51,7 @@ public class MultiScanSaver implements ScanSaver {
                 ViewManager.incrementProgress("Сброс на диск: " + (i + 1) + "/" + images.length);
                 if (cancel) return;
             } catch (IOException e) {
-                ViewManager.showMessage("Не удалось сохранить скан: " + e.getMessage());
+                ViewManager.showMessage("Не удалось сохранить скан: " + e.toString());
                 e.printStackTrace();
             }
         }

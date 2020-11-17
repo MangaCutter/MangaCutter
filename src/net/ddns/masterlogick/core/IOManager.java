@@ -1,6 +1,5 @@
-package net.ddns.masterlogick.service;
+package net.ddns.masterlogick.core;
 
-import net.ddns.masterlogick.core.Main;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
@@ -20,8 +19,7 @@ import java.util.concurrent.TimeUnit;
 public class IOManager {
     private static CloseableHttpClient client = null;
 
-    public static String sendRequest(String uri) throws Exception {
-        checkClient();
+    public static String sendRequest(String uri) throws IOException {
         StringBuilder sb = new StringBuilder();
         CloseableHttpResponse response = client.execute(new HttpGet(uri));
         BufferedReader bf = new BufferedReader(new InputStreamReader(response.getEntity().getContent()));
@@ -34,20 +32,12 @@ public class IOManager {
         return sb.toString();
     }
 
-    public static InputStream rawSendRequest(String uri) throws Exception {
-        checkClient();
+    public static InputStream rawSendRequest(String uri) throws IOException {
         return client.execute(new HttpGet(uri)).getEntity().getContent();
     }
 
-    public static BufferedImage downloadImage(String uri) throws Exception {
-        checkClient();
+    public static BufferedImage downloadImage(String uri) throws IOException {
         return ImageIO.read(client.execute(new HttpGet(uri)).getEntity().getContent());
-    }
-
-    private static void checkClient() throws Exception {
-        if (client == null) {
-            throw new Exception("Client must be initialised before network requests!");
-        }
     }
 
     public static void initClient() {
@@ -71,11 +61,13 @@ public class IOManager {
                 JOptionPane.showMessageDialog(null, "Доступна новая версия MangaCutter\n" + location);
             }
         } catch (IOException e) {
+            JOptionPane.showMessageDialog(null, "Не удалось получить информацию о новых версиях программы\n" + e.toString());
             e.printStackTrace();
         }
         try {
             cs.close();
         } catch (IOException e) {
+            JOptionPane.showMessageDialog(null, "Не удалось закрыть клиент.\n(Как Вы вообще сумели получить эту ошибку?)\n" + e.toString());
             e.printStackTrace();
         }
     }

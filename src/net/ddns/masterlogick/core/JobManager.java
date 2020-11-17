@@ -30,16 +30,20 @@ public class JobManager {
             case NO_JOB:
                 return;
             case PARSING:
-                service.cancel();
+                if (service != null)
+                    service.cancel();
                 return;
             case DOWNLOADING:
-                downloader.cancel();
+                if (downloader != null)
+                    downloader.cancel();
                 return;
             case CUTTING:
-                cutter.cancel();
+                if (cutter != null)
+                    cutter.cancel();
                 return;
             case DROPPING_TO_DISK:
-                saver.cancel();
+                if (saver != null)
+                    saver.cancel();
         }
     }
 
