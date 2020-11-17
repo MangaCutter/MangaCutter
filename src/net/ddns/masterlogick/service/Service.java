@@ -2,19 +2,23 @@ package net.ddns.masterlogick.service;
 
 import java.util.List;
 
-public interface Service {
+public class Service {
+    public Service() {
+    }
 
     /**
      * Parses manga page and return resolved URIs to images in logical order
      *
      * @param uri link to manga chapter of this service
      */
-    List<String> parsePage(String uri);
+    public List<String> parsePage(String uri) {
+        return null;
+    }
 
     /**
      * Whether the given uri is belongs to this service
      */
-    static boolean accept(String uri) {
+    public static boolean accept(String uri) {
         return false;
     }
 
@@ -23,12 +27,13 @@ public interface Service {
      *
      * @return short oneline info about service parser
      */
-    static String getInfo() {
+    public static String getInfo() {
         return "Unimplemented service: example.com";
     }
 
     /**
      * Stops current parsing job
      */
-    void cancel();
+    public void cancel() {
+    }
 }

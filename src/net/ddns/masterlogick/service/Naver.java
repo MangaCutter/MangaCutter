@@ -7,7 +7,7 @@ import javax.swing.*;
 import java.net.URI;
 import java.util.List;
 
-public class Naver implements Service {
+public class Naver extends Service {
     private boolean cancel = false;
 
     @Override
