@@ -7,13 +7,18 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 
-public class OneScanSaver implements ScanSaver {
+public class SingleScanSaver implements ScanSaver {
+    File out;
+
+    public SingleScanSaver(String path) {
+        out = new File(path);
+    }
 
     @Override
-    public void saveToDisk(BufferedImage[] images, String path) {
+    public void saveToDisk(BufferedImage[] images) {
         ViewManager.startProgress(1, "Сброс на диск: 0/1");
         try {
-            ImageIO.write(images[0], "PNG", new File(path));
+            ImageIO.write(images[0], "PNG", out);
         } catch (IOException e) {
             ViewManager.showMessage("Не удалось сохранить скан: " + e.getMessage());
             e.printStackTrace();

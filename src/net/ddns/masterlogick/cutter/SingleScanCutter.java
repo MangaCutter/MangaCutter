@@ -5,7 +5,7 @@ import net.ddns.masterlogick.UI.ViewManager;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 
-public class OneScanCutter implements Cutter {
+public class SingleScanCutter implements Cutter {
     private boolean cancel = false;
 
     @Override

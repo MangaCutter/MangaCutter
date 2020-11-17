@@ -25,11 +25,11 @@ public class Naver extends Service {
         return null;
     }
 
-    public static boolean accept(String uri) {
+    public boolean accept(String uri) {
         return URI.create(uri).getHost().equals("comic.naver.com");
     }
 
-    public static String getInfo() {
+    public String getInfo() {
         return "Korean Naver: comic.naver.com";
     }
 

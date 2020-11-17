@@ -13,13 +13,13 @@ public class PastaCutter implements Cutter {
     int tolerance;
     private Frame current;
     private final int perfectHeight;
-    private final boolean cutOnGradient;
+    private final boolean saveGradient;
     private static final int MIN_HEIGHT = 30;
     private static final int BORDERS_WIDTH = 10;
 
-    public PastaCutter(int perfectHeight, boolean cutOnGradient, int tolerance) {
+    public PastaCutter(int perfectHeight, boolean saveGradient, int tolerance) {
         this.perfectHeight = perfectHeight;
-        this.cutOnGradient = cutOnGradient;
+        this.saveGradient = saveGradient;
         this.tolerance = tolerance;
     }
 
@@ -55,7 +55,7 @@ public class PastaCutter implements Cutter {
             for (int y = 0; y < fragments[i].getHeight(); y++) {
                 if (cancel) return null;
                 int middle = fragments[i].getWidth() / 2;
-                if (scanlineOnWhite && !cutOnGradient && !ics.equalsColorsWithEpsilon(middle, y, prevColor, 0)) {
+                if (scanlineOnWhite && saveGradient && !ics.equalsColorsWithEpsilon(middle, y, prevColor, 0)) {
                     newFrameStart(fragments, frameInfo, i, y);
                     scanlineOnWhite = false;
                     continue;
@@ -70,7 +70,7 @@ public class PastaCutter implements Cutter {
                     }
                 }
 
-                if (!scanlineOnWhite && !cutOnGradient && !ics.equalsColorsWithEpsilon(middle, y, prevColor, 0)) {
+                if (!scanlineOnWhite && saveGradient && !ics.equalsColorsWithEpsilon(middle, y, prevColor, 0)) {
                     prevColor = ics.getColor(middle, y);
                     continue;
                 }

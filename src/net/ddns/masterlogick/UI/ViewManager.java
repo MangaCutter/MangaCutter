@@ -2,42 +2,32 @@ package net.ddns.masterlogick.UI;
 
 import net.ddns.masterlogick.core.JobManager;
 import net.ddns.masterlogick.service.ServiceManager;
+import org.reflections.Reflections;
 
 import javax.swing.*;
 import javax.swing.filechooser.FileFilter;
 import javax.swing.filechooser.FileSystemView;
-import java.awt.event.ItemEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.File;
+import java.util.Set;
 
 public class ViewManager {
-    private static JFrame frame;
+    private static JFrame frame = null;
     private static MainView view;
     private static JFileChooser singleFileChooser;
-    private static JFileChooser multipleFileChooser;
-    private static JFileChooser asIsFileChooser;
-    public static final int MULTI_INDEX = 0;
-    public static final int SINGLE_INDEX = 1;
-    public static final int AS_IS_INDEX = 2;
+    private static JFileChooser dirChooser;
 
     public static void startProgress(int max, String message) {
-        view.progressBar.setValue(0);
-        view.progressBar.setMaximum(max);
-        view.progressBar.setString(message);
-        view.progressBar.setEnabled(true);
+        view.startProgress(max, message);
     }
 
     public static void incrementProgress(String message) {
-        view.progressBar.setValue(view.progressBar.getValue() + 1);
-        view.progressBar.setString(message);
+        view.incrementProgress(message);
     }
 
     public static void resetProgress() {
-        view.progressBar.setValue(0);
-        view.progressBar.setMaximum(1);
-        view.progressBar.setString("");
-        view.progressBar.setEnabled(false);
+        view.resetProgress();
     }
 
     public static void showMessage(String s) {
@@ -45,56 +35,63 @@ public class ViewManager {
     }
 
     public static void createView() {
-        constructSingleFileChooser();
-        multipleFileChooser = constructDirChooser();
-        asIsFileChooser = constructDirChooser();
+        constructFileChoosers();
         constructFrame();
         frame.setJMenuBar(constructMenu());
         view = new MainView();
-        configureComboBox();
-        gradientCheckBoxSwitched();
-        frame.setContentPane(view.mainPanel);
+        frame.setContentPane(view.$$$getRootComponent$$$());
         frame.pack();
         frame.setVisible(true);
     }
 
-    public static void showSingleFileChooser() {
-        if (singleFileChooser.showDialog(frame, "Сохранить") == JFileChooser.APPROVE_OPTION) {
-            String path = singleFileChooser.getSelectedFile().getAbsolutePath();
-            if (!path.toLowerCase().endsWith(".png"))
+    public static String requestSelectSingleFile(String approveButtonText) {
+        String path = null;
+        if (singleFileChooser.showDialog(frame, approveButtonText) == JFileChooser.APPROVE_OPTION) {
+            path = singleFileChooser.getSelectedFile().getAbsolutePath();
+            if (!path.toLowerCase().endsWith(".png")) {
                 path += ".png";
-            if (new File(path).exists()) {
-                if (JOptionPane.showConfirmDialog(frame, "Выбранный файл уже существует\nПерезаписать?", "Внимание!", JOptionPane.YES_NO_OPTION) != JOptionPane.OK_OPTION) {
-                    return;
-                }
             }
-            view.singleFileTextField.setText(path);
         }
+        return path;
     }
 
-    public static void showMultipleFileChooser() {
-        if (multipleFileChooser.showDialog(frame, "Сохранить") == JFileChooser.APPROVE_OPTION) {
-            view.multiDirTextField.setText(multipleFileChooser.getSelectedFile().getAbsolutePath());
+    public static String requestSelectDir(String approveButtonText) {
+        if (dirChooser.showDialog(frame, approveButtonText) == JFileChooser.APPROVE_OPTION) {
+            return dirChooser.getSelectedFile().getAbsolutePath();
         }
+        return null;
     }
 
-    public static void showAsIsFileChooser() {
-        if (asIsFileChooser.showDialog(frame, "Сохранить") == JFileChooser.APPROVE_OPTION) {
-            view.asIsDirTextField.setText(asIsFileChooser.getSelectedFile().getAbsolutePath());
-        }
+    public static void packFrame() {
+        frame.pack();
     }
 
-    public static void gradientCheckBoxSwitched() {
-        if (view.cutGradientCheckBox.isSelected()) {
-            view.toleranceLabel.setEnabled(true);
-            view.toleranceSlider.setEnabled(true);
-            view.toleranceStaticLabel.setEnabled(true);
-        } else {
-            view.toleranceLabel.setEnabled(false);
-            view.toleranceSlider.setEnabled(false);
-            view.toleranceStaticLabel.setEnabled(false);
-            view.toleranceSlider.setValue(0);
-        }
+    private static void constructFileChoosers() {
+        singleFileChooser = new JFileChooser();
+        singleFileChooser.setDialogTitle("Куда сохранить?");
+        singleFileChooser.setDialogType(JFileChooser.SAVE_DIALOG);
+        singleFileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+        singleFileChooser.setAcceptAllFileFilterUsed(false);
+        singleFileChooser.setMultiSelectionEnabled(false);
+        singleFileChooser.setFileSystemView(FileSystemView.getFileSystemView());
+        singleFileChooser.addChoosableFileFilter(new FileFilter() {
+            @Override
+            public boolean accept(File f) {
+                return f.isDirectory() || f.getName().toLowerCase().endsWith(".png");
+            }
+
+            @Override
+            public String getDescription() {
+                return "PNG file";
+            }
+        });
+        dirChooser = new JFileChooser();
+        dirChooser.setDialogTitle("Куда сохранить?");
+        dirChooser.setDialogType(JFileChooser.SAVE_DIALOG);
+        dirChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+        dirChooser.setAcceptAllFileFilterUsed(false);
+        dirChooser.setMultiSelectionEnabled(false);
+        dirChooser.setFileSystemView(FileSystemView.getFileSystemView());
     }
 
     private static void constructFrame() {
@@ -114,38 +111,6 @@ public class ViewManager {
         }
     }
 
-    private static void constructSingleFileChooser() {
-        singleFileChooser = new JFileChooser();
-        singleFileChooser.setDialogTitle("Куда сохранить?");
-        singleFileChooser.setDialogType(JFileChooser.SAVE_DIALOG);
-        singleFileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
-        singleFileChooser.setAcceptAllFileFilterUsed(false);
-        singleFileChooser.setMultiSelectionEnabled(false);
-        singleFileChooser.setFileSystemView(FileSystemView.getFileSystemView());
-        singleFileChooser.addChoosableFileFilter(new FileFilter() {
-            @Override
-            public boolean accept(File f) {
-                return f.isDirectory() || f.getName().toLowerCase().endsWith(".png");
-            }
-
-            @Override
-            public String getDescription() {
-                return "PNG file";
-            }
-        });
-    }
-
-    private static JFileChooser constructDirChooser() {
-        JFileChooser fileChooser = new JFileChooser();
-        fileChooser.setDialogTitle("Куда сохранить?");
-        fileChooser.setDialogType(JFileChooser.SAVE_DIALOG);
-        fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-        fileChooser.setAcceptAllFileFilterUsed(false);
-        fileChooser.setMultiSelectionEnabled(false);
-        fileChooser.setFileSystemView(FileSystemView.getFileSystemView());
-        return fileChooser;
-    }
-
     private static JMenuBar constructMenu() {
         JMenuBar bar = new JMenuBar();
         JMenu menu = new JMenu("Справка");
@@ -162,37 +127,5 @@ public class ViewManager {
         menu.add(supportedServicesItem);
         bar.add(menu);
         return bar;
-    }
-
-    private static void configureComboBox() {
-        final String pastaVariant = "Разрезать главу на несколько коротких кусков";
-        final String singlePageVariant = "Склеить всё в один длинный скан";
-        final String asIsVariant = "Сохранить сканы \"как есть\"";
-        view.pathSelector.insertItemAt(pastaVariant, MULTI_INDEX);
-        view.pathSelector.insertItemAt(singlePageVariant, SINGLE_INDEX);
-        view.pathSelector.insertItemAt(asIsVariant, AS_IS_INDEX);
-        view.pathSelector.addItemListener(e -> {
-            if (e.getStateChange() == ItemEvent.SELECTED) {
-                switch (view.pathSelector.getSelectedIndex()) {
-                    case SINGLE_INDEX:
-                        view.singlePagePanel.setVisible(true);
-                        view.multiPagePanel.setVisible(false);
-                        view.asIsPanel.setVisible(false);
-                        break;
-                    case MULTI_INDEX:
-                        view.multiPagePanel.setVisible(true);
-                        view.singlePagePanel.setVisible(false);
-                        view.asIsPanel.setVisible(false);
-                        break;
-                    case AS_IS_INDEX:
-                        view.asIsPanel.setVisible(true);
-                        view.multiPagePanel.setVisible(false);
-                        view.singlePagePanel.setVisible(false);
-                        break;
-                }
-                frame.pack();
-            }
-        });
-        view.pathSelector.setSelectedIndex(0);
     }
 }

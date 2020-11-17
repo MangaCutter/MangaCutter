@@ -18,7 +18,7 @@ public class Service {
     /**
      * Whether the given uri is belongs to this service
      */
-    public static boolean accept(String uri) {
+    public boolean accept(String uri) {
         return false;
     }
 
@@ -27,7 +27,7 @@ public class Service {
      *
      * @return short oneline info about service parser
      */
-    public static String getInfo() {
+    public String getInfo() {
         return "Unimplemented service: example.com";
     }
 

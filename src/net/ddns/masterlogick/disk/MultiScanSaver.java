@@ -10,9 +10,14 @@ import java.io.IOException;
 
 public class MultiScanSaver implements ScanSaver {
     private boolean cancel = false;
+    String path;
+
+    public MultiScanSaver(String path) {
+        this.path = path;
+    }
 
     @Override
-    public void saveToDisk(BufferedImage[] images, String path) {
+    public void saveToDisk(BufferedImage[] images) {
         ViewManager.startProgress(images.length, "Сброс на диск: 0/" + images.length);
         File directory = new File(path);
         try {
