@@ -16,7 +16,7 @@ import java.util.List;
 import java.util.Set;
 
 public class Main {
-    public static final String VERSION = "v2.1.2";
+    public static final String VERSION = "v2.2.2";
     private static List<Form> forms;
     private static List<Service> services;
 
