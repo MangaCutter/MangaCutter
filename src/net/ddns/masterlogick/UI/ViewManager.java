@@ -29,8 +29,12 @@ public class ViewManager {
         view.resetProgress();
     }
 
-    public static void showMessage(String s) {
+    public static void showMessageDialog(String s) {
         JOptionPane.showMessageDialog(frame, s);
+    }
+
+    public static boolean showConfirmDialog(String s) {
+        return JOptionPane.showConfirmDialog(frame, s, "Внимание!", JOptionPane.YES_NO_CANCEL_OPTION) == JOptionPane.OK_OPTION;
     }
 
     public static void createView() {
@@ -115,7 +119,7 @@ public class ViewManager {
         JMenu menu = new JMenu("Справка");
 
         JMenuItem aboutItem = new JMenuItem("О программе");
-        aboutItem.addActionListener(actionEvent -> ViewManager.showMessage(
+        aboutItem.addActionListener(actionEvent -> ViewManager.showMessageDialog(
                 "MangaCutter\n" +
                         "Программа для скачивания и склейки сканов с корейского вебтуна\n" +
                         "Автор: MasterLogick\n" +
@@ -123,7 +127,7 @@ public class ViewManager {
                         "https://github.com/MasterLogick/MangaCutter"));
 
         JMenuItem supportedServicesItem = new JMenuItem("Поддерживаемые сервисы");
-        supportedServicesItem.addActionListener(actionEvent -> ViewManager.showMessage("Список поддерживаемых сервисов:\n" + ServiceManager.getSupportedServicesList()));
+        supportedServicesItem.addActionListener(actionEvent -> ViewManager.showMessageDialog("Список поддерживаемых сервисов:\n" + ServiceManager.getSupportedServicesList()));
 
         menu.add(aboutItem);
         menu.add(supportedServicesItem);

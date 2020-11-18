@@ -8,7 +8,6 @@ import net.ddns.masterlogick.disk.MultiScanSaver;
 
 import javax.swing.*;
 import java.awt.*;
-import java.util.HashMap;
 
 public class AsIsPageForm implements Form {
     private JTextField filePathTextField;
@@ -26,7 +25,7 @@ public class AsIsPageForm implements Form {
     public boolean validateInput() {
         String path = filePathTextField.getText();
         if (path.isEmpty()) {
-            ViewManager.showMessage("Не указан путь для сохранения");
+            ViewManager.showMessageDialog("Не указан путь для сохранения");
             return false;
         }
         return true;

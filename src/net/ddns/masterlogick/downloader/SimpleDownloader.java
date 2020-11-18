@@ -19,7 +19,7 @@ public class SimpleDownloader implements Downloader {
                 fragments[i] = IOManager.downloadImage(paths.get(i));
                 ViewManager.incrementProgress("Скачивание фрагментов: " + (i + 1) + "/" + paths.size());
             } catch (Exception e) {
-                ViewManager.showMessage("Ошибка при скачивании фрагмента: " + e.toString() + "\n" + "Скачивание прервано");
+                ViewManager.showMessageDialog("Ошибка при скачивании фрагмента: " + e.toString() + "\n" + "Скачивание прервано");
                 e.printStackTrace();
                 return null;
             }

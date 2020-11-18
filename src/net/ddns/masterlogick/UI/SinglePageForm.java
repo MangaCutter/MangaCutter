@@ -8,7 +8,6 @@ import net.ddns.masterlogick.disk.SingleScanSaver;
 
 import javax.swing.*;
 import java.awt.*;
-import java.util.HashMap;
 
 public class SinglePageForm implements Form {
     private JTextField filePathTextField;
@@ -26,11 +25,11 @@ public class SinglePageForm implements Form {
     public boolean validateInput() {
         String path = filePathTextField.getText();
         if (path.isEmpty()) {
-            ViewManager.showMessage("Не указан путь для сохранения");
+            ViewManager.showMessageDialog("Не указан путь для сохранения");
             return false;
         }
         if (!path.endsWith(".png")) {
-            ViewManager.showMessage("Путь указан без расширения .png; Надеюсь, Вы знаете, что делаете");
+            return ViewManager.showConfirmDialog("Путь указан без расширения .png; Надеюсь, Вы знаете, что делаете");
         }
         return true;
     }

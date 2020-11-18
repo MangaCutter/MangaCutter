@@ -36,7 +36,7 @@ public class MainView {
                 cancelButton.setEnabled(true);
                 if (validateInput()) {
                     if (JobManager.runJob(urlTextField.getText(), currentForm.getConfiguredPipeline()))
-                        ViewManager.showMessage("Глава успешно скачана!");
+                        ViewManager.showMessageDialog("Глава успешно скачана!");
                 }
                 ViewManager.resetProgress();
                 cancelButton.setEnabled(false);
@@ -61,7 +61,7 @@ public class MainView {
 
     public boolean validateInput() {
         if (urlTextField.getText().isEmpty()) {
-            ViewManager.showMessage("Не указана ссылка на главу");
+            ViewManager.showMessageDialog("Не указана ссылка на главу");
             return false;
         }
         return currentForm.validateInput();

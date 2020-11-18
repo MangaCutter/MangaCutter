@@ -20,7 +20,7 @@ public class Naver extends Service {
             ViewManager.incrementProgress("Скачана главная страница");
             return Jsoup.parse(sb).selectFirst("div.wt_viewer").select("img").eachAttr("src");
         } catch (IOException e) {
-            ViewManager.showMessage("Не удалось скачать главную страницу: " + e.toString());
+            ViewManager.showMessageDialog("Не удалось скачать главную страницу: " + e.toString());
             e.printStackTrace();
         }
         return null;

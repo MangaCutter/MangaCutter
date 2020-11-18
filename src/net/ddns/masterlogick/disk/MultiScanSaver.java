@@ -3,7 +3,6 @@ package net.ddns.masterlogick.disk;
 import net.ddns.masterlogick.UI.ViewManager;
 
 import javax.imageio.ImageIO;
-import javax.swing.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
@@ -22,24 +21,24 @@ public class MultiScanSaver implements ScanSaver {
         File directory = new File(path);
         try {
             if (directory.exists() && directory.isFile()) {
-                ViewManager.showMessage(path + "\nПо указанному пути находится файл, а не папка.\nСохранение приостановлено.");
+                ViewManager.showMessageDialog(path + "\nПо указанному пути находится файл, а не папка.\nСохранение приостановлено.");
                 return;
             }
             if (!directory.exists()) {
                 if (!directory.mkdirs()) {
-                    ViewManager.showMessage(path + "\nНе удалось создать указанную папку.");
+                    ViewManager.showMessageDialog(path + "\nНе удалось создать указанную папку.");
                 }
             }
         } catch (SecurityException e) {
-            ViewManager.showMessage(path + "\nНе удалось открыть указанную папку.\n" + e.toString());
+            ViewManager.showMessageDialog(path + "\nНе удалось открыть указанную папку.\n" + e.toString());
             e.printStackTrace();
         }
         for (int i = 0; i < images.length; i++) {
             try {
                 File f = new File(directory, String.format("%03d", (i + 1)) + ".png");
                 if (f.exists()) {
-                    if (JOptionPane.showConfirmDialog(null, "Файл " + f.getName() + " уже существует.\n"
-                            + "Перезаписать?", "Внимание!", JOptionPane.YES_NO_OPTION) != JOptionPane.OK_OPTION) {
+                    if (!ViewManager.showConfirmDialog("Файл " + f.getName() + " уже существует.\n"
+                            + "Перезаписать?")) {
                         continue;
                     }
                 }
@@ -51,7 +50,7 @@ public class MultiScanSaver implements ScanSaver {
                 ViewManager.incrementProgress("Сброс на диск: " + (i + 1) + "/" + images.length);
                 if (cancel) return;
             } catch (IOException e) {
-                ViewManager.showMessage("Не удалось сохранить скан: " + e.toString());
+                ViewManager.showMessageDialog("Не удалось сохранить скан: " + e.toString());
                 e.printStackTrace();
             }
         }

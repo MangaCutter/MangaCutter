@@ -26,10 +26,10 @@ public class Daum extends Service {
             data.forEach(o -> list[((int) ((long) ((JSONObject) o).get("imageOrder"))) - 1] = (String) ((JSONObject) o).get("url"));
             return Arrays.asList(list);
         } catch (ParseException e) {
-            ViewManager.showMessage("Не удалось получить ссылки на фрагменты: " + e.toString());
+            ViewManager.showMessageDialog("Не удалось получить ссылки на фрагменты: " + e.toString());
             e.printStackTrace();
         } catch (IOException e) {
-            ViewManager.showMessage("Не удалось скачать главную страницу: " + e.toString());
+            ViewManager.showMessageDialog("Не удалось скачать главную страницу: " + e.toString());
             e.printStackTrace();
         }
         return null;

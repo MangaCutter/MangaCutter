@@ -27,7 +27,7 @@ public class AcQq extends Service {
                 String html = IOManager.sendRequest(uri);
                 String[] parts = html.split("<script>");
                 if (parts.length != 4) {
-                    ViewManager.showMessage("Не удалось получить главную страницу");
+                    ViewManager.showMessageDialog("Не удалось получить главную страницу");
                     return null;
                 }
                 String keyEval = parts[2].substring(0, parts[2].indexOf("</script>")).trim();
@@ -85,11 +85,11 @@ public class AcQq extends Service {
                 return list;
             } catch (ParseException e) {
                 e.printStackTrace();
-                ViewManager.showMessage("Не удалось скачать главную страницу: " + e.toString());
+                ViewManager.showMessageDialog("Не удалось скачать главную страницу: " + e.toString());
             }
         } catch (IOException e) {
             e.printStackTrace();
-            ViewManager.showMessage("Не удалось скачать главную страницу: " + e.toString());
+            ViewManager.showMessageDialog("Не удалось скачать главную страницу: " + e.toString());
         }
         return null;
     }

@@ -51,7 +51,7 @@ public class JobManager {
         cancel = false;
         service = ServiceManager.getService(url);
         if (service == null) {
-            ViewManager.showMessage("Неправильная ссылка или скачивание с данного сервиса не поддерживается.\n" +
+            ViewManager.showMessageDialog("Неправильная ссылка или скачивание с данного сервиса не поддерживается.\n" +
                     "Полный список поддерживаемых сервисов есть в Справке");
             return false;
         }

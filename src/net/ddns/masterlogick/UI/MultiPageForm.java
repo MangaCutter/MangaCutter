@@ -9,7 +9,6 @@ import net.ddns.masterlogick.disk.MultiScanSaver;
 
 import javax.swing.*;
 import java.awt.*;
-import java.util.HashMap;
 
 public class MultiPageForm implements Form {
     private JTextField filePathTextField;
@@ -37,24 +36,24 @@ public class MultiPageForm implements Form {
     public boolean validateInput() {
         String path = filePathTextField.getText();
         if (path.isEmpty()) {
-            ViewManager.showMessage("Не указан путь для сохранения");
+            ViewManager.showMessageDialog("Не указан путь для сохранения");
             return false;
         }
         if (perfectHeightTextField.getText().isEmpty()) {
-            ViewManager.showMessage("Не указана высота!");
+            ViewManager.showMessageDialog("Не указана высота!");
             return false;
         }
         try {
             if (Integer.parseInt(perfectHeightTextField.getText()) < 0) {
-                ViewManager.showMessage("Высота не может быть отрицательной");
+                ViewManager.showMessageDialog("Высота не может быть отрицательной");
                 return false;
             }
         } catch (NumberFormatException e) {
-            ViewManager.showMessage(perfectHeightTextField.getText() + " - не число!");
+            ViewManager.showMessageDialog(perfectHeightTextField.getText() + " - не число!");
             return false;
         }
         if (saveGradientCheckBox.isSelected() && toleranceSlider.getValue() > 0) {
-            ViewManager.showMessage("Нельзя использовать опцию сохранения градиента\n" +
+            ViewManager.showMessageDialog("Нельзя использовать опцию сохранения градиента\n" +
                     "вместе с ненулевой чувствительностью");
             return false;
         }
