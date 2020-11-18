@@ -61,6 +61,7 @@ public class JobManager {
         if (cancel) {
             return false;
         }
+        if (fragmentPathList == null) return false;
 
         downloader = new SimpleDownloader();
         state = State.DOWNLOADING;
@@ -68,9 +69,11 @@ public class JobManager {
         if (cancel) {
             return false;
         }
+        if (fragments == null) return false;
 
         state = State.CUTTING;
         BufferedImage[] destImg = pipeline.cutter.cutScans(fragments);
+        if (destImg == null) return false;
 
         state = State.DROPPING_TO_DISK;
         pipeline.saver.saveToDisk(destImg);
