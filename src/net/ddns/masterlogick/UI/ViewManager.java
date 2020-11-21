@@ -123,7 +123,7 @@ public class ViewManager {
                 "MangaCutter\n" +
                         "Программа для скачивания и склейки сканов с корейского вебтуна\n" +
                         "Автор: MasterLogick\n" +
-                        Main.VERSION + "\n" +
+                        Main.getVersion() + "\n" +
                         "https://github.com/MasterLogick/MangaCutter"));
 
         JMenuItem supportedServicesItem = new JMenuItem("Поддерживаемые сервисы");

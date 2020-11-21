@@ -16,9 +16,9 @@ import java.util.List;
 import java.util.Set;
 
 public class Main {
-    public static final String VERSION = "v2.2.2";
     private static List<Form> forms;
     private static List<Service> services;
+    private static final int VERSION_MINOR = 2;
 
     static {
         System.setProperty("org.apache.commons.logging.Log",
@@ -26,6 +26,7 @@ public class Main {
     }
 
     public static void main(String[] args) {
+
         Thread.setDefaultUncaughtExceptionHandler((t, e) -> {
             e.printStackTrace();
             StringWriter sw = new StringWriter();
@@ -72,5 +73,9 @@ public class Main {
 
     public static List<Service> getServices() {
         return services;
+    }
+
+    public static String getVersion() {
+        return "v" + forms.size() + "." + services.size() + "." + VERSION_MINOR;
     }
 }

@@ -57,7 +57,7 @@ public class IOManager {
             String location = cs.execute(new HttpGet("https://github.com/MasterLogick/MangaCutter/releases/latest"))
                     .getFirstHeader("location").getValue();
             String tag = location.substring(location.lastIndexOf("/") + 1);
-            if (!tag.equals(Main.VERSION)) {
+            if (!tag.equals(Main.getVersion())) {
                 JOptionPane.showMessageDialog(null, "Доступна новая версия MangaCutter\n" + location);
             }
         } catch (IOException e) {
