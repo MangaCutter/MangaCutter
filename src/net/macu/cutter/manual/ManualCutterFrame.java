@@ -48,6 +48,7 @@ class ManualCutterFrame extends JFrame implements MouseListener, MouseMotionList
     private BufferedImage buffer;
     private Graphics2D g;
     private boolean ctrlPressed = false;
+    private boolean altPressed = false;
     private int srcWidth = Integer.MIN_VALUE;
     private int srcHeight = 0;
     private int imageViewportStart = 0;
@@ -317,11 +318,12 @@ class ManualCutterFrame extends JFrame implements MouseListener, MouseMotionList
     @Override
     public void keyPressed(KeyEvent e) {
         ctrlPressed = (e.getModifiers() & KeyEvent.CTRL_MASK) != 0;
-        if (e.getKeyCode() == KeyEvent.VK_SUBTRACT && (e.getModifiers() & KeyEvent.CTRL_MASK) != 0) {
+        altPressed = (e.getModifiers() & KeyEvent.ALT_MASK) != 0;
+        if (e.getKeyCode() == KeyEvent.VK_SUBTRACT && (ctrlPressed || altPressed)) {
             zoom(-2);
             c.repaint();
         }
-        if (e.getKeyCode() == KeyEvent.VK_ADD && (e.getModifiers() & KeyEvent.CTRL_MASK) != 0) {
+        if (e.getKeyCode() == KeyEvent.VK_ADD && (ctrlPressed || altPressed)) {
             zoom(2);
             c.repaint();
         }
@@ -329,7 +331,12 @@ class ManualCutterFrame extends JFrame implements MouseListener, MouseMotionList
 
     @Override
     public void keyReleased(KeyEvent e) {
-        ctrlPressed = (e.getModifiers() & KeyEvent.CTRL_MASK) != 0;
+        if (e.getKeyCode() == KeyEvent.VK_CONTROL) {
+            ctrlPressed = false;
+        }
+        if (e.getKeyCode() == KeyEvent.VK_ALT) {
+            altPressed = false;
+        }
     }
 
     @Override
@@ -498,10 +505,10 @@ class ManualCutterFrame extends JFrame implements MouseListener, MouseMotionList
 
     @Override
     public void mouseWheelMoved(MouseWheelEvent e) {
-        if (ctrlPressed) {
-            zoom(e.getWheelRotation());
+        if (ctrlPressed || altPressed) {
+            zoom(-2 * e.getWheelRotation());
         } else {
-            scroll(e.getWheelRotation() * viewportHeight / 6);
+            scroll(-e.getWheelRotation() * viewportHeight / 6);
         }
         mouseMoved(e);
         c.repaint();
@@ -673,9 +680,6 @@ class ManualCutterFrame extends JFrame implements MouseListener, MouseMotionList
     private void zoom(int amount) {
         previewWidth += 10 * amount;
         if (previewWidth <= 0) previewWidth = 20;
-        if (previewWidth >= c.getWidth() - SLIDER_WIDTH - 2 * LEADER_WIDTH - 2 * cutterBoxWidth) {
-            previewWidth = c.getWidth() - SLIDER_WIDTH - 2 * LEADER_WIDTH - 2 * cutterBoxWidth;
-        }
         if (toSRCCoordinates(imageViewportStart + viewportHeight) > srcHeight) {
             previewWidth = (int) ((float) srcWidth / srcHeight * viewportHeight);
             setViewportStart(0);
