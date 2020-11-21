@@ -24,7 +24,7 @@ public class PastaCutter implements Cutter {
 
     @Override
     public BufferedImage[] cutScans(BufferedImage[] fragments) {
-        return drawFrames(fragments, recognizeFrames(fragments));
+        return drawFrames(recognizeFrames(fragments));
     }
 
     @Override
@@ -55,14 +55,14 @@ public class PastaCutter implements Cutter {
                 if (cancel) return null;
                 int middle = fragments[i].getWidth() / 2;
                 if (scanlineOnWhite && saveGradient && !ics.equalsColorsWithEpsilon(middle, y, prevColor, 0)) {
-                    newFrameStart(fragments, frameInfo, i, y);
+                    newFrameStart(frameInfo, i, y);
                     scanlineOnWhite = false;
                     continue;
                 }
                 for (int x = BORDERS_WIDTH; x < fragments[i].getWidth() - BORDERS_WIDTH; x++) {
                     if (!ics.equalsColorsWithEpsilon(y, middle, x, tolerance)) {
                         if (scanlineOnWhite) {
-                            newFrameStart(fragments, frameInfo, i, y);
+                            newFrameStart(frameInfo, i, y);
                             scanlineOnWhite = false;
                         }
                         continue x_label;
@@ -113,7 +113,7 @@ public class PastaCutter implements Cutter {
         return frameInfo;
     }
 
-    private void newFrameStart(BufferedImage[] fragments, ArrayList<Frame> frameInfo, int i, int y) {
+    private void newFrameStart(ArrayList<Frame> frameInfo, int i, int y) {
         current.toY = y;
         current.toIndex = i;
         current.fixHeight();
@@ -134,7 +134,7 @@ public class PastaCutter implements Cutter {
         }
     }
 
-    private BufferedImage[] drawFrames(BufferedImage[] fragments, List<Frame> frames) {
+    private BufferedImage[] drawFrames(List<Frame> frames) {
         if (cancel) return null;
         ViewManager.startProgress(frames.size(), "Склейка сканов: 0/" + frames.size());
         ArrayList<BufferedImage> arr = new ArrayList<>();

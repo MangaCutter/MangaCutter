@@ -71,10 +71,12 @@ public class JobManager {
         }
         if (fragments == null) return false;
 
+        cutter = pipeline.cutter;
         state = State.CUTTING;
         BufferedImage[] destImg = pipeline.cutter.cutScans(fragments);
         if (destImg == null) return false;
 
+        saver = pipeline.saver;
         state = State.DROPPING_TO_DISK;
         pipeline.saver.saveToDisk(destImg);
 

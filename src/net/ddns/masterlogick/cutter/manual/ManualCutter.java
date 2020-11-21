@@ -5,11 +5,12 @@ import net.ddns.masterlogick.cutter.Cutter;
 import java.awt.image.BufferedImage;
 
 public class ManualCutter implements Cutter {
+    ManualCutterFrame mcf;
+
     @Override
     public BufferedImage[] cutScans(BufferedImage[] fragments) {
-        ManualCutterFrame mcf = new ManualCutterFrame(fragments);
-        Object locker = mcf.getLocker();
-        synchronized (locker) {
+        mcf = new ManualCutterFrame(fragments);
+        synchronized (mcf.getLocker()) {
             try {
                 mcf.getLocker().wait();
             } catch (InterruptedException e) {
@@ -21,6 +22,8 @@ public class ManualCutter implements Cutter {
 
     @Override
     public void cancel() {
-
+        if (mcf != null) {
+            mcf.cancel();
+        }
     }
 }

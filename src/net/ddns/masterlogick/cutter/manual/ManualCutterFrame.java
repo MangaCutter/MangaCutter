@@ -31,7 +31,6 @@ class ManualCutterFrame extends JFrame implements MouseListener, MouseMotionList
     private final Canvas c;
     private final ArrayList<Integer> cutLines = new ArrayList<>();
     private final int viewportVerticalOffset = BUTTON_PANEL_HEIGHT;
-    private final Thread scrollThread;
     private final Object locker = new Object();
     private final BufferedImage[] fragments;
     private BufferedImage buffer;
@@ -63,9 +62,9 @@ class ManualCutterFrame extends JFrame implements MouseListener, MouseMotionList
     ManualCutterFrame(BufferedImage[] images) {
         super("MangaCutter - Manual Cutter");
         fragments = images;
-        for (int i = 0; i < fragments.length; i++) {
-            srcWidth = Math.max(srcWidth, fragments[i].getWidth());
-            srcHeight += fragments[i].getHeight();
+        for (BufferedImage fragment : fragments) {
+            srcWidth = Math.max(srcWidth, fragment.getWidth());
+            srcHeight += fragment.getHeight();
         }
         cutLines.add(0);
         cutLines.add(srcHeight);
@@ -256,21 +255,23 @@ class ManualCutterFrame extends JFrame implements MouseListener, MouseMotionList
                 }
             }
         });
-        scrollThread = new Thread(() -> {
-            while (true) {
+        Thread scrollThread = new Thread(() -> {
+            while (isVisible()) {
                 try {
                     Thread.sleep(20);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
-                if (dragging == Drag.CUT_BOX) {
-                    int y = MouseInfo.getPointerInfo().getLocation().y - c.getLocationOnScreen().y - viewportVerticalOffset;
-                    if (y < 0)
-                        scroll(-SCROLL_UNITS_PER_ONE_TIME);
-                    else if (y >= viewportHeight - 1)
-                        scroll(SCROLL_UNITS_PER_ONE_TIME);
-                    updateDraggedBoxPos();
-                    c.repaint();
+                if (isVisible()) {
+                    if (dragging == Drag.CUT_BOX) {
+                        int y = MouseInfo.getPointerInfo().getLocation().y - c.getLocationOnScreen().y - viewportVerticalOffset;
+                        if (y < 0)
+                            scroll(-SCROLL_UNITS_PER_ONE_TIME);
+                        else if (y >= viewportHeight - 1)
+                            scroll(SCROLL_UNITS_PER_ONE_TIME);
+                        updateDraggedBoxPos();
+                        c.repaint();
+                    }
                 }
             }
         });
@@ -283,6 +284,14 @@ class ManualCutterFrame extends JFrame implements MouseListener, MouseMotionList
 
     public BufferedImage[] getResult() {
         return result;
+    }
+
+    public void cancel() {
+        dispose();
+        result = null;
+        synchronized (locker) {
+            locker.notifyAll();
+        }
     }
 
     @Override
@@ -640,13 +649,11 @@ class ManualCutterFrame extends JFrame implements MouseListener, MouseMotionList
         cutLines.set(druggingBoxIndex, srcPos);
     }
 
-    private int scroll(int units) {
-        int oldStart = imageViewportStart;
+    private void scroll(int units) {
         imageViewportStart += units;
         fixImageViewportStart();
         if (dragging == Drag.CUT_BOX)
             updateDraggedBoxPos();
-        return imageViewportStart - oldStart;
     }
 
     private void zoom(int amount) {

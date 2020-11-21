@@ -24,10 +24,18 @@ public class Frame {
         while (toY >= this.fragments[toIndex].getHeight()) {
             toY -= this.fragments[toIndex].getHeight();
             toIndex++;
+            if (toIndex == this.fragments.length - 1 && toY > this.fragments[toIndex].getHeight()) {
+                toY = this.fragments[toIndex].getHeight();
+                break;
+            }
         }
         while (fromY >= this.fragments[toIndex].getHeight()) {
             fromY -= this.fragments[fromIndex].getHeight();
             fromIndex++;
+            if (fromIndex == this.fragments.length - 1 && fromY > this.fragments[fromIndex].getHeight()) {
+                fromY = this.fragments[fromIndex].getHeight();
+                break;
+            }
         }
     }
 
