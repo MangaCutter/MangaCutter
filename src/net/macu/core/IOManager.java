@@ -22,7 +22,7 @@ public class IOManager {
     public static String sendRequest(String uri) throws IOException {
         StringBuilder sb = new StringBuilder();
         CloseableHttpResponse response = client.execute(new HttpGet(uri));
-        BufferedReader bf = new BufferedReader(new InputStreamReader(response.getEntity().getContent()));
+        BufferedReader bf = new BufferedReader(new InputStreamReader(rawSendRequest(uri)));
         String s;
         while ((s = bf.readLine()) != null) {
             sb.append(s).append('\n');
