@@ -10,13 +10,25 @@ import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 
 class ManualCutterFrame extends JFrame implements MouseListener, MouseMotionListener, MouseWheelListener, KeyListener {
+    private static final Color CUTTER_BOX_COLOR = Color.MAGENTA;
+    private static final Color SLIDER_BAR_COLOR = Color.LIGHT_GRAY;
+    private static final Color SLIDER_COLOR = new Color(Color.DARK_GRAY.getRed(), Color.DARK_GRAY.getGreen(), Color.DARK_GRAY.getBlue(), 190);
+    private static final Color BUTTON_PANEL_COLOR = Color.WHITE;
+    private static final Color BUTTON_PANEL_STROKE_COLOR = Color.DARK_GRAY;
+    private static final Color BUTTON_PRESSED_COLOR = Color.DARK_GRAY;
+    private static final Color BUTTON_RELEASED_COLOR = Color.LIGHT_GRAY;
+    private static final Color BUTTON_STROKE_COLOR = Color.BLACK;
+    private static final Color ADD_BUTTON_PIC_COLOR = Color.GREEN;
+    private static final Color REMOVE_BUTTON_PIC_COLOR = Color.RED;
+    private static final Color BACKGROUND_COLOR = Color.BLACK;
+    private static final Color LEADER_COLOR = Color.GRAY;
     private static final int SCROLL_UNITS_PER_ONE_TIME = 10;
     private static final int SLIDER_WIDTH = 8;
     private static final int LEADER_HEIGHT = 40;
     private static final int LEADER_WIDTH = 3;
     private static final int CUTTER_BOX_HEIGHT = 16;
     private static final int BUTTON_PANEL_HEIGHT = 40;
-    private static final Font font = new Font(Font.MONOSPACED, Font.BOLD, CUTTER_BOX_HEIGHT);
+    private static final Font FONT = new Font(Font.MONOSPACED, Font.BOLD, CUTTER_BOX_HEIGHT);
     private static final String CONFIRM_TEXT = "Готово";
     private static final int ZOOM_IN_SELECTED = 1;
     private static final int ZOOM_OUT_SELECTED = 2;
@@ -71,12 +83,13 @@ class ManualCutterFrame extends JFrame implements MouseListener, MouseMotionList
         previewWidth = srcWidth / 2;
         c = new Canvas() {
             public void paint(Graphics g2) {
+                g.setColor(BACKGROUND_COLOR);
                 g.clearRect(0, 0, c.getWidth(), c.getHeight());
 
                 g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
                 g.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
 
-                g.setFont(font);
+                g.setFont(FONT);
                 Rectangle labelBounds = g.getFontMetrics().getStringBounds(String.valueOf(srcHeight), g).getBounds();
                 cutterBoxWidth = labelBounds.width;
                 viewportWidth = getWidth() - SLIDER_WIDTH;
@@ -87,7 +100,7 @@ class ManualCutterFrame extends JFrame implements MouseListener, MouseMotionList
                 net.macu.cutter.pasta.Frame frame = new net.macu.cutter.pasta.Frame(fragments, toSRCCoordinates(imageViewportStart), toSRCCoordinates(imageViewportStart + viewportHeight));
                 frame.drawOnImage(buffer, cutterColumnWidth, viewportVerticalOffset, previewWidth, viewportHeight, heightToPreviewScale);
 
-                g.setColor(new Color(0xffffff - (g.getColor().getRGB() & 0xffffff)));
+                g.setColor(LEADER_COLOR);
                 for (int i = 0; i < viewportHeight; i += LEADER_HEIGHT * 2) {
                     g.fillRect(cutterColumnWidth - LEADER_WIDTH, i + viewportVerticalOffset,
                             LEADER_WIDTH, LEADER_HEIGHT);
@@ -95,8 +108,7 @@ class ManualCutterFrame extends JFrame implements MouseListener, MouseMotionList
                             LEADER_WIDTH, LEADER_HEIGHT);
                 }
 
-                g.setColor(Color.MAGENTA);
-
+                g.setColor(CUTTER_BOX_COLOR);
                 for (int i = 0; i < cutLines.size(); i++) {
                     int linePos = (int) ((float) (cutLines.get(i)) * heightToPreviewScale - imageViewportStart + viewportVerticalOffset);
                     if (linePos >= -CUTTER_BOX_HEIGHT / 2 - g.getFontMetrics().getDescent() - CUTTER_BOX_HEIGHT + viewportVerticalOffset &&
@@ -133,26 +145,30 @@ class ManualCutterFrame extends JFrame implements MouseListener, MouseMotionList
                     }
                 }
 
-                g.setColor(Color.LIGHT_GRAY);
+                g.setColor(SLIDER_BAR_COLOR);
                 g.fillRect(viewportWidth, viewportVerticalOffset, c.getWidth(), viewportHeight);
 
-                g.setColor(Color.MAGENTA);
+                g.setColor(CUTTER_BOX_COLOR);
                 Stroke oldStroke = g.getStroke();
                 g.setStroke(nickStroke);
                 cutLines.forEach(pos ->
                         g.drawLine(viewportWidth, (int) (((float) pos) / srcHeight * viewportHeight) + viewportVerticalOffset,
                                 getWidth(), (int) (((float) pos) / srcHeight * viewportHeight) + viewportVerticalOffset));
+
                 g.setStroke(oldStroke);
-                g.setColor(new Color(Color.DARK_GRAY.getRed(), Color.DARK_GRAY.getGreen(), Color.DARK_GRAY.getBlue(), 190));
+                g.setColor(SLIDER_COLOR);
                 sliderStart = (int) (imageViewportStart * viewportHeight / (srcHeight * heightToPreviewScale)) + viewportVerticalOffset;
                 sliderEnd = sliderStart + (int) (viewportHeight * viewportHeight / (srcHeight * heightToPreviewScale));
+                if (sliderEnd - sliderStart < 10) {
+                    sliderEnd = sliderStart + 10;
+                }
                 g.fillRect(viewportWidth, sliderStart, SLIDER_WIDTH, sliderEnd - sliderStart + 1);
 
-                g.setColor(Color.WHITE);
+                g.setColor(BUTTON_PANEL_COLOR);
                 g.fillRect(0, 0, c.getWidth(), BUTTON_PANEL_HEIGHT);
 
                 g.setStroke(buttonStroke);
-                g.setColor(Color.DARK_GRAY);
+                g.setColor(BUTTON_PANEL_STROKE_COLOR);
                 g.drawLine(0, BUTTON_PANEL_HEIGHT, c.getWidth(), BUTTON_PANEL_HEIGHT);
 
                 buttonRadius = (int) (0.4 * BUTTON_PANEL_HEIGHT);
@@ -160,17 +176,16 @@ class ManualCutterFrame extends JFrame implements MouseListener, MouseMotionList
                 Rectangle buttonBounds = g.getFontMetrics().getStringBounds(CONFIRM_TEXT, g).getBounds();
                 distanceBetweenCenters = (c.getWidth() - buttonBounds.width) / (buttonCount + 1);
                 int picSize = buttonRadius;
-                g.setColor(Color.BLACK);
                 for (int i = 0; i < buttonCount - 1; i++) {
                     int centerX = distanceBetweenCenters * (i + 1);
                     int centerY = BUTTON_PANEL_HEIGHT / 2;
                     if ((pressedButton & (1 << i)) != 0)
-                        g.setColor(Color.DARK_GRAY);
+                        g.setColor(BUTTON_PRESSED_COLOR);
                     else
-                        g.setColor(Color.LIGHT_GRAY);
+                        g.setColor(BUTTON_RELEASED_COLOR);
                     g.fillRoundRect(centerX - buttonRadius, centerY - buttonRadius,
                             2 * buttonRadius, 2 * buttonRadius, buttonRadius, buttonRadius);
-                    g.setColor(Color.BLACK);
+                    g.setColor(BUTTON_STROKE_COLOR);
                     g.drawRoundRect(centerX - buttonRadius, centerY - buttonRadius,
                             2 * buttonRadius, 2 * buttonRadius, buttonRadius, buttonRadius);
                     switch (i) {
@@ -191,23 +206,23 @@ class ManualCutterFrame extends JFrame implements MouseListener, MouseMotionList
                                     centerX + picSize / 4 + picSize / 8, centerY - picSize / 4);
                             break;
                         case 2:
-                            g.setColor(Color.GREEN);
+                            g.setColor(ADD_BUTTON_PIC_COLOR);
                             g.drawLine(centerX - picSize / 2, centerY, centerX + picSize / 2, centerY);
                             g.drawLine(centerX, centerY - picSize / 2, centerX, centerY + picSize / 2);
                             break;
                         case 3:
-                            g.setColor(Color.RED);
+                            g.setColor(REMOVE_BUTTON_PIC_COLOR);
                             g.drawLine(centerX - picSize / 2, centerY, centerX + picSize / 2, centerY);
                             break;
                     }
                 }
                 if ((pressedButton & CONFIRM_SELECTED) != 0)
-                    g.setColor(Color.DARK_GRAY);
+                    g.setColor(BUTTON_PRESSED_COLOR);
                 else
-                    g.setColor(Color.LIGHT_GRAY);
+                    g.setColor(BUTTON_RELEASED_COLOR);
                 finishButtonWidth = buttonBounds.width + buttonRadius;
                 g.fillRoundRect(distanceBetweenCenters * buttonCount - buttonRadius, BUTTON_PANEL_HEIGHT / 2 - buttonRadius, finishButtonWidth, buttonRadius * 2, buttonRadius, buttonRadius);
-                g.setColor(Color.BLACK);
+                g.setColor(BUTTON_STROKE_COLOR);
                 g.drawRoundRect(distanceBetweenCenters * buttonCount - buttonRadius, BUTTON_PANEL_HEIGHT / 2 - buttonRadius, finishButtonWidth, buttonRadius * 2, buttonRadius, buttonRadius);
                 g.drawString(CONFIRM_TEXT, distanceBetweenCenters * buttonCount - buttonRadius / 2, BUTTON_PANEL_HEIGHT / 2 + buttonRadius / 2);
 
@@ -337,23 +352,21 @@ class ManualCutterFrame extends JFrame implements MouseListener, MouseMotionList
                             cutLines.get(i) <= onImagePos + toSRCCoordinates(CUTTER_BOX_HEIGHT / 2)) {
                         if ((pressedButton & ADD_SELECTED) != 0 && posY >= 0) {
                             setCursor(new Cursor(Cursor.N_RESIZE_CURSOR));
-                            return;
                         } else {
                             hasMarkedForRemove = true;
                             setCursor(new Cursor(Cursor.HAND_CURSOR));
                             c.repaint();
-                            return;
                         }
+                        return;
                     }
                 }
             }
-        }
-
-        if (hasMarkedForRemove) {
-            hasMarkedForRemove = false;
-            c.repaint();
-        } else {
-            setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
+            if (hasMarkedForRemove) {
+                hasMarkedForRemove = false;
+                c.repaint();
+            } else {
+                setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
+            }
         }
     }
 
@@ -490,6 +503,7 @@ class ManualCutterFrame extends JFrame implements MouseListener, MouseMotionList
         } else {
             scroll(e.getWheelRotation() * viewportHeight / 6);
         }
+        mouseMoved(e);
         c.repaint();
     }
 
@@ -513,7 +527,7 @@ class ManualCutterFrame extends JFrame implements MouseListener, MouseMotionList
     }
 
     private void drawCutLine(int linePos, String topLabel, String bottomLabel, boolean fillButtons) {
-        g.setFont(font);
+        g.setFont(FONT);
         g.setStroke(cutLineStroke);
         g.drawLine(cutterColumnWidth - LEADER_WIDTH, linePos,
                 cutterColumnWidth + previewWidth + LEADER_WIDTH, linePos);
@@ -672,6 +686,5 @@ class ManualCutterFrame extends JFrame implements MouseListener, MouseMotionList
 
     private enum Drag {
         SLIDER, CUT_BOX, NOTHING
-
     }
 }
