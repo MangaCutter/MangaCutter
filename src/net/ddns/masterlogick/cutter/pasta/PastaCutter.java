@@ -3,7 +3,6 @@ package net.ddns.masterlogick.cutter.pasta;
 import net.ddns.masterlogick.UI.ViewManager;
 import net.ddns.masterlogick.cutter.Cutter;
 
-import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.List;
@@ -37,7 +36,7 @@ public class PastaCutter implements Cutter {
         ViewManager.startProgress(fragments.length, "Рассчёт высот сканов: 0/" + fragments.length);
         ArrayList<Frame> frameInfo = new ArrayList<>();
         boolean scanlineOnWhite = true;
-        current = new Frame();
+        current = new Frame(fragments);
         current.fromY = 0;
         current.fromIndex = 0;
         ImageColorStream ics = new ImageColorStream(fragments[0]);
@@ -88,9 +87,9 @@ public class PastaCutter implements Cutter {
                         current.toIndex = i;
                         current.toY = y - 1;
                     }
-                    current.fixHeight(fragments);
+                    current.fixHeight();
                     frameInfo.add(current);
-                    current = new Frame();
+                    current = new Frame(fragments);
                     current.fromIndex = i;
                     current.fromY = y;
                     scanlineOnWhite = true;
@@ -117,7 +116,7 @@ public class PastaCutter implements Cutter {
     private void newFrameStart(BufferedImage[] fragments, ArrayList<Frame> frameInfo, int i, int y) {
         current.toY = y;
         current.toIndex = i;
-        current.fixHeight(fragments);
+        current.fixHeight();
         if (current.height <= MIN_HEIGHT) {
             Frame prev = current;
             if (frameInfo.size() != 0) {
@@ -126,12 +125,12 @@ public class PastaCutter implements Cutter {
             current = prev;
         } else if (frameInfo.size() != 0) {
             Frame f = frameInfo.get(frameInfo.size() - 1);
-            Frame frame = current.getFirstHalf(fragments);
+            Frame frame = current.getTopHalf();
             f.toIndex = frame.toIndex;
             f.toY = frame.toY;
-            f.fixHeight(fragments);
+            f.fixHeight();
             frameInfo.set(frameInfo.size() - 1, f);
-            current = current.getSecondHalf(fragments);
+            current = current.getBottomHalf();
         }
     }
 
@@ -159,55 +158,12 @@ public class PastaCutter implements Cutter {
                 curHeight = 0;
                 from.toY = to.toY;
                 from.toIndex = to.toIndex;
-                from.fixHeight(fragments);
-                arr.add(copyImageFromFrame(fragments, from));
+                from.fixHeight();
+                arr.add(from.createImage());
             }
         }
         BufferedImage[] buff = new BufferedImage[arr.size()];
         buff = arr.toArray(buff);
         return buff;
-    }
-
-    private BufferedImage copyImageFromFrame(BufferedImage[] fragments, Frame frame) {
-        int destWidth = 0;
-        for (int i = frame.fromIndex; i <= frame.toIndex; i++) {
-            destWidth = Math.max(destWidth, fragments[i].getWidth());
-        }
-        BufferedImage image = new BufferedImage(destWidth, frame.height, BufferedImage.TYPE_INT_RGB);
-        Graphics g = image.getGraphics();
-        if (frame.fromIndex == frame.toIndex) {
-            g.drawImage(fragments[frame.fromIndex],
-                    0, 0,
-                    destWidth, frame.height - 1,
-                    0, frame.fromY,
-                    fragments[frame.fromIndex].getWidth(), frame.toY,
-                    null);
-        } else {
-            int y = 0;
-            g.drawImage(fragments[frame.fromIndex],
-                    0, 0,
-                    destWidth, fragments[frame.fromIndex].getHeight() - frame.fromY,
-                    0, frame.fromY,
-                    fragments[frame.fromIndex].getWidth(), fragments[frame.fromIndex].getHeight(),
-                    null);
-            y += fragments[frame.fromIndex].getHeight() - frame.fromY;
-            for (int i = frame.fromIndex + 1; i < frame.toIndex; i++) {
-                if (cancel) return null;
-                g.drawImage(fragments[i],
-                        0, y,
-                        destWidth, y + fragments[i].getHeight(),
-                        0, 0,
-                        fragments[i].getWidth(), fragments[i].getHeight(),
-                        null);
-                y += fragments[i].getHeight();
-            }
-            g.drawImage(fragments[frame.toIndex],
-                    0, y,
-                    destWidth, y + frame.toY + 1,
-                    0, 0,
-                    fragments[frame.toIndex].getWidth(), frame.toY + 1,
-                    null);
-        }
-        return image;
     }
 }
