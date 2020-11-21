@@ -1,5 +1,6 @@
 package net.macu.core;
 
+import net.macu.UI.ViewManager;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
@@ -8,7 +9,6 @@ import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.client.LaxRedirectStrategy;
 
 import javax.imageio.ImageIO;
-import javax.swing.*;
 import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -58,16 +58,16 @@ public class IOManager {
                     .getFirstHeader("location").getValue();
             String tag = location.substring(location.lastIndexOf("/") + 1);
             if (!tag.equals(Main.getVersion())) {
-                JOptionPane.showMessageDialog(null, "Доступна новая версия MaCu\n" + location);
+                ViewManager.showMessageDialog("<html>Доступна новая версия MaCu<br><a href=\"" + location + "\">" + location + "</a></html>");
             }
         } catch (IOException e) {
-            JOptionPane.showMessageDialog(null, "Не удалось получить информацию о новых версиях программы\n" + e.toString());
+            ViewManager.showMessageDialog("Не удалось получить информацию о новых версиях программы\n" + e.toString());
             e.printStackTrace();
         }
         try {
             cs.close();
         } catch (IOException e) {
-            JOptionPane.showMessageDialog(null, "Не удалось закрыть клиент.\n(Как Вы вообще сумели получить эту ошибку?)\n" + e.toString());
+            ViewManager.showMessageDialog("Не удалось закрыть клиент.\n(Как Вы вообще сумели получить эту ошибку?)\n" + e.toString());
             e.printStackTrace();
         }
     }

@@ -5,11 +5,15 @@ import net.macu.core.Main;
 import net.macu.service.ServiceManager;
 
 import javax.swing.*;
+import javax.swing.event.HyperlinkEvent;
 import javax.swing.filechooser.FileFilter;
 import javax.swing.filechooser.FileSystemView;
+import java.awt.*;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.File;
+import java.io.IOException;
+import java.net.URISyntaxException;
 
 public class ViewManager {
     private static JFrame frame = null;
@@ -30,7 +34,19 @@ public class ViewManager {
     }
 
     public static void showMessageDialog(String s) {
-        JOptionPane.showMessageDialog(frame, s);
+        JEditorPane ep = new JEditorPane("text/html", s);
+        ep.addHyperlinkListener(e -> {
+            if (e.getEventType().equals(HyperlinkEvent.EventType.ACTIVATED)) {
+                try {
+                    Desktop.getDesktop().browse(e.getURL().toURI());
+                } catch (IOException | URISyntaxException ioException) {
+                    ioException.printStackTrace();
+                }
+            }
+        });
+        ep.setEditable(false);
+        ep.setBackground(new JLabel().getBackground());
+        JOptionPane.showMessageDialog(null, ep);
     }
 
     public static boolean showConfirmDialog(String s) {
