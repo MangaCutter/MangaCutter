@@ -34,6 +34,9 @@ public class ViewManager {
     }
 
     public static void showMessageDialog(String s) {
+        if (!s.startsWith("<html>")) {
+            s = "<html>" + s.replaceAll("\n", "<br>") + "</html>";
+        }
         JEditorPane ep = new JEditorPane("text/html", s);
         ep.addHyperlinkListener(e -> {
             if (e.getEventType().equals(HyperlinkEvent.EventType.ACTIVATED)) {
@@ -46,7 +49,7 @@ public class ViewManager {
         });
         ep.setEditable(false);
         ep.setBackground(new JLabel().getBackground());
-        JOptionPane.showMessageDialog(null, ep);
+        JOptionPane.showMessageDialog(frame, ep);
     }
 
     public static boolean showConfirmDialog(String s) {
@@ -140,7 +143,7 @@ public class ViewManager {
                         "Программа для скачивания и склейки сканов с корейского вебтуна\n" +
                         "Автор: MasterLogick\n" +
                         Main.getVersion() + "\n" +
-                        "https://github.com/MasterLogick/MangaCutter"));
+                        "<a href=\"https://github.com/MasterLogick/MangaCutter\">https://github.com/MasterLogick/MangaCutter</a>"));
 
         JMenuItem supportedServicesItem = new JMenuItem("Поддерживаемые сервисы");
         supportedServicesItem.addActionListener(actionEvent -> ViewManager.showMessageDialog("Список поддерживаемых сервисов:\n" + ServiceManager.getSupportedServicesList()));

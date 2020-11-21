@@ -58,7 +58,7 @@ public class IOManager {
                     .getFirstHeader("location").getValue();
             String tag = location.substring(location.lastIndexOf("/") + 1);
             if (!tag.equals(Main.getVersion())) {
-                ViewManager.showMessageDialog("<html>Доступна новая версия MaCu<br><a href=\"" + location + "\">" + location + "</a></html>");
+                ViewManager.showMessageDialog("Доступна новая версия MaCu<br><a href=\"" + location + "\">" + location + "</a>");
             }
         } catch (IOException e) {
             ViewManager.showMessageDialog("Не удалось получить информацию о новых версиях программы\n" + e.toString());
