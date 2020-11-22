@@ -2,19 +2,22 @@ package net.macu.cutter.pasta;
 
 import net.macu.UI.ViewManager;
 import net.macu.cutter.Cutter;
+import net.macu.settings.Parameter;
+import net.macu.settings.Parameters;
+import net.macu.settings.Parametrized;
 
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.List;
 
-public class PastaCutter implements Cutter {
+public class PastaCutter implements Cutter, Parametrized {
     boolean cancel = false;
     int tolerance;
     private Frame current;
     private final int perfectHeight;
     private final boolean saveGradient;
-    private static final int MIN_HEIGHT = 30;
-    private static final int BORDERS_WIDTH = 10;
+    private static final Parameter MIN_HEIGHT = new Parameter(Parameter.Type.INT_TYPE, "cutter.pasta.PastaCutter.min_height");
+    private static final Parameter BORDERS_WIDTH = new Parameter(Parameter.Type.INT_TYPE, "cutter.pasta.PastaCutter.borders_width");
 
     public PastaCutter(int perfectHeight, boolean saveGradient, int tolerance) {
         this.perfectHeight = perfectHeight;
@@ -32,6 +35,10 @@ public class PastaCutter implements Cutter {
         cancel = true;
     }
 
+    public static Parameters getParameters() {
+        return new Parameters("cutter.pasta.PastaCutter", MIN_HEIGHT, BORDERS_WIDTH);
+    }
+
     private List<Frame> recognizeFrames(BufferedImage[] fragments) {
         ViewManager.startProgress(fragments.length, "Рассчёт высот сканов: 0/" + fragments.length);
         ArrayList<Frame> frameInfo = new ArrayList<>();
@@ -40,7 +47,7 @@ public class PastaCutter implements Cutter {
         current.fromY = 0;
         current.fromIndex = 0;
         ImageColorStream ics = new ImageColorStream(fragments[0]);
-        for (int x = BORDERS_WIDTH; x < fragments[0].getWidth() - BORDERS_WIDTH; x++) {
+        for (int x = BORDERS_WIDTH.getInt(); x < fragments[0].getWidth() - BORDERS_WIDTH.getInt(); x++) {
             if (!ics.equalsColorsWithEpsilon(0, fragments[0].getWidth() / 2, x, tolerance)) {
                 scanlineOnWhite = false;
             }
@@ -59,7 +66,7 @@ public class PastaCutter implements Cutter {
                     scanlineOnWhite = false;
                     continue;
                 }
-                for (int x = BORDERS_WIDTH; x < fragments[i].getWidth() - BORDERS_WIDTH; x++) {
+                for (int x = BORDERS_WIDTH.getInt(); x < fragments[i].getWidth() - BORDERS_WIDTH.getInt(); x++) {
                     if (!ics.equalsColorsWithEpsilon(y, middle, x, tolerance)) {
                         if (scanlineOnWhite) {
                             newFrameStart(frameInfo, i, y);
@@ -117,7 +124,7 @@ public class PastaCutter implements Cutter {
         current.toY = y;
         current.toIndex = i;
         current.fixHeight();
-        if (current.height <= MIN_HEIGHT) {
+        if (current.height <= MIN_HEIGHT.getInt()) {
             Frame prev = current;
             if (frameInfo.size() != 0) {
                 prev = frameInfo.remove(frameInfo.size() - 1);

@@ -4,6 +4,7 @@ import net.macu.UI.Form;
 import net.macu.UI.MainView;
 import net.macu.UI.ViewManager;
 import net.macu.service.Service;
+import net.macu.settings.Settings;
 import org.reflections.Reflections;
 
 import javax.swing.*;
@@ -18,7 +19,7 @@ import java.util.Set;
 public class Main {
     private static List<Form> forms;
     private static List<Service> services;
-    private static final int VERSION_MINOR = 2;
+    private static final int VERSION_MINOR = 3;
 
     static {
         System.setProperty("org.apache.commons.logging.Log",
@@ -26,7 +27,6 @@ public class Main {
     }
 
     public static void main(String[] args) {
-
         Thread.setDefaultUncaughtExceptionHandler((t, e) -> {
             e.printStackTrace();
             StringWriter sw = new StringWriter();
@@ -42,6 +42,8 @@ public class Main {
         rf = new Reflections(Service.class.getPackage().getName());
         Set<Class<? extends Service>> servicesSet = rf.getSubTypesOf(Service.class);
         services = Collections.unmodifiableList(getInstances(servicesSet));
+
+        Settings.collectParameters();
 
         IOManager.checkUpdates();
 

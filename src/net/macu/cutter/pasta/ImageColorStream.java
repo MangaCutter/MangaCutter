@@ -1,10 +1,14 @@
 package net.macu.cutter.pasta;
 
+import net.macu.settings.Parameter;
+import net.macu.settings.Parameters;
+import net.macu.settings.Parametrized;
+
 import java.awt.image.BufferedImage;
 import java.awt.image.Raster;
 
-class ImageColorStream {
-    private static final int BUFFER_HEIGHT = 512;
+public class ImageColorStream implements Parametrized {
+    private static final Parameter BUFFER_HEIGHT = new Parameter(Parameter.Type.INT_TYPE, "cutter.pasta.ImageColorStream.buffer_height");
 
     Raster raster;
     int[] buffer;
@@ -41,9 +45,13 @@ class ImageColorStream {
         return color;
     }
 
+    public static Parameters getParameters() {
+        return new Parameters("cutter.pasta.ImageColorStream", BUFFER_HEIGHT);
+    }
+
     private void update(int newPos) {
         if (from <= newPos && newPos <= to) return;
-        int bufferHeight = Math.max(Math.min(raster.getHeight() - newPos - 1, BUFFER_HEIGHT), 1);
+        int bufferHeight = Math.max(Math.min(raster.getHeight() - newPos - 1, BUFFER_HEIGHT.getInt()), 1);
         buffer = raster.getPixels(0, newPos, raster.getWidth(), bufferHeight, (int[]) null);
         from = newPos;
         to = from + bufferHeight - 1;

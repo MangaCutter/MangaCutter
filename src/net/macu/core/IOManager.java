@@ -1,6 +1,9 @@
 package net.macu.core;
 
 import net.macu.UI.ViewManager;
+import net.macu.settings.Parameter;
+import net.macu.settings.Parameters;
+import net.macu.settings.Parametrized;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
@@ -16,7 +19,8 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.concurrent.TimeUnit;
 
-public class IOManager {
+public class IOManager implements Parametrized {
+    private static final Parameter USER_AGENT = new Parameter(Parameter.Type.STRING_TYPE, "core.IOManager.user_agent");
     private static CloseableHttpClient client = null;
 
     public static String sendRequest(String uri) throws IOException {
@@ -70,5 +74,9 @@ public class IOManager {
             ViewManager.showMessageDialog("Не удалось закрыть клиент.\n(Как Вы вообще сумели получить эту ошибку?)\n" + e.toString());
             e.printStackTrace();
         }
+    }
+
+    public static Parameters getParameters() {
+        return new Parameters("core.IOManager", USER_AGENT);
     }
 }

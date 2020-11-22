@@ -20,6 +20,7 @@ public class ViewManager {
     private static MainView view;
     private static JFileChooser singleFileChooser;
     private static JFileChooser dirChooser;
+    private static SettingsFrame settingsFrame;
 
     public static void startProgress(int max, String message) {
         view.startProgress(max, message);
@@ -59,6 +60,7 @@ public class ViewManager {
     public static void createView() {
         constructFileChoosers();
         constructFrame();
+        settingsFrame = new SettingsFrame();
         frame.setJMenuBar(constructMenu());
         view = new MainView();
         frame.setContentPane(view.$$$getRootComponent$$$());
@@ -86,6 +88,10 @@ public class ViewManager {
 
     public static void packFrame() {
         frame.pack();
+    }
+
+    public static JFrame getFrame() {
+        return frame;
     }
 
     private static void constructFileChoosers() {
@@ -135,8 +141,7 @@ public class ViewManager {
 
     private static JMenuBar constructMenu() {
         JMenuBar bar = new JMenuBar();
-        JMenu menu = new JMenu("Справка");
-
+        JMenu helpManu = new JMenu("Справка");
         JMenuItem aboutItem = new JMenuItem("О программе");
         aboutItem.addActionListener(actionEvent -> ViewManager.showMessageDialog(
                 "MaCu - MangaCutter\n" +
@@ -147,10 +152,14 @@ public class ViewManager {
 
         JMenuItem supportedServicesItem = new JMenuItem("Поддерживаемые сервисы");
         supportedServicesItem.addActionListener(actionEvent -> ViewManager.showMessageDialog("Список поддерживаемых сервисов:\n" + ServiceManager.getSupportedServicesList()));
-
-        menu.add(aboutItem);
-        menu.add(supportedServicesItem);
-        bar.add(menu);
+        helpManu.add(aboutItem);
+        helpManu.add(supportedServicesItem);
+        bar.add(helpManu);
+        JMenuItem settingsMenu = new JMenuItem("Настройки");
+        settingsMenu.addActionListener(e -> {
+            settingsFrame.setVisible(true);
+        });
+        bar.add(settingsMenu);
         return bar;
     }
 }
