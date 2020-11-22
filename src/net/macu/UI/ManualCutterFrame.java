@@ -1,6 +1,5 @@
-package net.macu.cutter.manual;
+package net.macu.UI;
 
-import net.macu.UI.ViewManager;
 import net.macu.cutter.pasta.Frame;
 
 import javax.swing.*;
@@ -9,7 +8,7 @@ import java.awt.event.*;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 
-class ManualCutterFrame extends JFrame implements MouseListener, MouseMotionListener, MouseWheelListener, KeyListener {
+public class ManualCutterFrame extends JFrame implements MouseListener, MouseMotionListener, MouseWheelListener, KeyListener {
     private static final Color CUTTER_BOX_COLOR = Color.MAGENTA;
     private static final Color SLIDER_BAR_COLOR = Color.LIGHT_GRAY;
     private static final Color SLIDER_COLOR = new Color(Color.DARK_GRAY.getRed(), Color.DARK_GRAY.getGreen(), Color.DARK_GRAY.getBlue(), 190);
@@ -72,7 +71,7 @@ class ManualCutterFrame extends JFrame implements MouseListener, MouseMotionList
     private Drag dragging = Drag.NOTHING;
     private BufferedImage[] result;
 
-    ManualCutterFrame(BufferedImage[] images) {
+    public ManualCutterFrame(BufferedImage[] images) {
         super("MaCu - Manual Cutter");
         fragments = images;
         for (BufferedImage fragment : fragments) {
@@ -258,6 +257,7 @@ class ManualCutterFrame extends JFrame implements MouseListener, MouseMotionList
         g = buffer.createGraphics();
         setSize(600, 600);
         setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+        setLocationRelativeTo(ViewManager.getFrame());
         setVisible(true);
         addWindowListener(new WindowAdapter() {
             @Override

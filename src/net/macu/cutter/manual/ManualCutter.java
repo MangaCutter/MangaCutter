@@ -1,5 +1,6 @@
 package net.macu.cutter.manual;
 
+import net.macu.UI.ManualCutterFrame;
 import net.macu.cutter.Cutter;
 
 import java.awt.image.BufferedImage;
