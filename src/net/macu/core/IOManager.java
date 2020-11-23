@@ -1,6 +1,7 @@
 package net.macu.core;
 
 import net.macu.UI.ViewManager;
+import net.macu.settings.L;
 import net.macu.settings.Parameter;
 import net.macu.settings.Parameters;
 import net.macu.settings.Parametrized;
@@ -62,7 +63,7 @@ public class IOManager implements Parametrized {
                     .getFirstHeader("location").getValue();
             String tag = location.substring(location.lastIndexOf("/") + 1);
             if (!tag.equals(Main.getVersion())) {
-                ViewManager.showMessageDialog("Доступна новая версия MaCu<br><a href=\"" + location + "\">" + location + "</a>");
+                ViewManager.showMessageDialog(L.get("core.IOManager.checkUpdates.new_ver", location, location));
             }
         } catch (IOException e) {
             ViewManager.showMessageDialog("Не удалось получить информацию о новых версиях программы\n" + e.toString());

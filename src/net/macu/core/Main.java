@@ -4,6 +4,7 @@ import net.macu.UI.Form;
 import net.macu.UI.MainView;
 import net.macu.UI.ViewManager;
 import net.macu.service.Service;
+import net.macu.settings.L;
 import net.macu.settings.Settings;
 import org.reflections.Reflections;
 
@@ -44,10 +45,10 @@ public class Main {
         services = Collections.unmodifiableList(getInstances(servicesSet));
 
         Settings.collectParameters();
-
+        L.loadLanguageData();
         IOManager.checkUpdates();
-
         IOManager.initClient();
+
         ViewManager.createView();
     }
 
