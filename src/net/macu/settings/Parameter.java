@@ -1,5 +1,7 @@
 package net.macu.settings;
 
+import java.util.prefs.BackingStoreException;
+
 public class Parameter {
     Type type;
     String name;
@@ -22,6 +24,11 @@ public class Parameter {
             case STRING_TYPE:
                 Settings.preferences.put(name, (String) value);
                 break;
+        }
+        try {
+            Settings.preferences.flush();
+        } catch (BackingStoreException e) {
+            e.printStackTrace();//todo
         }
     }
 

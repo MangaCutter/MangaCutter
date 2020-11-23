@@ -7,6 +7,7 @@ import org.reflections.Reflections;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
 import java.util.prefs.BackingStoreException;
@@ -41,7 +42,7 @@ public class Settings {
         }
         defaults.stringPropertyNames().forEach(s -> {
             try {
-                if (!preferences.nodeExists(s)) {
+                if (!Arrays.asList(preferences.keys()).contains(s)) {
                     preferences.put(s, defaults.getProperty(s));
                 }
             } catch (BackingStoreException e) {

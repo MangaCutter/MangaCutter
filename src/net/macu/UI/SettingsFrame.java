@@ -5,19 +5,24 @@ import net.macu.settings.Parameters;
 import net.macu.settings.Settings;
 
 import javax.swing.*;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 import java.awt.*;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 
 public class SettingsFrame extends JDialog {
+    private final JButton applyButton;
 
-    private final ArrayList<ScheduledChange> scheduledChanges = new ArrayList<>();
+    private final HashMap<Parameter, Object> scheduledChanges = new HashMap<>();
 
     public SettingsFrame() {
         super(ViewManager.getFrame(), "Manga Cutter");
+        applyButton = new JButton("Применить");
+        applyButton.setEnabled(false);
         JPanel root = new JPanel();
         root.setLayout(new BoxLayout(root, BoxLayout.Y_AXIS));
         JPanel viewportRoot = new JPanel();
@@ -43,16 +48,54 @@ public class SettingsFrame extends JDialog {
                     case STRING_TYPE:
                         JTextField stringField = new JTextField(14);
                         stringField.setText(parameter.getString());
+                        stringField.getDocument().addDocumentListener(new DocumentListener() {
+                            @Override
+                            public void insertUpdate(DocumentEvent e) {
+                                changedUpdate(e);
+                            }
+
+                            @Override
+                            public void removeUpdate(DocumentEvent e) {
+                                changedUpdate(e);
+                            }
+
+                            @Override
+                            public void changedUpdate(DocumentEvent e) {
+                                scheduledChanges.put(parameter, stringField.getText());
+                                applyButton.setEnabled(true);
+                            }
+                        });
                         right.add(stringField);
                         break;
                     case INT_TYPE:
                         JTextField intField = new JTextField(10);
                         intField.setText(String.valueOf(parameter.getInt()));
+                        intField.getDocument().addDocumentListener(new DocumentListener() {
+                            @Override
+                            public void insertUpdate(DocumentEvent e) {
+                                changedUpdate(e);
+                            }
+
+                            @Override
+                            public void removeUpdate(DocumentEvent e) {
+                                changedUpdate(e);
+                            }
+
+                            @Override
+                            public void changedUpdate(DocumentEvent e) {
+                                scheduledChanges.put(parameter, intField.getText());
+                                applyButton.setEnabled(true);
+                            }
+                        });
                         right.add(intField);
                         break;
                     case BOOLEAN_TYPE:
                         JCheckBox jcb = new JCheckBox();
                         jcb.setSelected(parameter.getBoolean());
+                        jcb.addActionListener(e -> {
+                            scheduledChanges.put(parameter, jcb.isSelected());
+                            applyButton.setEnabled(true);
+                        });
                         right.add(jcb);
                         break;
                 }
@@ -64,7 +107,6 @@ public class SettingsFrame extends JDialog {
         });
         JPanel p = new JPanel();
         p.setLayout(new FlowLayout(FlowLayout.RIGHT, 5, 5));
-        JButton applyButton = new JButton("Применить");
         applyButton.addActionListener(e -> applyScheduledSettings());
         JButton cancelButton = new JButton("Отмена");
         cancelButton.addActionListener(e -> discardScheduledSettings());
@@ -95,14 +137,18 @@ public class SettingsFrame extends JDialog {
 
     private void discardScheduledSettings() {
         scheduledChanges.clear();
+        applyButton.setEnabled(false);
     }
 
     private void applyScheduledSettings() {
-        scheduledChanges.forEach(scheduledChange -> scheduledChange.p.setValue(scheduledChange.newValue));
-    }
-
-    private class ScheduledChange {
-        Parameter p;
-        Object newValue;
+        scheduledChanges.forEach((parameter, o) -> {
+            if (parameter.getType() == Parameter.Type.INT_TYPE) {
+                parameter.setValue(Integer.parseInt((String) o));//todo add NumberFormatException try-catch block
+            } else {
+                parameter.setValue(o);
+            }
+        });
+        scheduledChanges.clear();
+        applyButton.setEnabled(false);
     }
 }
