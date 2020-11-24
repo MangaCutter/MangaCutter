@@ -1,6 +1,10 @@
 package net.macu.UI;
 
 import net.macu.cutter.pasta.Frame;
+import net.macu.settings.L;
+import net.macu.settings.Parameter;
+import net.macu.settings.Parameters;
+import net.macu.settings.Parametrized;
 
 import javax.swing.*;
 import java.awt.*;
@@ -8,7 +12,9 @@ import java.awt.event.*;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 
-public class ManualCutterFrame extends JFrame implements MouseListener, MouseMotionListener, MouseWheelListener, KeyListener {
+public class ManualCutterFrame extends JFrame implements MouseListener, MouseMotionListener, MouseWheelListener, KeyListener, Parametrized {
+    private static final Parameter SCROLL_SPEED = new Parameter(Parameter.Type.INT_TYPE, "UI.ManualCutterFrame.scroll_speed");
+    private static final Parameter SCROLL_INVERSION = new Parameter(Parameter.Type.BOOLEAN_TYPE, "UI.ManualCutterFrame.scroll_inversion");
     private static final Color CUTTER_BOX_COLOR = Color.MAGENTA;
     private static final Color SLIDER_BAR_COLOR = Color.LIGHT_GRAY;
     private static final Color SLIDER_COLOR = new Color(Color.DARK_GRAY.getRed(), Color.DARK_GRAY.getGreen(), Color.DARK_GRAY.getBlue(), 190);
@@ -21,14 +27,12 @@ public class ManualCutterFrame extends JFrame implements MouseListener, MouseMot
     private static final Color REMOVE_BUTTON_PIC_COLOR = Color.RED;
     private static final Color BACKGROUND_COLOR = Color.BLACK;
     private static final Color LEADER_COLOR = Color.GRAY;
-    private static final int SCROLL_UNITS_PER_ONE_TIME = 10;
     private static final int SLIDER_WIDTH = 8;
     private static final int LEADER_HEIGHT = 40;
     private static final int LEADER_WIDTH = 3;
     private static final int CUTTER_BOX_HEIGHT = 16;
     private static final int BUTTON_PANEL_HEIGHT = 40;
     private static final Font FONT = new Font(Font.MONOSPACED, Font.BOLD, CUTTER_BOX_HEIGHT);
-    private static final String CONFIRM_TEXT = "Готово";
     private static final int ZOOM_IN_SELECTED = 1;
     private static final int ZOOM_OUT_SELECTED = 2;
     private static final int ADD_SELECTED = 4;
@@ -72,7 +76,7 @@ public class ManualCutterFrame extends JFrame implements MouseListener, MouseMot
     private BufferedImage[] result;
 
     public ManualCutterFrame(BufferedImage[] images) {
-        super("MaCu - Manual Cutter");
+        super(L.get("UI.ManualCutterFrame.frame_title"));
         fragments = images;
         for (BufferedImage fragment : fragments) {
             srcWidth = Math.max(srcWidth, fragment.getWidth());
@@ -173,7 +177,7 @@ public class ManualCutterFrame extends JFrame implements MouseListener, MouseMot
 
                 buttonRadius = (int) (0.4 * BUTTON_PANEL_HEIGHT);
                 buttonCount = 5;
-                Rectangle buttonBounds = g.getFontMetrics().getStringBounds(CONFIRM_TEXT, g).getBounds();
+                Rectangle buttonBounds = g.getFontMetrics().getStringBounds(L.get("UI.ManualCutterFrame.confirm_text"), g).getBounds();
                 distanceBetweenCenters = (c.getWidth() - buttonBounds.width) / (buttonCount + 1);
                 int picSize = buttonRadius;
                 for (int i = 0; i < buttonCount - 1; i++) {
@@ -224,7 +228,7 @@ public class ManualCutterFrame extends JFrame implements MouseListener, MouseMot
                 g.fillRoundRect(distanceBetweenCenters * buttonCount - buttonRadius, BUTTON_PANEL_HEIGHT / 2 - buttonRadius, finishButtonWidth, buttonRadius * 2, buttonRadius, buttonRadius);
                 g.setColor(BUTTON_STROKE_COLOR);
                 g.drawRoundRect(distanceBetweenCenters * buttonCount - buttonRadius, BUTTON_PANEL_HEIGHT / 2 - buttonRadius, finishButtonWidth, buttonRadius * 2, buttonRadius, buttonRadius);
-                g.drawString(CONFIRM_TEXT, distanceBetweenCenters * buttonCount - buttonRadius / 2, BUTTON_PANEL_HEIGHT / 2 + buttonRadius / 2);
+                g.drawString(L.get("UI.ManualCutterFrame.confirm_text"), distanceBetweenCenters * buttonCount - buttonRadius / 2, BUTTON_PANEL_HEIGHT / 2 + buttonRadius / 2);
 
                 g2.drawImage(buffer, 0, 0, null);
 
@@ -262,7 +266,7 @@ public class ManualCutterFrame extends JFrame implements MouseListener, MouseMot
         addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
-                if (ViewManager.showConfirmDialog("Отменить нарезку?")) {
+                if (ViewManager.showConfirmDialog(L.get("UI.ManualCutterFrame.cancel"))) {
                     result = null;
                     dispose();
                     synchronized (locker) {
@@ -282,9 +286,9 @@ public class ManualCutterFrame extends JFrame implements MouseListener, MouseMot
                     if (dragging == Drag.CUT_BOX) {
                         int y = MouseInfo.getPointerInfo().getLocation().y - c.getLocationOnScreen().y - viewportVerticalOffset;
                         if (y < 0)
-                            scroll(-SCROLL_UNITS_PER_ONE_TIME);
+                            scroll(SCROLL_SPEED.getInt() * (SCROLL_INVERSION.getBoolean() ? 1 : -1));
                         else if (y >= viewportHeight - 1)
-                            scroll(SCROLL_UNITS_PER_ONE_TIME);
+                            scroll(SCROLL_SPEED.getInt() * (SCROLL_INVERSION.getBoolean() ? -1 : 1));
                         updateDraggedBoxPos();
                         c.repaint();
                     }
@@ -503,34 +507,19 @@ public class ManualCutterFrame extends JFrame implements MouseListener, MouseMot
         }
     }
 
+    public static Parameters getParameters() {
+        return new Parameters("UI.ManualCutterFrame", SCROLL_SPEED, SCROLL_INVERSION);
+    }
+
     @Override
     public void mouseWheelMoved(MouseWheelEvent e) {
         if (ctrlPressed || altPressed) {
             zoom(-2 * e.getWheelRotation());
         } else {
-            scroll(-e.getWheelRotation() * viewportHeight / 6);
+            scroll(SCROLL_SPEED.getInt() * (SCROLL_INVERSION.getBoolean() ? 1 : -1));
         }
         mouseMoved(e);
         c.repaint();
-    }
-
-    private void confirm() {
-        if (ViewManager.showConfirmDialog("Разрезать по поставленным меткам?")) {
-            for (int i = 0; i < cutLines.size() - 1; i++) {
-                if (cutLines.get(i) == cutLines.get(i + 1)) {
-                    cutLines.remove(i);
-                    i--;
-                }
-            }
-            result = new BufferedImage[cutLines.size() - 1];
-            for (int i = 0; i < cutLines.size() - 1; i++) {
-                result[i] = new Frame(fragments, cutLines.get(i), cutLines.get(i + 1) - ((i == cutLines.size() - 1) ? 0 : 1)).createImage();
-            }
-            dispose();
-            synchronized (locker) {
-                locker.notifyAll();
-            }
-        }
     }
 
     private void drawCutLine(int linePos, String topLabel, String bottomLabel, boolean fillButtons) {
@@ -690,5 +679,24 @@ public class ManualCutterFrame extends JFrame implements MouseListener, MouseMot
 
     private enum Drag {
         SLIDER, CUT_BOX, NOTHING
+    }
+
+    private void confirm() {
+        if (ViewManager.showConfirmDialog(L.get("UI.ManualCutterFrame.accept"))) {
+            for (int i = 0; i < cutLines.size() - 1; i++) {
+                if (cutLines.get(i) == cutLines.get(i + 1)) {
+                    cutLines.remove(i);
+                    i--;
+                }
+            }
+            result = new BufferedImage[cutLines.size() - 1];
+            for (int i = 0; i < cutLines.size() - 1; i++) {
+                result[i] = new Frame(fragments, cutLines.get(i), cutLines.get(i + 1) - ((i == cutLines.size() - 1) ? 0 : 1)).createImage();
+            }
+            dispose();
+            synchronized (locker) {
+                locker.notifyAll();
+            }
+        }
     }
 }

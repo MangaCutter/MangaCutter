@@ -1,6 +1,7 @@
 package net.macu.disk;
 
 import net.macu.UI.ViewManager;
+import net.macu.settings.L;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
@@ -16,11 +17,11 @@ public class SingleScanSaver implements ScanSaver {
 
     @Override
     public void saveToDisk(BufferedImage[] images) {
-        ViewManager.startProgress(1, "Сброс на диск: 0/1");
+        ViewManager.startProgress(1, L.get("disc.SingleScanSaver.saveToDisk.progress"));
         try {
             ImageIO.write(images[0], "PNG", out);
         } catch (IOException e) {
-            ViewManager.showMessageDialog("Не удалось сохранить скан: " + e.toString());
+            ViewManager.showMessageDialog(L.get("disc.SingleScanSaver.cant_save", e.toString()));
             e.printStackTrace();
         }
     }

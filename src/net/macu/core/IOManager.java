@@ -49,7 +49,7 @@ public class IOManager implements Parametrized {
         if (client == null) {
             client = HttpClients.custom()
                     .setRedirectStrategy(LaxRedirectStrategy.INSTANCE)
-                    .setUserAgent("Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:78.0) Gecko/20100101 Firefox/78.0")
+                    .setUserAgent(USER_AGENT.getString())
                     .setConnectionTimeToLive(20, TimeUnit.SECONDS)
                     .build();
         }
@@ -66,13 +66,13 @@ public class IOManager implements Parametrized {
                 ViewManager.showMessageDialog(L.get("core.IOManager.checkUpdates.new_ver", location, location));
             }
         } catch (IOException e) {
-            ViewManager.showMessageDialog("Не удалось получить информацию о новых версиях программы\n" + e.toString());
+            ViewManager.showMessageDialog(L.get("core.IOManager.checkUpdates.execute_exception", e.toString()));
             e.printStackTrace();
         }
         try {
             cs.close();
         } catch (IOException e) {
-            ViewManager.showMessageDialog("Не удалось закрыть клиент.\n(Как Вы вообще сумели получить эту ошибку?)\n" + e.toString());
+            ViewManager.showMessageDialog(L.get("core.IOManager.checkUpdates.close_client_exception", e.toString()));
             e.printStackTrace();
         }
     }

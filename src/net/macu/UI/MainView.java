@@ -5,6 +5,7 @@ import com.intellij.uiDesigner.core.GridLayoutManager;
 import com.intellij.uiDesigner.core.Spacer;
 import net.macu.core.JobManager;
 import net.macu.core.Main;
+import net.macu.settings.L;
 
 import javax.swing.*;
 import java.awt.*;
@@ -19,6 +20,7 @@ public class MainView {
     private JPanel mainPanel;
     private JComboBox<String> pathSelector;
     private JPanel selectableFormPannel;
+    private JLabel urlLabel;
     private Form currentForm;
     private Thread t;
 
@@ -36,7 +38,7 @@ public class MainView {
                 cancelButton.setEnabled(true);
                 if (validateInput()) {
                     if (JobManager.runJob(urlTextField.getText(), currentForm.getConfiguredPipeline()))
-                        ViewManager.showMessageDialog("Глава успешно скачана!");
+                        ViewManager.showMessageDialog(L.get("UI.MainView.complete_message"));
                 }
                 ViewManager.resetProgress();
                 cancelButton.setEnabled(false);
@@ -57,11 +59,14 @@ public class MainView {
             }
         });
         pathSelector.setSelectedIndex(0);
+        urlLabel.setText(L.get("UI.MainView.url_label"));
+        cancelButton.setText(L.get("UI.MainView.cancel_button"));
+        startButton.setText(L.get("UI.MainView.start_button"));
     }
 
     public boolean validateInput() {
         if (urlTextField.getText().isEmpty()) {
-            ViewManager.showMessageDialog("Не указана ссылка на главу");
+            ViewManager.showMessageDialog(L.get("UI.MainView.validateInput.empty_url"));
             return false;
         }
         return currentForm.validateInput();
@@ -113,9 +118,9 @@ public class MainView {
         gbc.weighty = 1.0;
         gbc.fill = GridBagConstraints.BOTH;
         mainPanel.add(panel1, gbc);
-        final JLabel label1 = new JLabel();
-        label1.setText("Ссылка на главу");
-        panel1.add(label1, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        urlLabel = new JLabel();
+        urlLabel.setText("Link to chapter:");
+        panel1.add(urlLabel, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         urlTextField = new JTextField();
         panel1.add(urlTextField, new GridConstraints(0, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_FIXED, null, new Dimension(150, -1), null, 0, false));
         final JPanel panel2 = new JPanel();
@@ -172,11 +177,11 @@ public class MainView {
         gbc.fill = GridBagConstraints.BOTH;
         mainPanel.add(panel4, gbc);
         startButton = new JButton();
-        startButton.setText("Старт");
+        startButton.setText("Start");
         panel4.add(startButton, new GridConstraints(0, 2, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         cancelButton = new JButton();
         cancelButton.setEnabled(false);
-        cancelButton.setText("Отмена");
+        cancelButton.setText("Cancel");
         panel4.add(cancelButton, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         final Spacer spacer1 = new Spacer();
         panel4.add(spacer1, new GridConstraints(0, 1, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, 1, null, null, null, 0, false));

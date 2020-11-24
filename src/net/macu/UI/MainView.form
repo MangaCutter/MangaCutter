@@ -16,12 +16,12 @@
         <properties/>
         <border type="none"/>
         <children>
-          <component id="7ec66" class="javax.swing.JLabel">
+          <component id="7ec66" class="javax.swing.JLabel" binding="urlLabel">
             <constraints>
               <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
             </constraints>
             <properties>
-              <text value="Ссылка на главу"/>
+              <text value="Link to chapter:"/>
             </properties>
           </component>
           <component id="69cc0" class="javax.swing.JTextField" binding="urlTextField">
@@ -95,7 +95,7 @@
               <grid row="0" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
             </constraints>
             <properties>
-              <text value="Старт"/>
+              <text value="Start"/>
             </properties>
           </component>
           <component id="8d0bd" class="javax.swing.JButton" binding="cancelButton">
@@ -104,7 +104,7 @@
             </constraints>
             <properties>
               <enabled value="false"/>
-              <text value="Отмена"/>
+              <text value="Cancel"/>
             </properties>
           </component>
           <hspacer id="7b5bf">

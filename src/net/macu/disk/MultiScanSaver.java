@@ -1,6 +1,7 @@
 package net.macu.disk;
 
 import net.macu.UI.ViewManager;
+import net.macu.settings.L;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
@@ -17,28 +18,27 @@ public class MultiScanSaver implements ScanSaver {
 
     @Override
     public void saveToDisk(BufferedImage[] images) {
-        ViewManager.startProgress(images.length, "Сброс на диск: 0/" + images.length);
+        ViewManager.startProgress(images.length, L.get("disk.MultiScanSaver.progress", 0, images.length));
         File directory = new File(path);
         try {
             if (directory.exists() && directory.isFile()) {
-                ViewManager.showMessageDialog(path + "\nПо указанному пути находится файл, а не папка.\nСохранение приостановлено.");
+                ViewManager.showMessageDialog(L.get("disc.MultiScanSaver.file_exists", path));
                 return;
             }
             if (!directory.exists()) {
                 if (!directory.mkdirs()) {
-                    ViewManager.showMessageDialog(path + "\nНе удалось создать указанную папку.");
+                    ViewManager.showMessageDialog(L.get("disc.MultiScanSaver.cant_create", path));
                 }
             }
         } catch (SecurityException e) {
-            ViewManager.showMessageDialog(path + "\nНе удалось открыть указанную папку.\n" + e.toString());
+            ViewManager.showMessageDialog(L.get("disc.MultiScanSaver.cant_open", path, e.toString()));
             e.printStackTrace();
         }
         for (int i = 0; i < images.length; i++) {
             try {
                 File f = new File(directory, String.format("%03d", (i + 1)) + ".png");
                 if (f.exists()) {
-                    if (!ViewManager.showConfirmDialog("Файл " + f.getName() + " уже существует.\n"
-                            + "Перезаписать?")) {
+                    if (!ViewManager.showConfirmDialog(L.get("disc.MultiScanSaver.confirm_rewrite", f.getName()))) {
                         continue;
                     }
                 }
@@ -47,10 +47,10 @@ public class MultiScanSaver implements ScanSaver {
                 images[i] = null;
                 System.gc();
 
-                ViewManager.incrementProgress("Сброс на диск: " + (i + 1) + "/" + images.length);
+                ViewManager.incrementProgress(L.get("disk.MultiScanSaver.progress", i + 1, images.length));
                 if (cancel) return;
             } catch (IOException e) {
-                ViewManager.showMessageDialog("Не удалось сохранить скан: " + e.toString());
+                ViewManager.showMessageDialog(L.get("disc.MultiScanSaver.cant_save", e.toString()));
                 e.printStackTrace();
             }
         }

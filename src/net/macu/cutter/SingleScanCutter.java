@@ -1,6 +1,7 @@
 package net.macu.cutter;
 
 import net.macu.UI.ViewManager;
+import net.macu.settings.L;
 
 import java.awt.*;
 import java.awt.image.BufferedImage;
@@ -10,7 +11,7 @@ public class SingleScanCutter implements Cutter {
 
     @Override
     public BufferedImage[] cutScans(BufferedImage[] fragments) {
-        ViewManager.startProgress(fragments.length, "Склейка фрагментов: 0/" + fragments.length);
+        ViewManager.startProgress(fragments.length, L.get("cutter.SingleScanCutter.cutScans.progress", 0, fragments.length));
         int height = 0;
         int width = 0;
         for (BufferedImage fragment : fragments) {
@@ -26,7 +27,7 @@ public class SingleScanCutter implements Cutter {
             if (cancel) return null;
             g.drawImage(fragments[i], 0, currentHeight, null);
             currentHeight += fragments[i].getHeight();
-            ViewManager.incrementProgress("Склейка фрагментов: " + (i + 1) + "/" + fragments.length);
+            ViewManager.incrementProgress(L.get("cutter.SingleScanCutter.cutScans.progress", i + 1, fragments.length));
         }
         return new BufferedImage[]{dst};
     }

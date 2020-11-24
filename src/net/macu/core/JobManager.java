@@ -7,8 +7,10 @@ import net.macu.downloader.Downloader;
 import net.macu.downloader.SimpleDownloader;
 import net.macu.service.Service;
 import net.macu.service.ServiceManager;
+import net.macu.settings.L;
 
 import java.awt.image.BufferedImage;
+import java.net.URI;
 import java.util.List;
 
 public class JobManager {
@@ -49,10 +51,13 @@ public class JobManager {
 
     public static synchronized boolean runJob(String url, Pipeline pipeline) {
         cancel = false;
-        service = ServiceManager.getService(url);
+        URI uri = URI.create(url);
+        if (uri.getHost() != null && uri.getPath() != null)
+            service = ServiceManager.getService(url);
+        else
+            service = null;
         if (service == null) {
-            ViewManager.showMessageDialog("Неправильная ссылка или скачивание с данного сервиса не поддерживается.\n" +
-                    "Полный список поддерживаемых сервисов есть в Справке");
+            ViewManager.showMessageDialog(L.get("core.JobManager.runJob.unsupported_service"));
             return false;
         }
 

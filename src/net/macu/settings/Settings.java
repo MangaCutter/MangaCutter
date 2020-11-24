@@ -2,7 +2,7 @@ package net.macu.settings;
 
 
 import net.macu.UI.ViewManager;
-import org.reflections.Reflections;
+import net.macu.core.Main;
 
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
@@ -21,8 +21,7 @@ public class Settings {
     public static void collectParameters() {
         if (preferences != null) return;
         preferences = Preferences.userNodeForPackage(Settings.class);
-        Reflections r = new Reflections();
-        r.getSubTypesOf(Parametrized.class).forEach(aClass -> {
+        Main.getReflections().getSubTypesOf(Parametrized.class).forEach(aClass -> {
             try {
                 parametersLsit.add((Parameters) aClass.getMethod("getParameters").invoke(null));
             } catch (IllegalAccessException e) {
@@ -38,7 +37,7 @@ public class Settings {
             defaults.load(Settings.class.getResourceAsStream("defaultSettings.properties"));
         } catch (IOException e) {
             e.printStackTrace();
-            ViewManager.showMessageDialog("Не удалось получить настройки по умолчанию");
+            ViewManager.showMessageDialog(L.get("settings.Settings.collectParameters.get_defaults_exception", e.toString()));
         }
         defaults.stringPropertyNames().forEach(s -> {
             try {
@@ -47,7 +46,7 @@ public class Settings {
                 }
             } catch (BackingStoreException e) {
                 e.printStackTrace();
-                ViewManager.showMessageDialog("Не удалось получить настройки");
+                ViewManager.showMessageDialog(L.get("settings.Settings.collectParameters.put_defaults_exception", e.toString()));
             }
         });
         parametersLsit.forEach(parameters -> parameters.forEach(parameter -> {

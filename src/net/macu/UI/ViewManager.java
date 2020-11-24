@@ -3,6 +3,7 @@ package net.macu.UI;
 import net.macu.core.JobManager;
 import net.macu.core.Main;
 import net.macu.service.ServiceManager;
+import net.macu.settings.L;
 
 import javax.swing.*;
 import javax.swing.event.HyperlinkEvent;
@@ -54,7 +55,7 @@ public class ViewManager {
     }
 
     public static boolean showConfirmDialog(String s) {
-        return JOptionPane.showConfirmDialog(frame, s, "Внимание!", JOptionPane.YES_NO_CANCEL_OPTION) == JOptionPane.OK_OPTION;
+        return JOptionPane.showConfirmDialog(frame, s, L.get("UI.ViewManager.confirm_dialog_title"), JOptionPane.YES_NO_CANCEL_OPTION) == JOptionPane.OK_OPTION;
     }
 
     public static void createView() {
@@ -96,7 +97,7 @@ public class ViewManager {
 
     private static void constructFileChoosers() {
         singleFileChooser = new JFileChooser();
-        singleFileChooser.setDialogTitle("Куда сохранить?");
+        singleFileChooser.setDialogTitle(L.get("UI.ViewManager.file_chooser_title"));
         singleFileChooser.setDialogType(JFileChooser.SAVE_DIALOG);
         singleFileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
         singleFileChooser.setAcceptAllFileFilterUsed(false);
@@ -110,11 +111,11 @@ public class ViewManager {
 
             @Override
             public String getDescription() {
-                return "PNG file";
+                return L.get("UI.ViewManager.png_image_description");
             }
         });
         dirChooser = new JFileChooser();
-        dirChooser.setDialogTitle("Куда сохранить?");
+        dirChooser.setDialogTitle(L.get("UI.ViewManager.file_chooser_title"));
         dirChooser.setDialogType(JFileChooser.SAVE_DIALOG);
         dirChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
         dirChooser.setAcceptAllFileFilterUsed(false);
@@ -124,7 +125,7 @@ public class ViewManager {
 
     private static void constructFrame() {
         if (frame == null) {
-            frame = new JFrame("MaCu");
+            frame = new JFrame(L.get("UI.ViewManager.main_frame_title"));
             frame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
             frame.setLocationRelativeTo(null);
             frame.setResizable(false);
@@ -141,24 +142,16 @@ public class ViewManager {
 
     private static JMenuBar constructMenu() {
         JMenuBar bar = new JMenuBar();
-        JMenu helpManu = new JMenu("Справка");
-        JMenuItem aboutItem = new JMenuItem("О программе");
-        aboutItem.addActionListener(actionEvent -> ViewManager.showMessageDialog(
-                "MaCu - MangaCutter\n" +
-                        "Программа для скачивания и склейки сканов с корейского вебтуна\n" +
-                        "Автор: MasterLogick\n" +
-                        Main.getVersion() + "\n" +
-                        "<a href=\"https://github.com/MasterLogick/MangaCutter\">https://github.com/MasterLogick/MangaCutter</a>"));
-
-        JMenuItem supportedServicesItem = new JMenuItem("Поддерживаемые сервисы");
-        supportedServicesItem.addActionListener(actionEvent -> ViewManager.showMessageDialog("Список поддерживаемых сервисов:\n" + ServiceManager.getSupportedServicesList()));
+        JMenu helpManu = new JMenu(L.get("UI.ViewManager.help_menu"));
+        JMenuItem aboutItem = new JMenuItem(L.get("UI.ViewManager.about_menu"));
+        aboutItem.addActionListener(actionEvent -> ViewManager.showMessageDialog(L.get("UI.ViewManager.about_text", Main.getVersion())));
+        JMenuItem supportedServicesItem = new JMenuItem(L.get("UI.ViewManager.supported_services_menu"));
+        supportedServicesItem.addActionListener(actionEvent -> ViewManager.showMessageDialog(L.get("UI.ViewManager.supported_services_list", ServiceManager.getSupportedServicesList())));
         helpManu.add(aboutItem);
         helpManu.add(supportedServicesItem);
         bar.add(helpManu);
-        JMenuItem settingsMenu = new JMenuItem("Настройки");
-        settingsMenu.addActionListener(e -> {
-            settingsFrame.setVisible(true);
-        });
+        JMenuItem settingsMenu = new JMenuItem(L.get("UI.ViewManager.settings_menu"));
+        settingsMenu.addActionListener(e -> settingsFrame.setVisible(true));
         bar.add(settingsMenu);
         return bar;
     }

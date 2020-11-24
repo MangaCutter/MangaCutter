@@ -1,5 +1,6 @@
 package net.macu.UI;
 
+import net.macu.settings.L;
 import net.macu.settings.Parameter;
 import net.macu.settings.Parameters;
 import net.macu.settings.Settings;
@@ -20,8 +21,8 @@ public class SettingsFrame extends JDialog {
     private final HashMap<Parameter, Object> scheduledChanges = new HashMap<>();
 
     public SettingsFrame() {
-        super(ViewManager.getFrame(), "Manga Cutter");
-        applyButton = new JButton("Применить");
+        super(ViewManager.getFrame(), L.get("UI.SettingsFrame.frame_title"));
+        applyButton = new JButton(L.get("UI.SettingsFrame.apply_button"));
         applyButton.setEnabled(false);
         JPanel root = new JPanel();
         root.setLayout(new BoxLayout(root, BoxLayout.Y_AXIS));
@@ -34,14 +35,14 @@ public class SettingsFrame extends JDialog {
             if (parameters.isEmpty()) return;
             JPanel panel = new JPanel();
             panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
-            panel.setBorder(BorderFactory.createTitledBorder(parameters.getName()));
+            panel.setBorder(BorderFactory.createTitledBorder(L.get(parameters.getName())));
             parameters.sort(Comparator.comparing(Parameter::getType));
             parameters.forEach(parameter -> {
                 JPanel p = new JPanel();
                 p.setLayout(new BorderLayout());
                 JPanel left = new JPanel();
                 left.setLayout(new FlowLayout(FlowLayout.LEFT, 5, 5));
-                left.add(new JLabel(parameter.getName()));
+                left.add(new JLabel(L.get(parameter.getName())));
                 JPanel right = new JPanel();
                 right.setLayout(new FlowLayout(FlowLayout.RIGHT, 5, 5));
                 switch (parameter.getType()) {
@@ -108,9 +109,12 @@ public class SettingsFrame extends JDialog {
         JPanel p = new JPanel();
         p.setLayout(new FlowLayout(FlowLayout.RIGHT, 5, 5));
         applyButton.addActionListener(e -> applyScheduledSettings());
-        JButton cancelButton = new JButton("Отмена");
-        cancelButton.addActionListener(e -> discardScheduledSettings());
-        JButton okButton = new JButton("ОК");
+        JButton cancelButton = new JButton(L.get("UI.SettingsFrame.cancel_button"));
+        cancelButton.addActionListener(e -> {
+            discardScheduledSettings();
+            setVisible(false);
+        });
+        JButton okButton = new JButton(L.get("UI.SettingsFrame.ok_button"));
         okButton.addActionListener(e -> {
             applyScheduledSettings();
             setVisible(false);

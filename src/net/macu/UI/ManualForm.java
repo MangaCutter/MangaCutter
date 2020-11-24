@@ -5,6 +5,7 @@ import com.intellij.uiDesigner.core.GridLayoutManager;
 import net.macu.core.Pipeline;
 import net.macu.cutter.manual.ManualCutter;
 import net.macu.disk.MultiScanSaver;
+import net.macu.settings.L;
 
 import javax.swing.*;
 import java.awt.*;
@@ -13,19 +14,22 @@ public class ManualForm implements Form {
     private JTextField filePathTextField;
     private JButton browseButton;
     private JPanel form;
+    private JLabel pathLabel;
 
     public ManualForm() {
         browseButton.addActionListener(e -> {
-            String path = ViewManager.requestSelectDir("Сохранить");
+            String path = ViewManager.requestSelectDir(L.get("UI.ManualForm.browser_approve_button"));
             filePathTextField.setText(path);
         });
+        pathLabel.setText(L.get("UI.ManualForm.path_label"));
+        browseButton.setText(L.get("UI.ManualForm.browse_button"));
     }
 
     @Override
     public boolean validateInput() {
         String path = filePathTextField.getText();
         if (path.isEmpty()) {
-            ViewManager.showMessageDialog("Не указан путь для сохранения");
+            ViewManager.showMessageDialog(L.get("UI.ManualForm.validateInput.empty_path"));
             return false;
         }
         return true;
@@ -37,7 +41,7 @@ public class ManualForm implements Form {
     }
 
     public String getDescription() {
-        return "Нарезать сканы вручную";
+        return L.get("UI.ManualForm.description");
     }
 
     @Override
@@ -62,11 +66,11 @@ public class ManualForm implements Form {
     private void $$$setupUI$$$() {
         form = new JPanel();
         form.setLayout(new GridLayoutManager(1, 3, new Insets(0, 0, 0, 0), -1, -1));
-        final JLabel label1 = new JLabel();
-        label1.setText("Сохранить в:");
-        form.add(label1, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        pathLabel = new JLabel();
+        pathLabel.setText("Save in:");
+        form.add(pathLabel, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         browseButton = new JButton();
-        browseButton.setText("Обзор");
+        browseButton.setText("Browse");
         form.add(browseButton, new GridConstraints(0, 2, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         filePathTextField = new JTextField();
         form.add(filePathTextField, new GridConstraints(0, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_FIXED, null, new Dimension(150, -1), null, 0, false));

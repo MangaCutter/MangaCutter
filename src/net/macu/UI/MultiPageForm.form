@@ -8,13 +8,13 @@
     <properties/>
     <border type="none"/>
     <children>
-      <component id="99c04" class="javax.swing.JLabel">
+      <component id="99c04" class="javax.swing.JLabel" binding="pathLabel">
         <constraints>
           <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
         </constraints>
         <properties>
           <enabled value="true"/>
-          <text value="Сохранить в:"/>
+          <text value="Save in:"/>
         </properties>
       </component>
       <component id="e9185" class="javax.swing.JTextField" binding="filePathTextField">
@@ -30,7 +30,7 @@
           <grid row="0" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
         </constraints>
         <properties>
-          <text value="Обзор"/>
+          <text value="Browse"/>
         </properties>
       </component>
       <grid id="73fe2" layout-manager="GridLayoutManager" row-count="1" column-count="2" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
@@ -49,12 +49,12 @@
             </constraints>
             <properties/>
           </component>
-          <component id="28b0f" class="javax.swing.JLabel">
+          <component id="28b0f" class="javax.swing.JLabel" binding="perfectHeightLabel">
             <constraints>
               <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
             </constraints>
             <properties>
-              <text value="Идеальная высота:"/>
+              <text value="Perfect height:"/>
             </properties>
           </component>
         </children>
@@ -73,11 +73,11 @@
             </constraints>
             <properties>
               <inheritsPopupMenu value="false"/>
-              <label value="Сохранять градиент"/>
+              <label value="Save gradient"/>
               <requestFocusEnabled value="true"/>
               <rolloverEnabled value="true"/>
               <selected value="false"/>
-              <text value="Сохранять градиент"/>
+              <text value="Save gradient"/>
             </properties>
           </component>
           <hspacer id="2ad0c">
@@ -100,7 +100,7 @@
               <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
             </constraints>
             <properties>
-              <text value="Чувствительность:"/>
+              <text value="Tolerance:"/>
             </properties>
           </component>
           <component id="13da9" class="javax.swing.JSlider" binding="toleranceSlider">
