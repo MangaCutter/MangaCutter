@@ -1,7 +1,6 @@
 package net.macu.core;
 
 import net.macu.UI.Form;
-import net.macu.UI.MainView;
 import net.macu.UI.ViewManager;
 import net.macu.service.Service;
 import net.macu.settings.L;
@@ -20,7 +19,8 @@ import java.util.Set;
 public class Main {
     private static List<Form> forms;
     private static List<Service> services;
-    private static final int VERSION_MINOR = 3;
+    private static final int VERSION_MINOR = 5;
+    private static Reflections reflections;
 
     static {
         System.setProperty("org.apache.commons.logging.Log",
@@ -33,19 +33,20 @@ public class Main {
             StringWriter sw = new StringWriter();
             PrintWriter pw = new PrintWriter(sw);
             e.printStackTrace(pw);
-            JOptionPane.showMessageDialog(null, "Ошибка: " + sw.toString());
+            JOptionPane.showMessageDialog(null, "Error: " + sw.toString());
         });
-        Reflections rf = new Reflections(Form.class.getPackage().getName());
-        Set<Class<? extends Form>> formsSet = rf.getSubTypesOf(Form.class);
-        formsSet.removeIf(aClass -> aClass.equals(MainView.class));
-        forms = Collections.unmodifiableList(getInstances(formsSet));
 
-        rf = new Reflections(Service.class.getPackage().getName());
-        Set<Class<? extends Service>> servicesSet = rf.getSubTypesOf(Service.class);
-        services = Collections.unmodifiableList(getInstances(servicesSet));
+        reflections = new Reflections("net.macu");
 
         Settings.collectParameters();
         L.loadLanguageData();
+
+        Set<Class<? extends Form>> formsSet = reflections.getSubTypesOf(Form.class);
+        forms = Collections.unmodifiableList(getInstances(formsSet));
+
+        Set<Class<? extends Service>> servicesSet = reflections.getSubTypesOf(Service.class);
+        services = Collections.unmodifiableList(getInstances(servicesSet));
+
         IOManager.checkUpdates();
         IOManager.initClient();
 
@@ -76,6 +77,10 @@ public class Main {
 
     public static List<Service> getServices() {
         return services;
+    }
+
+    public static Reflections getReflections() {
+        return reflections;
     }
 
     public static String getVersion() {
