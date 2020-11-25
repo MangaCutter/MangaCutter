@@ -19,7 +19,7 @@ import java.util.Set;
 public class Main {
     private static List<Form> forms;
     private static List<Service> services;
-    private static final int VERSION_MINOR = 5;
+    private static final int VERSION_MINOR = 4;
     private static Reflections reflections;
 
     static {
