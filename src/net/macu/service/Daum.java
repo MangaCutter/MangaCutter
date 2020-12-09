@@ -2,6 +2,7 @@ package net.macu.service;
 
 import net.macu.UI.ViewManager;
 import net.macu.core.IOManager;
+import net.macu.settings.L;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -12,12 +13,12 @@ import java.net.URI;
 import java.util.Arrays;
 import java.util.List;
 
-public class Daum extends Service {
+public class Daum implements Service {
     private boolean cancel = false;
 
     @Override
     public List<String> parsePage(String uri) {
-        ViewManager.startProgress(1, "Скачивание главной страницы");
+        ViewManager.startProgress(1, L.get("service.Daum.parsePage.progress"));
         String viewerImagesUrl = "http://webtoon.daum.net/data/pc/webtoon/viewer_images/" + uri.substring(uri.lastIndexOf("/") + 1);
         try {
             JSONObject json = (JSONObject) new JSONParser().parse(IOManager.sendRequest(viewerImagesUrl));
@@ -26,10 +27,10 @@ public class Daum extends Service {
             data.forEach(o -> list[((int) ((long) ((JSONObject) o).get("imageOrder"))) - 1] = (String) ((JSONObject) o).get("url"));
             return Arrays.asList(list);
         } catch (ParseException e) {
-            ViewManager.showMessageDialog("Не удалось получить ссылки на фрагменты: " + e.toString());
+            ViewManager.showMessageDialog(L.get("service.Daum.parsePage.parse_exception", e.toString()));
             e.printStackTrace();
         } catch (IOException e) {
-            ViewManager.showMessageDialog("Не удалось скачать главную страницу: " + e.toString());
+            ViewManager.showMessageDialog(L.get("service.Daum.parsePage.io_exception", e.toString()));
             e.printStackTrace();
         }
         return null;

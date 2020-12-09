@@ -57,7 +57,7 @@ public class Main {
         ArrayList<T> instancesList = new ArrayList();
         classSet.forEach(aClass -> {
             try {
-                instancesList.add(aClass.getConstructor(null).newInstance(null));
+                instancesList.add(aClass.getConstructor().newInstance());
             } catch (InstantiationException e) {
                 e.printStackTrace();
             } catch (IllegalAccessException e) {

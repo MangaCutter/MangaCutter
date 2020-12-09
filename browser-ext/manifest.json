@@ -1,0 +1,40 @@
+{
+  "manifest_version": 2,
+  "name": "MangaCutter Browser adapter",
+  "version": "1.0",
+  "description": "Add-on for MangaCutter capabilities extention",
+  //   "content_scripts": [
+  //     {
+  //       "run_at": "document_end",
+  //       "matches": ["*://*.mangafreak.net/*"],
+  //       "js": ["js/mangafreak.js"]
+  //     }
+  //   ],
+  "background": {
+    "scripts": [
+      "js/background.js"
+    ],
+    "persistent": false
+  },
+  "browser_action": {
+    "default_icon": {
+      "19": "icons/icon.svg",
+      "38": "icons/icon.svg"
+    },
+    "default_title": "MangaCutter",
+    "default_popup": "popup/popup.html"
+  },
+  "permissions": [
+    "<all_urls>",
+    "webRequest",
+    "webRequestBlocking",
+    "tabs",
+    "storage",
+    "cookies",
+    "proxy"
+  ],
+  "icons": {
+    "48": "icons/icon.svg",
+    "96": "icons/icon.svg"
+  }
+}

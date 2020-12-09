@@ -27,7 +27,7 @@ public class IOManager implements Parametrized {
     public static String sendRequest(String uri) throws IOException {
         StringBuilder sb = new StringBuilder();
         CloseableHttpResponse response = client.execute(new HttpGet(uri));
-        BufferedReader bf = new BufferedReader(new InputStreamReader(rawSendRequest(uri)));
+        BufferedReader bf = new BufferedReader(new InputStreamReader(sendRawRequest(uri)));
         String s;
         while ((s = bf.readLine()) != null) {
             sb.append(s).append('\n');
@@ -37,7 +37,7 @@ public class IOManager implements Parametrized {
         return sb.toString();
     }
 
-    public static InputStream rawSendRequest(String uri) throws IOException {
+    public static InputStream sendRawRequest(String uri) throws IOException {
         return client.execute(new HttpGet(uri)).getEntity().getContent();
     }
 

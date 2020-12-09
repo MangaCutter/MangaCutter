@@ -2,6 +2,7 @@ package net.macu.service;
 
 import net.macu.UI.ViewManager;
 import net.macu.core.IOManager;
+import net.macu.settings.L;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -15,11 +16,12 @@ import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 
-public class AcQq extends Service {
+public class AcQq implements Service {
     private boolean cancel = false;
 
     @Override
     public List<String> parsePage(String uri) {
+        ViewManager.startProgress(1, L.get("service.AcQq.parsePage.progress"));
         try {
             String jsonData = "";
             while (true) {
@@ -27,7 +29,7 @@ public class AcQq extends Service {
                 String html = IOManager.sendRequest(uri);
                 String[] parts = html.split("<script>");
                 if (parts.length != 4) {
-                    ViewManager.showMessageDialog("Не удалось получить главную страницу");
+                    ViewManager.showMessageDialog(L.get("service.AcQq.parsePage.unknown_format"));
                     return null;
                 }
                 String keyEval = parts[2].substring(0, parts[2].indexOf("</script>")).trim();
@@ -85,11 +87,11 @@ public class AcQq extends Service {
                 return list;
             } catch (ParseException e) {
                 e.printStackTrace();
-                ViewManager.showMessageDialog("Не удалось скачать главную страницу: " + e.toString());
+                ViewManager.showMessageDialog(L.get("service.AcQq.parsePage.parse_exception", e.toString()));
             }
         } catch (IOException e) {
             e.printStackTrace();
-            ViewManager.showMessageDialog("Не удалось скачать главную страницу: " + e.toString());
+            ViewManager.showMessageDialog(L.get("service.AcQq.parsePage.io_exception", e.toString()));
         }
         return null;
     }
