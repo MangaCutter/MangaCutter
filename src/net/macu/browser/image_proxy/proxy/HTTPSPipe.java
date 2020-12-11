@@ -1,16 +1,27 @@
 package net.macu.browser.image_proxy.proxy;
 
-import net.macu.util.BufferedReader;
+import net.macu.util.UnblockableBufferedReader;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
+import java.util.Vector;
 
 public class HTTPSPipe extends Thread {
+    private static final Vector<Pipe> pipes = new Vector<>();
+    private static final HTTPSPipe handler = new HTTPSPipe();
 
-    public static void pipe(BufferedReader in, OutputStream out, Socket client) {
+    private HTTPSPipe() {
+        setDaemon(true);
+    }
+
+    public static void startHandler() {
+        if (!handler.isAlive()) handler.start();
+    }
+
+    public static void pipe(UnblockableBufferedReader in, OutputStream out, Socket client) {
         try {
             out.write("HTTP/1.1 200 OK\r\n\r\n".getBytes(StandardCharsets.US_ASCII));
         } catch (IOException e) {
@@ -32,47 +43,51 @@ public class HTTPSPipe extends Thread {
             } catch (IOException e) {
                 e.printStackTrace();
             }
-            byte[] buffer = new byte[1024];
-            while (true) {
-                try {
-                    if (in.available()) {
-                        int received = in.read(buffer);
-                        if (received < 0) break;
-                        dOut.write(buffer, 0, received);
-                    }
-                } catch (IOException e) {
-                    e.printStackTrace();
-                    break;
-                }
-                try {
-                    if (dIn.available() != 0) {
-                        int sent = dIn.read(buffer);
-                        if (sent < 0) break;
-                        out.write(buffer, 0, sent);
-                    }
-                } catch (IOException e) {
-                    e.printStackTrace();
-                    break;
-                }
-            }
+            pipes.add(new Pipe(dIn, out));
+            pipes.add(new Pipe(in, dOut));
+        } else {
             try {
-                dIn.close();
-                dOut.close();
+                in.close();
+                out.close();
+                client.close();
             } catch (IOException e) {
                 e.printStackTrace();
             }
         }
-        try {
-            s.close();
-        } catch (IOException e) {
-            e.printStackTrace();
+    }
+
+    @Override
+    public void run() {
+        byte[] buffer = new byte[1024];
+        while (true) {
+            if (pipes.size() == 0) Thread.yield();
+            for (int i = 0; i < pipes.size(); i++) {
+                Pipe pipe = pipes.get(i);
+                try {
+                    if (pipe.in.available() > 0) {
+                        int received = pipe.in.read(buffer);
+                        if (received < 0) {
+                            pipes.remove(i);
+                            i--;
+                            continue;
+                        }
+                        pipe.out.write(buffer, 0, received);
+                    }
+                } catch (IOException e) {
+                    pipes.remove(i);
+                    i--;
+                }
+            }
         }
-        try {
-            in.close();
-            out.close();
-            client.close();
-        } catch (IOException e) {
-            e.printStackTrace();
+    }
+
+    private static class Pipe {
+        InputStream in;
+        OutputStream out;
+
+        private Pipe(InputStream in, OutputStream out) {
+            this.in = in;
+            this.out = out;
         }
     }
 }

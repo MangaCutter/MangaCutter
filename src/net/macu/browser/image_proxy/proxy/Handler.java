@@ -1,16 +1,13 @@
 package net.macu.browser.image_proxy.proxy;
 
-import net.macu.util.BufferedReader;
+import net.macu.util.UnblockableBufferedReader;
 
 import javax.net.SocketFactory;
 import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
 import java.io.*;
 import java.net.Socket;
-import java.net.URL;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.Base64;
 import java.util.List;
 
 public class Handler extends Thread {
@@ -20,14 +17,18 @@ public class Handler extends Thread {
     private final Socket browserSocket;
     private final boolean secure;
     private Socket targetSocket;
-    private BufferedReader browserReader;
+    private UnblockableBufferedReader browserReader;
     private PrintWriter browserWriter;
     private OutputStream browserStream;
-    private BufferedReader targetReader;
+    private UnblockableBufferedReader targetReader;
     private PrintWriter targetWriter;
     private OutputStream targetStream;
     private String protocolVersion = "HTTP/1.1";
     private boolean keepAlive = true;
+    private int keepAliveMax = -1;
+    private int keepAliveRequestCount = 0;
+    private int keepAliveTimeout = -1;
+    private int keepAliveTime = 0;
     private String lastTargetHost = "";
     private int lastTargetPort = -1;
 
@@ -37,15 +38,6 @@ public class Handler extends Thread {
         setName("Handler-" + (Counter));
         Counter++;
         this.secure = secure;
-    }
-
-    private static boolean isValid(String url) {
-        try {
-            new URL(url).toURI();
-            return true;
-        } catch (Exception e) {
-            return false;
-        }
     }
 
     private static Socket createSocket(String host, int port) throws IOException {
@@ -62,14 +54,7 @@ public class Handler extends Thread {
         }
     }
 
-    private static String decodeUrl(String encodedUrl) {
-        if (!encodedUrl.contains("f6ae943355d1438bb867a5e9581eea13")) return encodedUrl;
-        String t = encodedUrl.substring(encodedUrl.indexOf("?"));
-        t = t.substring(t.indexOf("=") + 1);
-        return new String(Base64.getDecoder().decode(t.substring(t.indexOf("=") + 1)), StandardCharsets.UTF_8);
-    }
-
-    private static byte[] readFixedSizeBody(int contentLength, BufferedReader bodyStream) throws IOException {
+    private static byte[] readFixedSizeBody(int contentLength, UnblockableBufferedReader bodyStream) throws IOException {
         byte[] body = new byte[contentLength];
         for (int filled = 0; filled < contentLength; ) {
             filled += bodyStream.read(body, filled, contentLength - filled);
@@ -77,7 +62,7 @@ public class Handler extends Thread {
         return body;
     }
 
-    private static byte[] readChunkedBody(BufferedReader bodyStream) throws IOException {
+    private static byte[] readChunkedBody(UnblockableBufferedReader bodyStream) throws IOException {
         String buffer;
         ByteArrayOutputStream body = new ByteArrayOutputStream();
         while ((buffer = bodyStream.readLine(false)) != null && !buffer.isEmpty()) {
@@ -111,10 +96,34 @@ public class Handler extends Thread {
     public void run() {
         try {
             System.out.println(getName() + " started");
-            browserReader = new BufferedReader(browserSocket.getInputStream());
+            browserReader = new UnblockableBufferedReader(browserSocket.getInputStream());
             browserStream = browserSocket.getOutputStream();
             browserWriter = new PrintWriter(new BufferedWriter(new OutputStreamWriter(browserStream)));
             do {
+                if (keepAlive) {
+                    if (keepAliveMax != -1 && keepAliveMax <= keepAliveRequestCount) {
+                        break;
+                    } else {
+                        keepAliveRequestCount++;
+                    }
+                    while (keepAliveTimeout >= keepAliveTime) {
+                        if (browserReader.available() == 0) {
+                            try {
+                                Thread.sleep(100);
+                            } catch (InterruptedException e) {
+                                e.printStackTrace();
+                            }
+                            keepAliveTime += 100;
+                        } else {
+                            break;
+                        }
+                    }
+                    if (keepAliveTimeout != -1 && keepAliveTimeout <= keepAliveTime) {
+                        break;
+                    } else {
+                        keepAliveTimeout = 0;
+                    }
+                }
                 String requestLine = browserReader.readLine(false);
                 String[] requestParts = requestLine.split(" ");
                 if (requestParts.length != 3) {
@@ -128,7 +137,6 @@ public class Handler extends Thread {
                 }
                 String requestMethod = requestParts[0];
                 String requestUrl = requestParts[1];
-                String path = decodeUrl(requestUrl);
 
                 //read request headers
                 String targetHost = "";
@@ -158,8 +166,21 @@ public class Handler extends Thread {
                     if (h.headerName.equals("Accept-Encoding")) {
                         continue;
                     }
-                    if (h.headerName.equals("Referer")) {
-                        h.headerData = decodeUrl(h.headerData);
+                    if (h.headerName.equals("Keep-Alive")) {
+                        String[] params = h.headerData.split(",");
+                        for (String p :
+                                params) {
+                            p = p.trim();
+                            String[] par = p.split("=");
+                            switch (par[0]) {
+                                case "timeout":
+                                    keepAliveTimeout = Integer.parseInt(par[1]) * 1000;
+                                    break;
+                                case "max":
+                                    keepAliveMax = Integer.parseInt(par[1]);
+                                    break;
+                            }
+                        }
                     }
                     if (h.headerName.equals("Transfer-Encoding")) {
                         requestEncoding = h.headerData;
@@ -181,8 +202,10 @@ public class Handler extends Thread {
                 requestHeaders.add(new Header("Content-Length", String.valueOf(requestBody.length)));
                 if (requestMethod.equals("CONNECT")) {
                     HTTPSPipe.pipe(browserReader, browserStream, browserSocket);
+                    System.out.println(getName() + " piped and stopped");
                     return;
                 }
+
                 if (!lastTargetHost.equals(targetHost) || lastTargetPort != targetPort) {
                     if (targetSocket != null) {
                         targetWriter.close();
@@ -192,14 +215,14 @@ public class Handler extends Thread {
                     targetSocket = createSocket(targetHost, targetPort);
                     targetStream = targetSocket.getOutputStream();
                     targetWriter = new PrintWriter(new BufferedWriter(new OutputStreamWriter(targetStream)));
-                    targetReader = new BufferedReader(targetSocket.getInputStream());
+                    targetReader = new UnblockableBufferedReader(targetSocket.getInputStream());
                     String targetAddress = targetSocket.getRemoteSocketAddress().toString();
                     targetPort = Integer.parseInt(targetAddress.substring(targetAddress.lastIndexOf(":") + 1));
                     System.out.println("-----new connection from " + Thread.currentThread().getName() + " to " + targetSocket.getRemoteSocketAddress().toString() + "-----");
                 } else {
                     System.out.println("-----new request from " + Thread.currentThread().getName() + " to target " + targetSocket.getRemoteSocketAddress().toString() + "-----");
                 }
-                sendMessage(requestMethod + " " + path + " " + protocolVersion, requestHeaders, requestBody, targetWriter, targetStream);
+                sendMessage(requestMethod + " " + requestUrl + " " + protocolVersion, requestHeaders, requestBody, targetWriter, targetStream);
 
                 //read target response
                 String responseLine = targetReader.readLine(false);
@@ -247,8 +270,6 @@ public class Handler extends Thread {
             targetSocket.close();
         } catch (IOException e) {
             e.printStackTrace();
-        } finally {
-            //todo close all streams and sockets
         }
         System.out.println(getName() + " stopped");
     }
