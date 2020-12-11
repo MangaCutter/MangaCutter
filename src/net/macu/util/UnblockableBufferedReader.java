@@ -36,7 +36,7 @@ import java.nio.charset.StandardCharsets;
  * @since JDK1.1
  */
 
-public class BufferedReader {
+public class UnblockableBufferedReader extends InputStream {
 
     private static final int INVALIDATED = -2;
     private static final int UNMARKED = -1;
@@ -65,7 +65,7 @@ public class BufferedReader {
      * @param sz Input-buffer size
      * @throws IllegalArgumentException If {@code sz <= 0}
      */
-    public BufferedReader(InputStream in, int sz) throws IOException {
+    public UnblockableBufferedReader(InputStream in, int sz) throws IOException {
         if (sz <= 0)
             throw new IllegalArgumentException("Buffer size <= 0");
         this.in = in;
@@ -81,7 +81,7 @@ public class BufferedReader {
      *
      * @param in A Reader
      */
-    public BufferedReader(InputStream in) throws IOException {
+    public UnblockableBufferedReader(InputStream in) throws IOException {
         this(in, defaultCharBufferSize);
     }
 
@@ -309,11 +309,19 @@ public class BufferedReader {
         }
     }
 
+    @Override
+    public int read() throws IOException {
+        byte[] arr = new byte[1];
+        if (read(arr) == 1) return arr[0];
+        else return -1;
+    }
+
     public int read(byte[] buffer) throws IOException {
         return read(buffer, 0, buffer.length);
     }
 
-    public boolean available() throws IOException {
-        return in.available() != 0 || nChars != nextChar;
+    public int available() throws IOException {
+        int available = in.available();
+        return available != 0 ? available : nChars - nextChar;
     }
 }
