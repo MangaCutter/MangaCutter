@@ -25,10 +25,8 @@ import org.bouncycastle.pkcs.bc.BcPKCS12MacCalculatorBuilderProvider;
 import org.bouncycastle.pkcs.jcajce.JcaPKCS10CertificationRequestBuilder;
 import org.bouncycastle.pkcs.jcajce.JcePKCSPBEInputDecryptorProviderBuilder;
 import org.bouncycastle.util.encoders.Base64;
-import org.bouncycastle.util.io.Streams;
 
 import java.io.ByteArrayOutputStream;
-import java.io.InputStream;
 import java.math.BigInteger;
 import java.security.*;
 import java.security.cert.Certificate;
@@ -38,43 +36,22 @@ import java.security.spec.PKCS8EncodedKeySpec;
 import java.util.Calendar;
 import java.util.Date;
 
-public class CertUtils {
-    private static CertKeyPair rootCKP;
+public class CertificateAuthority {
+    private static CertificateAuthority rootCA;
     private static final char[] MAIN_PASSWORD = new char[]{'a', 'b', 'c', 'd', 'e', 'f'};
     private static final String BC_PROVIDER = "BC";
 
-    public static KeyStore generateServerCert(String domain, CertKeyPair ckp) throws Exception {
-        KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("RSA", BC_PROVIDER);
-        keyPairGenerator.initialize(1024);
-        Calendar calendar = Calendar.getInstance();
-        calendar.add(Calendar.DATE, -1);
-        Date startDate = calendar.getTime();
-        calendar.add(Calendar.DATE, 3);
-        Date endDate = calendar.getTime();
-        BigInteger issuedCertSerialNum = new BigInteger(Long.toString(new SecureRandom().nextLong()));
-        KeyPair issuedCertKeyPair = keyPairGenerator.generateKeyPair();
-        PKCS10CertificationRequestBuilder p10Builder = new JcaPKCS10CertificationRequestBuilder(new X500Name("CN=" + domain), issuedCertKeyPair.getPublic());
-        JcaContentSignerBuilder csrBuilder = new JcaContentSignerBuilder("SHA256withRSA").setProvider(BC_PROVIDER);
-        ContentSigner csrContentSigner = csrBuilder.build(ckp.getKeyPair().getPrivate());
-        PKCS10CertificationRequest csr = p10Builder.build(csrContentSigner);
-        X509v3CertificateBuilder issuedCertBuilder = new X509v3CertificateBuilder(new X500Name(ckp.getCertificate().getSubjectDN().getName()), issuedCertSerialNum, startDate, endDate, csr.getSubject(), csr.getSubjectPublicKeyInfo());
-        JcaX509ExtensionUtils issuedCertExtUtils = new JcaX509ExtensionUtils();
-        issuedCertBuilder.addExtension(Extension.basicConstraints, true, new BasicConstraints(false));
-        issuedCertBuilder.addExtension(Extension.authorityKeyIdentifier, false, issuedCertExtUtils.createAuthorityKeyIdentifier(ckp.getCertificate()));
-        issuedCertBuilder.addExtension(Extension.subjectKeyIdentifier, false, issuedCertExtUtils.createSubjectKeyIdentifier(csr.getSubjectPublicKeyInfo()));
-        issuedCertBuilder.addExtension(Extension.keyUsage, false, new KeyUsage(KeyUsage.keyEncipherment));
-        issuedCertBuilder.addExtension(Extension.subjectAlternativeName, false, new DERSequence(new ASN1Encodable[]{new GeneralName(GeneralName.dNSName, domain)}));
-        X509CertificateHolder issuedCertHolder = issuedCertBuilder.build(csrContentSigner);
-        X509Certificate issuedCert = new JcaX509CertificateConverter().setProvider(BC_PROVIDER).getCertificate(issuedCertHolder);
-        issuedCert.verify(ckp.getCertificate().getPublicKey(), BC_PROVIDER);
-        KeyStore sslKeyStore = KeyStore.getInstance("PKCS12", BC_PROVIDER);
-        sslKeyStore.load(null, null);
-        sslKeyStore.setKeyEntry("server-cert", issuedCertKeyPair.getPrivate(), null, new java.security.cert.Certificate[]{issuedCert, ckp.getCertificate()});
-        return sslKeyStore;
+    private final X509Certificate[] certificateChain;
+    private final PrivateKey privateKey;
+
+    public CertificateAuthority(X509Certificate[] certificateChain, PrivateKey privateKey) {
+
+        this.certificateChain = certificateChain;
+        this.privateKey = privateKey;
     }
 
-    public static CertKeyPair readPKCS12File(InputStream pfxIn) throws Exception {
-        PKCS12PfxPdu pfx = new PKCS12PfxPdu(Streams.readAll(pfxIn));
+    public static CertificateAuthority readPKCS12File(byte[] PKCS12Bytes) throws Exception {
+        PKCS12PfxPdu pfx = new PKCS12PfxPdu(PKCS12Bytes);
         if (!pfx.isMacValid(new BcPKCS12MacCalculatorBuilderProvider(BcDefaultDigestProvider.INSTANCE), MAIN_PASSWORD)) {
             throw new CertException("PKCS#12 MAC test failed!");
         }
@@ -82,7 +59,7 @@ public class CertUtils {
         InputDecryptorProvider inputDecryptorProvider = new JcePKCSPBEInputDecryptorProviderBuilder().setProvider(BC_PROVIDER).build(MAIN_PASSWORD);
         JcaX509CertificateConverter jcaConverter = new JcaX509CertificateConverter().setProvider(BC_PROVIDER);
         X509Certificate certificate = null;
-        KeyPair kp = null;
+        PrivateKey privateKey = null;
         for (int i = 0; i != infos.length; i++) {
             if (infos[i].getContentType().equals(PKCSObjectIdentifiers.encryptedData)) {
                 PKCS12SafeBagFactory dataFact = new PKCS12SafeBagFactory(infos[i], inputDecryptorProvider);
@@ -105,14 +82,13 @@ public class CertUtils {
                 PKCS8EncryptedPrivateKeyInfo encInfo = (PKCS8EncryptedPrivateKeyInfo) bags[0].getBagValue();
                 PrivateKeyInfo info = encInfo.decryptPrivateKeyInfo(inputDecryptorProvider);
                 KeyFactory keyFact = KeyFactory.getInstance(info.getPrivateKeyAlgorithm().getAlgorithm().getId(), BC_PROVIDER);
-                PrivateKey privateKey = keyFact.generatePrivate(new PKCS8EncodedKeySpec(info.getEncoded()));
-                kp = new KeyPair(certificate.getPublicKey(), privateKey);
+                privateKey = keyFact.generatePrivate(new PKCS8EncodedKeySpec(info.getEncoded()));
             }
         }
-        return new CertKeyPair(certificate, kp);
+        return new CertificateAuthority(new X509Certificate[]{certificate}, privateKey);
     }
 
-    public static void generateRootCA() throws Exception {
+    public static CertificateAuthority generateRootCA() throws Exception {
         KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("RSA", BC_PROVIDER);
         keyPairGenerator.initialize(2048);
         Calendar calendar = Calendar.getInstance();
@@ -130,13 +106,50 @@ public class CertUtils {
         rootCertBuilder.addExtension(Extension.subjectKeyIdentifier, false, rootCertExtUtils.createSubjectKeyIdentifier(rootKeyPair.getPublic()));
         X509CertificateHolder rootCertHolder = rootCertBuilder.build(rootCertContentSigner);
         X509Certificate rootCert = new JcaX509CertificateConverter().setProvider(BC_PROVIDER).getCertificate(rootCertHolder);
-        System.out.println(certToBase64String(new Certificate[]{rootCert}));
-        System.out.println(exportKeyPairToKeystoreFileBase64Encoded(rootKeyPair, new Certificate[]{rootCert}, "root-cert", "PKCS12"));
+        return new CertificateAuthority(new X509Certificate[]{rootCert}, rootKeyPair.getPrivate());
     }
 
-    public static String certToBase64String(Certificate[] chain) throws CertificateEncodingException {
+    public X509Certificate[] getCertificateChain() {
+        return certificateChain;
+    }
+
+    public PrivateKey getPrivate() {
+        return privateKey;
+    }
+
+    public KeyStore generateSubKeyStore(String domain) throws Exception {
+        KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("RSA", BC_PROVIDER);
+        keyPairGenerator.initialize(1024);
+        Calendar calendar = Calendar.getInstance();
+        calendar.add(Calendar.DATE, -1);
+        Date startDate = calendar.getTime();
+        calendar.add(Calendar.DATE, 3);
+        Date endDate = calendar.getTime();
+        BigInteger issuedCertSerialNum = new BigInteger(Long.toString(new SecureRandom().nextLong()));
+        KeyPair issuedCertKeyPair = keyPairGenerator.generateKeyPair();
+        PKCS10CertificationRequestBuilder p10Builder = new JcaPKCS10CertificationRequestBuilder(new X500Name("CN=" + domain), issuedCertKeyPair.getPublic());
+        JcaContentSignerBuilder csrBuilder = new JcaContentSignerBuilder("SHA256withRSA").setProvider(BC_PROVIDER);
+        ContentSigner csrContentSigner = csrBuilder.build(privateKey);
+        PKCS10CertificationRequest csr = p10Builder.build(csrContentSigner);
+        X509v3CertificateBuilder issuedCertBuilder = new X509v3CertificateBuilder(new X500Name(certificateChain[0].getSubjectDN().getName()), issuedCertSerialNum, startDate, endDate, csr.getSubject(), csr.getSubjectPublicKeyInfo());
+        JcaX509ExtensionUtils issuedCertExtUtils = new JcaX509ExtensionUtils();
+        issuedCertBuilder.addExtension(Extension.basicConstraints, true, new BasicConstraints(false));
+        issuedCertBuilder.addExtension(Extension.authorityKeyIdentifier, false, issuedCertExtUtils.createAuthorityKeyIdentifier(certificateChain[0]));
+        issuedCertBuilder.addExtension(Extension.subjectKeyIdentifier, false, issuedCertExtUtils.createSubjectKeyIdentifier(csr.getSubjectPublicKeyInfo()));
+        issuedCertBuilder.addExtension(Extension.keyUsage, false, new KeyUsage(KeyUsage.keyEncipherment));
+        issuedCertBuilder.addExtension(Extension.subjectAlternativeName, false, new DERSequence(new ASN1Encodable[]{new GeneralName(GeneralName.dNSName, domain)}));
+        X509CertificateHolder issuedCertHolder = issuedCertBuilder.build(csrContentSigner);
+        X509Certificate issuedCert = new JcaX509CertificateConverter().setProvider(BC_PROVIDER).getCertificate(issuedCertHolder);
+        issuedCert.verify(certificateChain[0].getPublicKey(), BC_PROVIDER);
+        KeyStore sslKeyStore = KeyStore.getInstance("PKCS12", BC_PROVIDER);
+        sslKeyStore.load(null, null);
+        sslKeyStore.setKeyEntry("server-cert", issuedCertKeyPair.getPrivate(), null, new java.security.cert.Certificate[]{issuedCert, certificateChain[0]});
+        return sslKeyStore;
+    }
+
+    public String certToBase64String() throws CertificateEncodingException {
         StringBuilder sb = new StringBuilder();
-        for (Certificate certificate : chain) {
+        for (Certificate certificate : certificateChain) {
             sb.append("-----BEGIN CERTIFICATE-----\n");
             sb.append(Base64.toBase64String(certificate.getEncoded()));
             sb.append("\n");
@@ -145,10 +158,10 @@ public class CertUtils {
         return sb.toString();
     }
 
-    public static String exportKeyPairToKeystoreFileBase64Encoded(KeyPair keyPair, Certificate[] chain, String alias, String storeType) throws Exception {
+    public String exportKeyPairToKeystoreFileBase64Encoded(String alias, String storeType) throws Exception {
         KeyStore sslKeyStore = KeyStore.getInstance(storeType, BC_PROVIDER);
         sslKeyStore.load(null, null);
-        sslKeyStore.setKeyEntry(alias, keyPair.getPrivate(), null, chain);
+        sslKeyStore.setKeyEntry(alias, privateKey, null, certificateChain);
         ByteArrayOutputStream keyStoreOs = new ByteArrayOutputStream();
         sslKeyStore.store(keyStoreOs, MAIN_PASSWORD);
         return Base64.toBase64String(keyStoreOs.toByteArray());
