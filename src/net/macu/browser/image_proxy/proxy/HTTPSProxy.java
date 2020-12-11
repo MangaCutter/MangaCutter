@@ -15,7 +15,7 @@ public class HTTPSProxy extends Thread {
 //            kstore = new FileInputStream("/home/user/ca/keystore.p12");
 //            keyStore.load(kstore, new char[]{'a', 'b', 'c', 'd', 'e', 'f'});
             KeyManagerFactory kmf = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
-            kmf.init(CertUtils.generate("*.mangafreak.net", CertUtils.readPKCS12File(new FileInputStream("/home/user/ca/ca.p12"))), new char[0]);
+            kmf.init(CertUtils.generateServerCert("*.mangafreak.net", CertUtils.readPKCS12File(new FileInputStream("/home/user/ca/ca.p12"))), new char[0]);
             SSLContext ctx = SSLContext.getInstance("TLS");
             ctx.init(kmf.getKeyManagers(), null, null);
             SSLServerSocketFactory factory = ctx.getServerSocketFactory();

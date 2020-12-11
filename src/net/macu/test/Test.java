@@ -68,6 +68,7 @@ public class Test {
         wss.start();*/
 //        System.out.println(CertUtils.generate("test.domain", CertUtils.readPKCS12File(new FileInputStream("/home/user/ca/ca.p12"))).toString());
         System.out.println(CertUtils.readPKCS12File(new FileInputStream("/home/user/ca/ca.p12")).getCertificate().toString());
+        CertUtils.generateRootCA();
         MainGatewayProxy server = new MainGatewayProxy();
         server.start();
         HTTPSProxy httpsProxy = new HTTPSProxy();

@@ -15,6 +15,7 @@ import org.bouncycastle.cert.X509CertificateHolder;
 import org.bouncycastle.cert.X509v3CertificateBuilder;
 import org.bouncycastle.cert.jcajce.JcaX509CertificateConverter;
 import org.bouncycastle.cert.jcajce.JcaX509ExtensionUtils;
+import org.bouncycastle.cert.jcajce.JcaX509v3CertificateBuilder;
 import org.bouncycastle.operator.ContentSigner;
 import org.bouncycastle.operator.InputDecryptorProvider;
 import org.bouncycastle.operator.bc.BcDefaultDigestProvider;
@@ -38,11 +39,11 @@ import java.util.Calendar;
 import java.util.Date;
 
 public class CertUtils {
-    //    private static CertKeyPair rootCKP;
+    private static CertKeyPair rootCKP;
     private static final char[] MAIN_PASSWORD = new char[]{'a', 'b', 'c', 'd', 'e', 'f'};
     private static final String BC_PROVIDER = "BC";
 
-    public static KeyStore generate(String domain, CertKeyPair ckp) throws Exception {
+    public static KeyStore generateServerCert(String domain, CertKeyPair ckp) throws Exception {
         KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("RSA", BC_PROVIDER);
         keyPairGenerator.initialize(1024);
         Calendar calendar = Calendar.getInstance();
@@ -68,42 +69,28 @@ public class CertUtils {
         issuedCert.verify(ckp.getCertificate().getPublicKey(), BC_PROVIDER);
         KeyStore sslKeyStore = KeyStore.getInstance("PKCS12", BC_PROVIDER);
         sslKeyStore.load(null, null);
-        sslKeyStore.setKeyEntry("alias", issuedCertKeyPair.getPrivate(), null, new java.security.cert.Certificate[]{issuedCert, ckp.getCertificate()});
-//        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-//        sslKeyStore.store(baos, MAIN_PASSWORD);
-//        KeyStore resultKS = KeyStore.getInstance(KeyStore.getDefaultType());
-//        resultKS.load(new ByteArrayInputStream(baos.toByteArray()), MAIN_PASSWORD);
-//        KeyManagerFactory kmf = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
-//        kmf.init(sslKeyStore, null);
+        sslKeyStore.setKeyEntry("server-cert", issuedCertKeyPair.getPrivate(), null, new java.security.cert.Certificate[]{issuedCert, ckp.getCertificate()});
         return sslKeyStore;
     }
 
     public static CertKeyPair readPKCS12File(InputStream pfxIn) throws Exception {
         PKCS12PfxPdu pfx = new PKCS12PfxPdu(Streams.readAll(pfxIn));
-
         if (!pfx.isMacValid(new BcPKCS12MacCalculatorBuilderProvider(BcDefaultDigestProvider.INSTANCE), MAIN_PASSWORD)) {
             throw new CertException("PKCS#12 MAC test failed!");
         }
-
         ContentInfo[] infos = pfx.getContentInfos();
-
-        InputDecryptorProvider inputDecryptorProvider = new JcePKCSPBEInputDecryptorProviderBuilder()
-                .setProvider(BC_PROVIDER).build(MAIN_PASSWORD);
+        InputDecryptorProvider inputDecryptorProvider = new JcePKCSPBEInputDecryptorProviderBuilder().setProvider(BC_PROVIDER).build(MAIN_PASSWORD);
         JcaX509CertificateConverter jcaConverter = new JcaX509CertificateConverter().setProvider(BC_PROVIDER);
         X509Certificate certificate = null;
         KeyPair kp = null;
         for (int i = 0; i != infos.length; i++) {
             if (infos[i].getContentType().equals(PKCSObjectIdentifiers.encryptedData)) {
                 PKCS12SafeBagFactory dataFact = new PKCS12SafeBagFactory(infos[i], inputDecryptorProvider);
-
                 PKCS12SafeBag[] bags = dataFact.getSafeBags();
-
                 for (int b = 0; b != bags.length; b++) {
                     PKCS12SafeBag bag = bags[b];
-
                     X509CertificateHolder certHldr = (X509CertificateHolder) bag.getBagValue();
                     X509Certificate cert = jcaConverter.getCertificate(certHldr);
-
                     org.bouncycastle.asn1.pkcs.Attribute[] attributes = bag.getAttributes();
                     for (int a = 0; a != attributes.length; a++) {
                         org.bouncycastle.asn1.pkcs.Attribute attr = attributes[a];
@@ -114,58 +101,56 @@ public class CertUtils {
                 }
             } else {
                 PKCS12SafeBagFactory dataFact = new PKCS12SafeBagFactory(infos[i]);
-
                 PKCS12SafeBag[] bags = dataFact.getSafeBags();
-
                 PKCS8EncryptedPrivateKeyInfo encInfo = (PKCS8EncryptedPrivateKeyInfo) bags[0].getBagValue();
                 PrivateKeyInfo info = encInfo.decryptPrivateKeyInfo(inputDecryptorProvider);
-
                 KeyFactory keyFact = KeyFactory.getInstance(info.getPrivateKeyAlgorithm().getAlgorithm().getId(), BC_PROVIDER);
-                PrivateKey privKey = keyFact.generatePrivate(new PKCS8EncodedKeySpec(info.getEncoded()));
-                kp = new KeyPair(certificate.getPublicKey(), privKey);
-                /*org.bouncycastle.asn1.pkcs.Attribute[] attributes = bags[0].getAttributes();
-                for (int a = 0; a != attributes.length; a++) {
-                    Attribute attr = attributes[a];
-
-                    if (attr.getAttrType().equals(PKCS12SafeBag.friendlyNameAttribute)) {
-                        privKeyMap.put(((DERBMPString) attr.getAttributeValues()[0]).getString(), privKey);
-                    } else if (attr.getAttrType().equals(PKCS12SafeBag.localKeyIdAttribute)) {
-                        privKeyIds.put(privKey, attr.getAttributeValues()[0]);
-                    }
-                }*/
+                PrivateKey privateKey = keyFact.generatePrivate(new PKCS8EncodedKeySpec(info.getEncoded()));
+                kp = new KeyPair(certificate.getPublicKey(), privateKey);
             }
         }
-        /*for (Iterator it = privKeyMap.keySet().iterator(); it.hasNext(); ) {
-            String alias = (String) it.next();
-
-            System.out.println("Key Entry: " + alias + ", Subject: " + (((X509Certificate) certKeyIds.get(privKeyIds.get(privKeyMap.get(alias)))).getSubjectDN()));
-        }
-
-        for (Iterator it = certMap.keySet().iterator(); it.hasNext(); ) {
-            String alias = (String) it.next();
-
-            System.out.println("Certificate Entry: " + alias + ", Subject: " + (((X509Certificate) certMap.get(alias)).getSubjectDN()));
-        }
-        System.out.println();*/
         return new CertKeyPair(certificate, kp);
+    }
+
+    public static void generateRootCA() throws Exception {
+        KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("RSA", BC_PROVIDER);
+        keyPairGenerator.initialize(2048);
+        Calendar calendar = Calendar.getInstance();
+        calendar.add(Calendar.DATE, -3);
+        Date startDate = calendar.getTime();
+        calendar.add(Calendar.YEAR, 1000);
+        Date endDate = calendar.getTime();
+        KeyPair rootKeyPair = keyPairGenerator.generateKeyPair();
+        BigInteger rootSerialNum = new BigInteger(Long.toString(new SecureRandom().nextLong()));
+        X500Name rootCertIssuer = new X500Name("C=AQ,ST=South-Pole,O=MangaCutter Team,CN=MangaCutter Root CA");
+        ContentSigner rootCertContentSigner = new JcaContentSignerBuilder("SHA256withRSA").setProvider(BC_PROVIDER).build(rootKeyPair.getPrivate());
+        X509v3CertificateBuilder rootCertBuilder = new JcaX509v3CertificateBuilder(rootCertIssuer, rootSerialNum, startDate, endDate, rootCertIssuer, rootKeyPair.getPublic());
+        JcaX509ExtensionUtils rootCertExtUtils = new JcaX509ExtensionUtils();
+        rootCertBuilder.addExtension(Extension.basicConstraints, true, new BasicConstraints(true));
+        rootCertBuilder.addExtension(Extension.subjectKeyIdentifier, false, rootCertExtUtils.createSubjectKeyIdentifier(rootKeyPair.getPublic()));
+        X509CertificateHolder rootCertHolder = rootCertBuilder.build(rootCertContentSigner);
+        X509Certificate rootCert = new JcaX509CertificateConverter().setProvider(BC_PROVIDER).getCertificate(rootCertHolder);
+        System.out.println(certToBase64String(new Certificate[]{rootCert}));
+        System.out.println(exportKeyPairToKeystoreFileBase64Encoded(rootKeyPair, new Certificate[]{rootCert}, "root-cert", "PKCS12"));
     }
 
     public static String certToBase64String(Certificate[] chain) throws CertificateEncodingException {
         StringBuilder sb = new StringBuilder();
         for (Certificate certificate : chain) {
-            sb.append("-----BEGIN CERTIFICATE-----");
+            sb.append("-----BEGIN CERTIFICATE-----\n");
             sb.append(Base64.toBase64String(certificate.getEncoded()));
+            sb.append("\n");
             sb.append("-----END CERTIFICATE-----\n");
         }
         return sb.toString();
     }
 
-    public static String exportKeyPairToKeystoreFileBase64Encoded(KeyPair keyPair, Certificate certificate, String alias, String storeType, String storePass) throws Exception {
+    public static String exportKeyPairToKeystoreFileBase64Encoded(KeyPair keyPair, Certificate[] chain, String alias, String storeType) throws Exception {
         KeyStore sslKeyStore = KeyStore.getInstance(storeType, BC_PROVIDER);
         sslKeyStore.load(null, null);
-        sslKeyStore.setKeyEntry(alias, keyPair.getPrivate(), null, new Certificate[]{certificate});
+        sslKeyStore.setKeyEntry(alias, keyPair.getPrivate(), null, chain);
         ByteArrayOutputStream keyStoreOs = new ByteArrayOutputStream();
-        sslKeyStore.store(keyStoreOs, storePass.toCharArray());
+        sslKeyStore.store(keyStoreOs, MAIN_PASSWORD);
         return Base64.toBase64String(keyStoreOs.toByteArray());
     }
 }
