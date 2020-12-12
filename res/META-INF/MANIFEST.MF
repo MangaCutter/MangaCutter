@@ -1,2 +1,2 @@
 Manifest-Version: 1.0
-Main-Class: net.macu.core.Main
+Main-Class: net.macu.core.Loader
