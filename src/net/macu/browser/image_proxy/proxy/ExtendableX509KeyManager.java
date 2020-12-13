@@ -20,12 +20,14 @@ public class ExtendableX509KeyManager implements X509KeyManager {
     private ExtendableX509KeyManager() {
     }
 
-    public static void addKeyManager(String domain) throws Exception {
+    public static void addDomain(String domain) throws Exception {
         ExtendableX509KeyManager km = getInstance();
         if (!km.domains.contains(domain)) {
-            KeyStore store = CertificateAuthority.getRootCA().generateSubKeyStore(domain);
+            km.domains.add(domain);
+            KeyStore store = CertificateAuthority.getRootCA().generateSubKeyStore(km.domains);
             KeyManagerFactory kmf = KeyManagerFactory.getInstance("SunX509");
             kmf.init(store, null);
+            km.keyManagers.clear();
             for (KeyManager keyManager : kmf.getKeyManagers()) {
                 if (keyManager instanceof X509KeyManager) {
                     km.keyManagers.add((X509KeyManager) keyManager);

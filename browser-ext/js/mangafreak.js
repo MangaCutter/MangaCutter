@@ -1,13 +1,18 @@
-/*
 console.log("execution started");
 let urls = [];
-document.querySelectorAll("img#gohere").forEach(function (item) {
-    urls.push(item.src);
-});
-browser.runtime.sendMessage({
-    "type": "send-to-server",
-    "data": urls
-});*/
+let query = document.querySelectorAll("img#gohere");
+if (query.length === 0) {
+    alert("This page is not a chapter");
+} else {
+    query.forEach(function (item) {
+        urls.push(item.src);
+    });
+    browser.runtime.sendMessage({
+        "type": "download-chapter",
+        "data": urls
+    });
+}
+/*
 (function () {
     let img = document.querySelector('img');
     console.log(img);
@@ -37,3 +42,4 @@ browser.runtime.sendMessage({
         URL.revokeObjectURL(link.href);
     }, 'image/png');
 })();
+*/

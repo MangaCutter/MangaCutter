@@ -21,7 +21,7 @@ public class HTTPSPipe extends Thread {
         if (!handler.isAlive()) handler.start();
     }
 
-    public static void pipe(UnblockableBufferedReader in, OutputStream out, Socket client, String targetHost) {
+    public static synchronized void pipe(UnblockableBufferedReader in, OutputStream out, Socket client, String targetHost) {
         try {
             out.write("HTTP/1.1 200 OK\r\n\r\n".getBytes(StandardCharsets.US_ASCII));
         } catch (IOException e) {
@@ -29,7 +29,7 @@ public class HTTPSPipe extends Thread {
             return;
         }
         try {
-            ExtendableX509KeyManager.addKeyManager(targetHost);
+            ExtendableX509KeyManager.addDomain(targetHost);
         } catch (Exception e) {
             e.printStackTrace();
             try {

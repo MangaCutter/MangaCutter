@@ -48,6 +48,6 @@ public class BrowserPlugin {
     void onMessage(String message) {
         if (message.equals("ps")) {
             webSocketServer.getPLuginSocket().send("ps " + httpProxy.isStarted());
-        }
+        } else System.out.println(message);
     }
 }

@@ -1,6 +1,5 @@
 package net.macu.browser.image_proxy.proxy;
 
-import org.bouncycastle.asn1.ASN1Encodable;
 import org.bouncycastle.asn1.DERSequence;
 import org.bouncycastle.asn1.pkcs.ContentInfo;
 import org.bouncycastle.asn1.pkcs.PKCSObjectIdentifiers;
@@ -37,6 +36,7 @@ import java.security.cert.X509Certificate;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.List;
 
 public class CertificateAuthority {
     private static CertificateAuthority rootCA;
@@ -129,7 +129,7 @@ public class CertificateAuthority {
         return privateKey;
     }
 
-    public KeyStore generateSubKeyStore(String domain) throws Exception {
+    public KeyStore generateSubKeyStore(List<String> domain) throws Exception {
         KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("RSA", BC_PROVIDER);
         keyPairGenerator.initialize(1024);
         Calendar calendar = Calendar.getInstance();
@@ -139,7 +139,7 @@ public class CertificateAuthority {
         Date endDate = calendar.getTime();
         BigInteger issuedCertSerialNum = new BigInteger(Long.toString(new SecureRandom().nextLong()));
         KeyPair issuedCertKeyPair = keyPairGenerator.generateKeyPair();
-        PKCS10CertificationRequestBuilder p10Builder = new JcaPKCS10CertificationRequestBuilder(new X500Name("CN=" + domain), issuedCertKeyPair.getPublic());
+        PKCS10CertificationRequestBuilder p10Builder = new JcaPKCS10CertificationRequestBuilder(new X500Name("CN=" + domain.get(0)), issuedCertKeyPair.getPublic());
         JcaContentSignerBuilder csrBuilder = new JcaContentSignerBuilder("SHA256withRSA").setProvider(BC_PROVIDER);
         ContentSigner csrContentSigner = csrBuilder.build(privateKey);
         PKCS10CertificationRequest csr = p10Builder.build(csrContentSigner);
@@ -149,7 +149,11 @@ public class CertificateAuthority {
         issuedCertBuilder.addExtension(Extension.authorityKeyIdentifier, false, issuedCertExtUtils.createAuthorityKeyIdentifier(certificateChain[0]));
         issuedCertBuilder.addExtension(Extension.subjectKeyIdentifier, false, issuedCertExtUtils.createSubjectKeyIdentifier(csr.getSubjectPublicKeyInfo()));
         issuedCertBuilder.addExtension(Extension.keyUsage, false, new KeyUsage(KeyUsage.keyEncipherment));
-        issuedCertBuilder.addExtension(Extension.subjectAlternativeName, false, new DERSequence(new ASN1Encodable[]{new GeneralName(GeneralName.dNSName, domain)}));
+        GeneralName[] names = new GeneralName[domain.size()];
+        for (int i = 0; i < domain.size(); i++) {
+            names[i] = new GeneralName(GeneralName.dNSName, domain.get(i));
+        }
+        issuedCertBuilder.addExtension(Extension.subjectAlternativeName, false, new DERSequence(names));
         X509CertificateHolder issuedCertHolder = issuedCertBuilder.build(csrContentSigner);
         X509Certificate issuedCert = new JcaX509CertificateConverter().setProvider(BC_PROVIDER).getCertificate(issuedCertHolder);
         issuedCert.verify(certificateChain[0].getPublicKey(), BC_PROVIDER);
