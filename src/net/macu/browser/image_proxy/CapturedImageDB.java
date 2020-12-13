@@ -10,7 +10,6 @@ public class CapturedImageDB {
         synchronized (capturedList) {
             capturedList.put(originUrl, image);
         }
-        System.out.println("captured image: " + originUrl + " " + image.toString());
     }
 
     public static BufferedImage getImage(String originUrl) {

@@ -25,8 +25,10 @@ import org.bouncycastle.pkcs.bc.BcPKCS12MacCalculatorBuilderProvider;
 import org.bouncycastle.pkcs.jcajce.JcaPKCS10CertificationRequestBuilder;
 import org.bouncycastle.pkcs.jcajce.JcePKCSPBEInputDecryptorProviderBuilder;
 import org.bouncycastle.util.encoders.Base64;
+import org.bouncycastle.util.io.Streams;
 
 import java.io.ByteArrayOutputStream;
+import java.io.FileInputStream;
 import java.math.BigInteger;
 import java.security.*;
 import java.security.cert.Certificate;
@@ -40,6 +42,7 @@ public class CertificateAuthority {
     private static CertificateAuthority rootCA;
     private static final char[] MAIN_PASSWORD = new char[]{'a', 'b', 'c', 'd', 'e', 'f'};
     private static final String BC_PROVIDER = "BC";
+    private static final String KET_STORE_TYPE = "PKCS12";
 
     private final X509Certificate[] certificateChain;
     private final PrivateKey privateKey;
@@ -88,7 +91,7 @@ public class CertificateAuthority {
         return new CertificateAuthority(new X509Certificate[]{certificate}, privateKey);
     }
 
-    public static CertificateAuthority generateRootCA() throws Exception {
+    public static CertificateAuthority generateNewRootCA() throws Exception {
         KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("RSA", BC_PROVIDER);
         keyPairGenerator.initialize(2048);
         Calendar calendar = Calendar.getInstance();
@@ -107,6 +110,15 @@ public class CertificateAuthority {
         X509CertificateHolder rootCertHolder = rootCertBuilder.build(rootCertContentSigner);
         X509Certificate rootCert = new JcaX509CertificateConverter().setProvider(BC_PROVIDER).getCertificate(rootCertHolder);
         return new CertificateAuthority(new X509Certificate[]{rootCert}, rootKeyPair.getPrivate());
+    }
+
+    public static void loadRootCA() throws Exception {
+        rootCA = readPKCS12File(Streams.readAll(new FileInputStream("/home/user/ca/ca.p12")));
+        System.out.println("Root CA loaded");
+    }
+
+    public static CertificateAuthority getRootCA() {
+        return rootCA;
     }
 
     public X509Certificate[] getCertificateChain() {
@@ -141,13 +153,13 @@ public class CertificateAuthority {
         X509CertificateHolder issuedCertHolder = issuedCertBuilder.build(csrContentSigner);
         X509Certificate issuedCert = new JcaX509CertificateConverter().setProvider(BC_PROVIDER).getCertificate(issuedCertHolder);
         issuedCert.verify(certificateChain[0].getPublicKey(), BC_PROVIDER);
-        KeyStore sslKeyStore = KeyStore.getInstance("PKCS12", BC_PROVIDER);
+        KeyStore sslKeyStore = KeyStore.getInstance(KET_STORE_TYPE, BC_PROVIDER);
         sslKeyStore.load(null, null);
         sslKeyStore.setKeyEntry("server-cert", issuedCertKeyPair.getPrivate(), null, new java.security.cert.Certificate[]{issuedCert, certificateChain[0]});
         return sslKeyStore;
     }
 
-    public String certToBase64String() throws CertificateEncodingException {
+    public String getCertificateChainBase64Encoded() throws CertificateEncodingException {
         StringBuilder sb = new StringBuilder();
         for (Certificate certificate : certificateChain) {
             sb.append("-----BEGIN CERTIFICATE-----\n");
@@ -158,8 +170,8 @@ public class CertificateAuthority {
         return sb.toString();
     }
 
-    public String exportKeyPairToKeystoreFileBase64Encoded(String alias, String storeType) throws Exception {
-        KeyStore sslKeyStore = KeyStore.getInstance(storeType, BC_PROVIDER);
+    public String getKeyPairKeystoreFileBase64Encoded(String alias) throws Exception {
+        KeyStore sslKeyStore = KeyStore.getInstance(KET_STORE_TYPE, BC_PROVIDER);
         sslKeyStore.load(null, null);
         sslKeyStore.setKeyEntry(alias, privateKey, null, certificateChain);
         ByteArrayOutputStream keyStoreOs = new ByteArrayOutputStream();

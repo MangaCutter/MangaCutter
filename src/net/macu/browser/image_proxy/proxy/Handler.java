@@ -1,10 +1,13 @@
 package net.macu.browser.image_proxy.proxy;
 
+import net.macu.browser.image_proxy.CapturedImageDB;
 import net.macu.util.UnblockableBufferedReader;
 
+import javax.imageio.ImageIO;
 import javax.net.SocketFactory;
 import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
+import java.awt.image.BufferedImage;
 import java.io.*;
 import java.net.Socket;
 import java.util.ArrayList;
@@ -24,10 +27,10 @@ public class Handler extends Thread {
     private PrintWriter targetWriter;
     private OutputStream targetStream;
     private String protocolVersion = "HTTP/1.1";
-    private boolean keepAlive = true;
-    private int keepAliveMax = -1;
+    private boolean keepAlive = false;
+    private int keepAliveMax = 100;
     private int keepAliveRequestCount = 0;
-    private int keepAliveTimeout = -1;
+    private int keepAliveTimeout = 6000;
     private int keepAliveTime = 0;
     private String lastTargetHost = "";
     private int lastTargetPort = -1;
@@ -95,7 +98,6 @@ public class Handler extends Thread {
     @Override
     public void run() {
         try {
-            System.out.println(getName() + " started");
             browserReader = new UnblockableBufferedReader(browserSocket.getInputStream());
             browserStream = browserSocket.getOutputStream();
             browserWriter = new PrintWriter(new BufferedWriter(new OutputStreamWriter(browserStream)));
@@ -201,8 +203,7 @@ public class Handler extends Thread {
                 requestHeaders.add(new Header("Accept-Encoding", "identity"));
                 requestHeaders.add(new Header("Content-Length", String.valueOf(requestBody.length)));
                 if (requestMethod.equals("CONNECT")) {
-                    HTTPSPipe.pipe(browserReader, browserStream, browserSocket);
-                    System.out.println(getName() + " piped and stopped");
+                    HTTPSPipe.pipe(browserReader, browserStream, browserSocket, targetHost);
                     return;
                 }
 
@@ -218,9 +219,6 @@ public class Handler extends Thread {
                     targetReader = new UnblockableBufferedReader(targetSocket.getInputStream());
                     String targetAddress = targetSocket.getRemoteSocketAddress().toString();
                     targetPort = Integer.parseInt(targetAddress.substring(targetAddress.lastIndexOf(":") + 1));
-                    System.out.println("-----new connection from " + Thread.currentThread().getName() + " to " + targetSocket.getRemoteSocketAddress().toString() + "-----");
-                } else {
-                    System.out.println("-----new request from " + Thread.currentThread().getName() + " to target " + targetSocket.getRemoteSocketAddress().toString() + "-----");
                 }
                 sendMessage(requestMethod + " " + requestUrl + " " + protocolVersion, requestHeaders, requestBody, targetWriter, targetStream);
 
@@ -233,6 +231,7 @@ public class Handler extends Thread {
                 ArrayList<Header> responseHeaders = new ArrayList<>();
                 int responseContentLength = 0;
                 String responseEncoding = "identity";
+                boolean imageContentType = false;
                 while ((buffer = targetReader.readLine(false)) != null && !buffer.isEmpty()) {
                     Header h = new Header(buffer);
                     if (h.headerName.equals("Content-Length")) {
@@ -245,6 +244,10 @@ public class Handler extends Thread {
                     if (h.headerName.equals("Transfer-Encoding")) {
                         responseEncoding = h.headerData;
                         h.headerData = "identity";
+                    }
+                    if (h.headerName.equals("Content-Type")) {
+                        if (h.headerData.startsWith("image/"))
+                            imageContentType = true;
                     }
                     responseHeaders.add(h);
                 }
@@ -259,6 +262,10 @@ public class Handler extends Thread {
                 }
                 responseHeaders.add(new Header("Content-Length", String.valueOf(responseBody.length)));
                 sendMessage(responseMethod + " " + responseCode + " " + responseDescription, responseHeaders, responseBody, browserWriter, browserSocket.getOutputStream());
+                if (imageContentType) {
+                    BufferedImage bi = ImageIO.read(new ByteArrayInputStream(responseBody));
+                    CapturedImageDB.putImage(requestUrl, bi);//todo change image signature
+                }
                 lastTargetPort = targetPort;
                 lastTargetHost = targetHost;
             } while (keepAlive);
@@ -271,7 +278,6 @@ public class Handler extends Thread {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        System.out.println(getName() + " stopped");
     }
 
     private void sendErrorStatusMessage(int code, String description) {

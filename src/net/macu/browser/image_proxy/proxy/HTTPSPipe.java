@@ -21,11 +21,24 @@ public class HTTPSPipe extends Thread {
         if (!handler.isAlive()) handler.start();
     }
 
-    public static void pipe(UnblockableBufferedReader in, OutputStream out, Socket client) {
+    public static void pipe(UnblockableBufferedReader in, OutputStream out, Socket client, String targetHost) {
         try {
             out.write("HTTP/1.1 200 OK\r\n\r\n".getBytes(StandardCharsets.US_ASCII));
         } catch (IOException e) {
             e.printStackTrace();
+            return;
+        }
+        try {
+            ExtendableX509KeyManager.addKeyManager(targetHost);
+        } catch (Exception e) {
+            e.printStackTrace();
+            try {
+                in.close();
+                out.close();
+                client.close();
+            } catch (IOException ioException) {
+                ioException.printStackTrace();
+            }
             return;
         }
         Socket s = null;
