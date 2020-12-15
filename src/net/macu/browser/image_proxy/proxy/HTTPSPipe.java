@@ -80,8 +80,21 @@ public class HTTPSPipe extends Thread {
                     if (pipe.in.available() > 0) {
                         int received = pipe.in.read(buffer);
                         if (received < 0) {
-                            pipes.remove(i);
-                            i--;
+                            try {
+                                pipes.remove(i).close();
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
+                            try {
+                                if (i % 2 == 0) {
+                                    pipes.remove(i).close();
+                                } else {
+                                    pipes.remove(i - 1).close();
+                                }
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
+                            i -= 2;
                             continue;
                         }
                         pipe.out.write(buffer, 0, received);
@@ -101,6 +114,11 @@ public class HTTPSPipe extends Thread {
         private Pipe(InputStream in, OutputStream out) {
             this.in = in;
             this.out = out;
+        }
+
+        private void close() throws IOException {
+            in.close();
+            out.close();
         }
     }
 }
