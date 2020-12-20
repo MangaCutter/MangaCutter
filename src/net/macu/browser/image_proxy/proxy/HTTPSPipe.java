@@ -1,27 +1,16 @@
 package net.macu.browser.image_proxy.proxy;
 
 import net.macu.util.UnblockableBufferedReader;
+import org.bouncycastle.tls.TlsServerProtocol;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.OutputStream;
-import java.net.Socket;
 import java.nio.charset.StandardCharsets;
-import java.util.Vector;
+import java.util.Calendar;
 
-public class HTTPSPipe extends Thread {
-    private static final Vector<Pipe> pipes = new Vector<>();
-    private static final HTTPSPipe handler = new HTTPSPipe();
+public class HTTPSPipe {
 
-    private HTTPSPipe() {
-        setDaemon(true);
-    }
-
-    public static void startHandler() {
-        if (!handler.isAlive()) handler.start();
-    }
-
-    public static synchronized void pipe(UnblockableBufferedReader in, OutputStream out, Socket client, String targetHost) {
+    public static void pipe(UnblockableBufferedReader in, OutputStream out, String targetHost) {
         try {
             out.write("HTTP/1.1 200 OK\r\n\r\n".getBytes(StandardCharsets.US_ASCII));
         } catch (IOException e) {
@@ -29,96 +18,22 @@ public class HTTPSPipe extends Thread {
             return;
         }
         try {
-            ExtendableX509KeyManager.addDomain(targetHost);
+            TlsServerProtocol proto = new TlsServerProtocol(in, out);
+            System.out.println(Thread.currentThread().getName() + " started tls handshake at time: " + Calendar.getInstance().getTime().toString());
+            TlsServerImpl impl = new TlsServerImpl(targetHost);
+            System.out.println(Thread.currentThread().getName() + " tls server created at time: " + Calendar.getInstance().getTime().toString());
+            proto.accept(impl);
+            System.out.println(Thread.currentThread().getName() + " ended tls handshake at time: " + Calendar.getInstance().getTime().toString());
+            new Handler(proto.getInputStream(), proto.getOutputStream(), true).start();
         } catch (Exception e) {
+            System.out.print(Thread.currentThread().getName() + " ");
             e.printStackTrace();
             try {
                 in.close();
                 out.close();
-                client.close();
             } catch (IOException ioException) {
                 ioException.printStackTrace();
             }
-            return;
-        }
-        Socket s = null;
-        try {
-            s = new Socket("127.0.0.1", 50002);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        if (s != null) {
-            InputStream dIn = null;
-            OutputStream dOut = null;
-            try {
-                dIn = s.getInputStream();
-                dOut = s.getOutputStream();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-            pipes.add(new Pipe(dIn, out));
-            pipes.add(new Pipe(in, dOut));
-        } else {
-            try {
-                in.close();
-                out.close();
-                client.close();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-    }
-
-    @Override
-    public void run() {
-        byte[] buffer = new byte[1024];
-        while (true) {
-            if (pipes.size() == 0) Thread.yield();
-            for (int i = 0; i < pipes.size(); i++) {
-                Pipe pipe = pipes.get(i);
-                try {
-                    if (pipe.in.available() > 0) {
-                        int received = pipe.in.read(buffer);
-                        if (received < 0) {
-                            try {
-                                pipes.remove(i).close();
-                            } catch (IOException e) {
-                                e.printStackTrace();
-                            }
-                            try {
-                                if (i % 2 == 0) {
-                                    pipes.remove(i).close();
-                                } else {
-                                    pipes.remove(i - 1).close();
-                                }
-                            } catch (IOException e) {
-                                e.printStackTrace();
-                            }
-                            i -= 2;
-                            continue;
-                        }
-                        pipe.out.write(buffer, 0, received);
-                    }
-                } catch (IOException e) {
-                    pipes.remove(i);
-                    i--;
-                }
-            }
-        }
-    }
-
-    private static class Pipe {
-        InputStream in;
-        OutputStream out;
-
-        private Pipe(InputStream in, OutputStream out) {
-            this.in = in;
-            this.out = out;
-        }
-
-        private void close() throws IOException {
-            in.close();
-            out.close();
         }
     }
 }

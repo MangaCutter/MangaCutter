@@ -2,6 +2,7 @@ package net.macu.browser.image_proxy.proxy;
 
 import java.io.IOException;
 import java.net.ServerSocket;
+import java.net.Socket;
 
 public class HTTPProxy extends Thread {
     private final int port;
@@ -22,7 +23,8 @@ public class HTTPProxy extends Thread {
         }
         try {
             while (true) {
-                Handler handler = new Handler(ss.accept(), false);
+                Socket s = ss.accept();
+                Handler handler = new Handler(s.getInputStream(), s.getOutputStream(), false);
                 handler.start();
             }
         } catch (IOException e) {

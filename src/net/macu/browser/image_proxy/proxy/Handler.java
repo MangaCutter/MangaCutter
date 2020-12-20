@@ -9,7 +9,9 @@ import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
 import java.awt.image.BufferedImage;
 import java.io.*;
+import java.net.MalformedURLException;
 import java.net.Socket;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -17,12 +19,12 @@ public class Handler extends Thread {
     private static SocketFactory socketFactory = null;
     private static SSLSocketFactory sslSocketFactory = null;
     private static int Counter = 0;
-    private final Socket browserSocket;
+    private final InputStream browserInputStream;
     private final boolean secure;
     private Socket targetSocket;
     private UnblockableBufferedReader browserReader;
     private PrintWriter browserWriter;
-    private OutputStream browserStream;
+    private final OutputStream browserOutputStream;
     private UnblockableBufferedReader targetReader;
     private PrintWriter targetWriter;
     private OutputStream targetStream;
@@ -35,22 +37,23 @@ public class Handler extends Thread {
     private String lastTargetHost = "";
     private int lastTargetPort = -1;
 
-    public Handler(Socket s, boolean secure) {
-        this.browserSocket = s;
+    public Handler(InputStream in, OutputStream out, boolean secure) {
+        browserInputStream = in;
+        browserOutputStream = out;
         setDaemon(true);
         setName("Handler-" + (Counter));
         Counter++;
         this.secure = secure;
     }
 
-    private static Socket createSocket(String host, int port) throws IOException {
-        try {
+    private static Socket createSocket(String host, int port, boolean secure) throws IOException {
+        if (secure) {
             if (sslSocketFactory == null)
                 sslSocketFactory = (SSLSocketFactory) SSLSocketFactory.getDefault();
             SSLSocket socket = (SSLSocket) sslSocketFactory.createSocket(host, port);
             socket.startHandshake();
             return socket;
-        } catch (Exception e) {
+        } else {
             if (socketFactory == null)
                 socketFactory = SocketFactory.getDefault();
             return socketFactory.createSocket(host, port);
@@ -95,12 +98,21 @@ public class Handler extends Thread {
         }
     }
 
+    private static boolean isURLValid(String url) {
+        try {
+            new URL(url);
+            return true;
+        } catch (MalformedURLException e) {
+            return false;
+        }
+    }
+
     @Override
     public void run() {
+        System.out.println(Thread.currentThread().getName() + " started");
         try {
-            browserReader = new UnblockableBufferedReader(browserSocket.getInputStream());
-            browserStream = browserSocket.getOutputStream();
-            browserWriter = new PrintWriter(new BufferedWriter(new OutputStreamWriter(browserStream)));
+            browserReader = new UnblockableBufferedReader(browserInputStream);
+            browserWriter = new PrintWriter(new BufferedWriter(new OutputStreamWriter(browserOutputStream)));
             do {
                 if (keepAlive) {
                     if (keepAliveMax != -1 && keepAliveMax <= keepAliveRequestCount) {
@@ -203,7 +215,7 @@ public class Handler extends Thread {
                 requestHeaders.add(new Header("Accept-Encoding", "identity"));
                 requestHeaders.add(new Header("Content-Length", String.valueOf(requestBody.length)));
                 if (requestMethod.equals("CONNECT")) {
-                    HTTPSPipe.pipe(browserReader, browserStream, browserSocket, targetHost);
+                    HTTPSPipe.pipe(browserReader, browserOutputStream, targetHost);
                     return;
                 }
 
@@ -213,7 +225,7 @@ public class Handler extends Thread {
                         targetReader.close();
                         targetSocket.close();
                     }
-                    targetSocket = createSocket(targetHost, targetPort);
+                    targetSocket = createSocket(targetHost, targetPort, secure);
                     targetStream = targetSocket.getOutputStream();
                     targetWriter = new PrintWriter(new BufferedWriter(new OutputStreamWriter(targetStream)));
                     targetReader = new UnblockableBufferedReader(targetSocket.getInputStream());
@@ -261,23 +273,33 @@ public class Handler extends Thread {
                     break;
                 }
                 responseHeaders.add(new Header("Content-Length", String.valueOf(responseBody.length)));
-                sendMessage(responseMethod + " " + responseCode + " " + responseDescription, responseHeaders, responseBody, browserWriter, browserSocket.getOutputStream());
+                sendMessage(responseMethod + " " + responseCode + " " + responseDescription, responseHeaders, responseBody, browserWriter, browserOutputStream);
                 if (imageContentType) {
-                    BufferedImage bi = ImageIO.read(new ByteArrayInputStream(responseBody));
-                    CapturedImageDB.putImage(requestUrl, bi);//todo change image signature
+                    BufferedImage interceptedImage = ImageIO.read(new ByteArrayInputStream(responseBody));
+                    if (isURLValid(requestUrl))
+                        CapturedImageDB.putImage(requestUrl, interceptedImage);//todo change image signature
+                    else if (isURLValid("http" + (secure ? "s" : "") + "://" + targetHost + requestUrl)) {
+                        CapturedImageDB.putImage("http" + (secure ? "s" : "") + "://" + targetHost + requestUrl, interceptedImage);
+                    }
                 }
                 lastTargetPort = targetPort;
                 lastTargetHost = targetHost;
             } while (keepAlive);
             browserWriter.close();
             browserReader.close();
-            browserSocket.close();
             targetWriter.close();
             targetReader.close();
             targetSocket.close();
         } catch (IOException e) {
             e.printStackTrace();
         }
+        browserWriter.close();
+        try {
+            browserReader.close();
+        } catch (IOException ioException) {
+            ioException.printStackTrace();
+        }
+        System.out.println(Thread.currentThread().getName() + " stopped");
     }
 
     private void sendErrorStatusMessage(int code, String description) {

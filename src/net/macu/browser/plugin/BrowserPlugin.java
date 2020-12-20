@@ -1,19 +1,20 @@
 package net.macu.browser.plugin;
 
 import net.macu.browser.image_proxy.proxy.HTTPProxy;
-import net.macu.browser.image_proxy.proxy.HTTPSPipe;
-import net.macu.browser.image_proxy.proxy.HTTPSProxy;
+import org.json.simple.JSONArray;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
+
+import java.util.ArrayList;
 
 public class BrowserPlugin {
     private static BrowserPlugin instance = null;
     private final PluginWebSocketServer webSocketServer;
     private final HTTPProxy httpProxy;
-    private final HTTPSProxy httpsProxy;
 
     private BrowserPlugin() {
         webSocketServer = new PluginWebSocketServer(50000, this);
         httpProxy = new HTTPProxy(50001);
-        httpsProxy = new HTTPSProxy(50002);
     }
 
     public static BrowserPlugin getPlugin() {
@@ -28,10 +29,8 @@ public class BrowserPlugin {
     }
 
     public void start() {
-        httpsProxy.start();
         httpProxy.start();
         webSocketServer.start();
-        HTTPSPipe.startHandler();
     }
 
     public boolean waitUntilConnected(int timeout) {
@@ -48,6 +47,14 @@ public class BrowserPlugin {
     void onMessage(String message) {
         if (message.equals("ps")) {
             webSocketServer.getPLuginSocket().send("ps " + httpProxy.isStarted());
+        } else if (message.startsWith("dc ")) {
+            try {
+                ArrayList data = (JSONArray) new JSONParser().parse(message.substring(3));
+                for (int i = 0; i < data.size(); i++) {
+                }
+            } catch (ParseException e) {
+                e.printStackTrace();
+            }
         } else System.out.println(message);
     }
 }
