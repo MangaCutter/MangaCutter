@@ -45,15 +45,7 @@ public class CertificateAuthority {
     private static final char[] MAIN_PASSWORD = new char[]{'a', 'b', 'c', 'd', 'e', 'f'};
     private static final String BC_PROVIDER = "BC";
     private static final String KET_STORE_TYPE = "PKCS12";
-    private static JcaTlsCrypto crypto = null;
-
-    static {
-        try {
-            crypto = new JcaTlsCryptoProvider().create((SecureRandom.getInstance("NativePRNGNonBlocking")));
-        } catch (NoSuchAlgorithmException e) {
-            e.printStackTrace();
-        }
-    }
+    private static final JcaTlsCrypto crypto = new JcaTlsCryptoProvider().create(new InsecureSecureRandom());
 
     private final X509Certificate[] certificateChain;
     private final PrivateKey privateKey;

@@ -1,6 +1,6 @@
 console.log("execution started");
 let urls = [];
-let query = document.querySelectorAll("img#gohere");
+let query = document.querySelectorAll("img");
 if (query.length === 0) {
     alert("This page is not a chapter");
 } else {
@@ -8,7 +8,7 @@ if (query.length === 0) {
         urls.push(item.src);
     });
     browser.runtime.sendMessage({
-        "type": "download-chapter",
+        "type": "download-images",
         "data": urls
     });
 }

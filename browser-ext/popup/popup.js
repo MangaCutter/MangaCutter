@@ -42,6 +42,7 @@ function gotProxyStatus(item) {
                 downloadChapterButton.setAttribute("disabled", "");
             }
             downloadImagesButton.removeAttribute("disabled");
+            downloadImagesButton.onclick = () => browser.tabs.executeScript(tab.id, {file: "/js/image_injector.js"});
         });
     }
     if (proxyEnabled && !item.proxyStatus) {

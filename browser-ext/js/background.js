@@ -68,6 +68,9 @@ browser.runtime.onMessage.addListener(function (message) {
     if (message.type === "download-chapter") {
         sendMsgToServer("dc " + JSON.stringify(message.data));
     }
+    if (message.type === "download-images") {
+        sendMsgToServer("di " + JSON.stringify(message.data));
+    }
 });
 
 function handleProxyRequest(requestInfo) {
@@ -75,17 +78,10 @@ function handleProxyRequest(requestInfo) {
     return {type: "http", host: "127.0.0.1", port: 50001};
 }
 
-browser.proxy.onRequest.addListener(handleProxyRequest, {urls: ["*://*.mangafreak.net/*"]/*, types: ["image"]*/});
+browser.proxy.onRequest.addListener(handleProxyRequest, {urls: ["*://*.mangafreak.net/*"]});
 
 function requestProxyStatus() {
     sendMsgToServer("ps");
 }
 
 setInterval(requestProxyStatus, 5000);
-
-// browser.runtime.onMessage.addListener(listener);
-//
-// function listener(data) {
-//     console.log("1");
-//     browser.tabs.create({url: data.url}).then(onCreated, onError);
-// }
