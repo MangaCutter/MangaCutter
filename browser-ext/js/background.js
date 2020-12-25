@@ -4,6 +4,7 @@ browser.storage.local.set({proxyStatus: false});
 let sock;
 createWebSocket();
 let sendQueue = [];
+let interceptList = [];
 
 function sendMsgToServer(msg) {
     sendQueue.push(msg);
@@ -47,6 +48,8 @@ function onWebSocketMessage(event) {
         browser.tabs.create({url: request.substr(5)}).catch(onError);
     } else if (request.indexOf("ps ") === 0) {
         browser.storage.local.set({proxyStatus: (request.substr(3) === "true")}).catch(onError);
+    } else if (request.indexOf("got ") === 0) {
+        removeFromInterceptList(request.substr(4));
     }
 }
 
@@ -58,7 +61,7 @@ function createWebSocket() {
     sock.onclose = onWebSocketClose;
 }
 
-browser.runtime.onMessage.addListener(function (message) {
+browser.runtime.onMessage.addListener((message, sender) => {
     if (message.type === "send-to-server") {
         console.log("send to server");
         message.data.forEach(function (item) {
@@ -66,19 +69,50 @@ browser.runtime.onMessage.addListener(function (message) {
         });
     }
     if (message.type === "download-chapter") {
-        sendMsgToServer("dc " + JSON.stringify(message.data));
+        addToInterceptList(message.data);
+        browser.tabs.reload(sender.tab, {bypassCache: false});
     }
     if (message.type === "download-images") {
-        sendMsgToServer("di " + JSON.stringify(message.data));
+        addToInterceptList(message.data);
+        browser.tabs.reload(sender.tab, {bypassCache: false});
     }
 });
 
-function handleProxyRequest(requestInfo) {
-    console.log(`Proxying: ${requestInfo.url}`);
-    return {type: "http", host: "127.0.0.1", port: 50001};
+function enableProxy() {
+    browser.proxy.settings.get({}).then((settings) => {
+        if (settings.levelOfControl === "controllable_by_this_extension" ||
+            settings.levelOfControl === "controlled_by_this_extension") {
+            browser.proxy.settings.set({
+                value: {
+                    proxyType: "manual",
+                    http: "http://127.0.0.1:50001"
+                }
+            });
+        } else {
+            sendMsgToServer("alert browser.plugin.BrowserPlugin.onMessage.browser_proxy_failed_to_control")
+        }
+    });
 }
 
-browser.proxy.onRequest.addListener(handleProxyRequest, {urls: ["*://*.mangafreak.net/*"]});
+function disableProxy() {
+    browser.proxy.settings.clear({});
+}
+
+function addToInterceptList(urls) {
+    enableProxy();
+    for (const url in urls) {
+        interceptList.push(url);
+    }
+}
+
+function removeFromInterceptList(url) {
+    interceptList = interceptList.filter(function (value) {
+        return value !== url;
+    });
+    if (interceptList.length === 0) {
+        disableProxy();
+    }
+}
 
 function requestProxyStatus() {
     sendMsgToServer("ps");

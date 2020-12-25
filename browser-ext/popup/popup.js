@@ -98,4 +98,3 @@ browser.tabs.query({currentWindow: true, active: true}).then(function (tabs) {
         downloadChapterButton.setAttribute("disabled", "");
     }
 });
-

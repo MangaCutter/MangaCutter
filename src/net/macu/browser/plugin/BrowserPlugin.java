@@ -1,11 +1,8 @@
 package net.macu.browser.plugin;
 
+import net.macu.UI.ViewManager;
 import net.macu.browser.image_proxy.proxy.HTTPProxy;
-import org.json.simple.JSONArray;
-import org.json.simple.parser.JSONParser;
-import org.json.simple.parser.ParseException;
-
-import java.util.ArrayList;
+import net.macu.settings.L;
 
 public class BrowserPlugin {
     private static BrowserPlugin instance = null;
@@ -23,9 +20,7 @@ public class BrowserPlugin {
     }
 
     public void openUrlInDefaultBrowser(String url) {
-        if (webSocketServer.isConnected()) {
-            webSocketServer.getPLuginSocket().send("open " + url);
-        }
+        sendMessage("open " + url);
     }
 
     public void start() {
@@ -47,14 +42,16 @@ public class BrowserPlugin {
     void onMessage(String message) {
         if (message.equals("ps")) {
             webSocketServer.getPLuginSocket().send("ps " + httpProxy.isStarted());
-        } else if (message.startsWith("dc ")) {
-            try {
-                ArrayList data = (JSONArray) new JSONParser().parse(message.substring(3));
-                for (int i = 0; i < data.size(); i++) {
-                }
-            } catch (ParseException e) {
-                e.printStackTrace();
-            }
+        } else if (message.startsWith("alert ")) {
+            ViewManager.showMessageDialog(L.get(message.substring(6)));
         } else System.out.println(message);
+    }
+
+    public void sendMessage(String message) {
+        if (webSocketServer.isConnected()) {
+            webSocketServer.getPLuginSocket().send(message);
+        } else {
+            //todo in case of disconnection
+        }
     }
 }
