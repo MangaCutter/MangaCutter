@@ -1,10 +1,9 @@
 browser.storage.local.set({connectionStatus: false});
-browser.storage.local.set({proxyStatus: false});
 
 let sock;
-createWebSocket();
 let sendQueue = [];
-let interceptList = [];
+let busyTabs = [];
+let proxyStatus = false;
 
 function sendMsgToServer(msg) {
     sendQueue.push(msg);
@@ -34,88 +33,77 @@ function onWebSocketClose() {
     setTimeout(createWebSocket, 2000);
 }
 
-function onWebSocketError() {
-    if (sock.readyState !== sock.OPEN) {
-        browser.storage.local.set({connectionStatus: false});
-        browser.storage.local.set({proxyStatus: false});
-    }
-    sock.close();
-}
-
 function onWebSocketMessage(event) {
     let request = event.data;
     if (request.indexOf("open ") === 0) {
         browser.tabs.create({url: request.substr(5)}).catch(onError);
-    } else if (request.indexOf("ps ") === 0) {
-        browser.storage.local.set({proxyStatus: (request.substr(3) === "true")}).catch(onError);
-    } else if (request.indexOf("got ") === 0) {
-        removeFromInterceptList(request.substr(4));
+    } else if (request.indexOf("done ") === 0) {
+        let tab = request.substr(5);
+        for (let i = 0; i < busyTabs.length; i++) {
+            if (busyTabs[i].tab === tab) {
+                busyTabs.splice(i, 1);
+                break;
+            }
+        }
+        if (busyTabs.length === 0) {
+            disableProxy();
+            sendMsgToServer("cl");
+        }
+    } else if (request.indexOf("refresh ") === 0) {
+        let tab = request.substr(8);
+        for (let i = 0; i < busyTabs.length; i++) {
+            if (busyTabs[i].tab === tab) {
+                if (busyTabs[i].attempts < 5) {
+                    browser.tabs.reload(busyTabs[i].tab, {bypassCache: true}).then(browser.tabs.executeScript(busyTabs[i].tab, {file: busyTabs[i].file}));
+                    busyTabs[i].attempts++;
+                } else {
+                    sendMsgToServer("alert browser.plugin.BrowserPlugin.onMessage.too_many_attempts");
+                    busyTabs.splice(i, 1);
+                }
+            }
+        }
     }
 }
 
 function createWebSocket() {
     sock = new WebSocket("ws://localhost:50000");
-    sock.onerror = onWebSocketError;
+    sock.onerror = onWebSocketClose;
     sock.onmessage = onWebSocketMessage;
     sock.onopen = onWebSocketOpen;
     sock.onclose = onWebSocketClose;
 }
 
-browser.runtime.onMessage.addListener((message, sender) => {
-    if (message.type === "send-to-server") {
-        console.log("send to server");
-        message.data.forEach(function (item) {
-            sendMsgToServer(item);
-        });
-    }
-    if (message.type === "download-chapter") {
-        addToInterceptList(message.data);
-        browser.tabs.reload(sender.tab, {bypassCache: false});
-    }
-    if (message.type === "download-images") {
-        addToInterceptList(message.data);
-        browser.tabs.reload(sender.tab, {bypassCache: false});
-    }
-});
-
-function enableProxy() {
-    browser.proxy.settings.get({}).then((settings) => {
+async function enableProxy() {
+    await browser.proxy.settings.get({}).then(async (settings) => {
         if (settings.levelOfControl === "controllable_by_this_extension" ||
             settings.levelOfControl === "controlled_by_this_extension") {
-            browser.proxy.settings.set({
+            await browser.proxy.settings.set({
                 value: {
                     proxyType: "manual",
-                    http: "http://127.0.0.1:50001"
+                    http: "http://127.0.0.1:50001",
+                    httpProxyAll: true
                 }
-            });
-        } else {
-            sendMsgToServer("alert browser.plugin.BrowserPlugin.onMessage.browser_proxy_failed_to_control")
+            }).then(() => proxyStatus = true, (e) => console.log(e));
         }
-    });
+    }, (e) => console.log(e));
 }
 
 function disableProxy() {
-    browser.proxy.settings.clear({});
+    browser.proxy.settings.clear({}).then(() => proxyStatus = false);
 }
 
-function addToInterceptList(urls) {
-    enableProxy();
-    for (const url in urls) {
-        interceptList.push(url);
+createWebSocket();
+
+browser.runtime.onMessage.addListener(async (message, sender) => {
+    if (message.type === "dc") {
+        if (!proxyStatus)
+            await enableProxy();
+        if (proxyStatus) {
+            busyTabs.push({tab: message.tab, file: message.file, attempts: 0});
+            browser.tabs.reload(message.tab, {bypassCache: true}).then(browser.tabs.executeScript(message.tab, {file: message.file}));
+        } //note: else branch is situated in enableProxy method
     }
-}
-
-function removeFromInterceptList(url) {
-    interceptList = interceptList.filter(function (value) {
-        return value !== url;
-    });
-    if (interceptList.length === 0) {
-        disableProxy();
+    if (message.type === "su") {
+        sendMsgToServer("su " + sender.tab + "\t" + message.data);
     }
-}
-
-function requestProxyStatus() {
-    sendMsgToServer("ps");
-}
-
-setInterval(requestProxyStatus, 5000);
+});

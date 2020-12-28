@@ -1,8 +1,3 @@
-browser.runtime.sendMessage({
-    "type": "download-chapter",
-    "data": getURLS()
-});
-
 function getURLS() {
     let urls = [];
     let query = document.querySelectorAll("img#gohere");
@@ -15,3 +10,8 @@ function getURLS() {
     }
     return urls;
 }
+
+browser.runtime.sendMessage({
+    "type": "su",
+    "data": getURLS()
+});

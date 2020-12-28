@@ -1,6 +1,6 @@
 package net.macu.browser.image_proxy.proxy;
 
-import net.macu.browser.image_proxy.CapturedImageDB;
+import net.macu.browser.image_proxy.CapturedImageMap;
 import net.macu.util.UnblockableBufferedReader;
 
 import javax.imageio.ImageIO;
@@ -25,6 +25,7 @@ public class Handler extends Thread {
     private UnblockableBufferedReader browserReader;
     private PrintWriter browserWriter;
     private final OutputStream browserOutputStream;
+    private final CapturedImageMap capturedImages;
     private UnblockableBufferedReader targetReader;
     private PrintWriter targetWriter;
     private OutputStream targetStream;
@@ -37,9 +38,10 @@ public class Handler extends Thread {
     private String lastTargetHost = "";
     private int lastTargetPort = -1;
 
-    public Handler(InputStream in, OutputStream out, boolean secure) {
+    public Handler(InputStream in, OutputStream out, boolean secure, CapturedImageMap capturedImages) {
         browserInputStream = in;
         browserOutputStream = out;
+        this.capturedImages = capturedImages;
         setDaemon(true);
         setName("Handler-" + (Counter));
         Counter++;
@@ -215,7 +217,7 @@ public class Handler extends Thread {
                 requestHeaders.add(new Header("Accept-Encoding", "identity"));
                 requestHeaders.add(new Header("Content-Length", String.valueOf(requestBody.length)));
                 if (requestMethod.equals("CONNECT")) {
-                    HTTPSPipe.pipe(browserReader, browserOutputStream, targetHost);
+                    HTTPSPipe.pipe(browserReader, browserOutputStream, targetHost, capturedImages);
                     return;
                 }
 
@@ -277,9 +279,9 @@ public class Handler extends Thread {
                 if (imageContentType) {
                     BufferedImage interceptedImage = ImageIO.read(new ByteArrayInputStream(responseBody));
                     if (isURLValid(requestUrl))
-                        CapturedImageDB.putImage(requestUrl, interceptedImage);//todo change image signature
+                        capturedImages.putImage(requestUrl, interceptedImage);//todo change image signature
                     else if (isURLValid("http" + (secure ? "s" : "") + "://" + targetHost + requestUrl)) {
-                        CapturedImageDB.putImage("http" + (secure ? "s" : "") + "://" + targetHost + requestUrl, interceptedImage);
+                        capturedImages.putImage("http" + (secure ? "s" : "") + "://" + targetHost + requestUrl, interceptedImage);
                     }
                 }
                 lastTargetPort = targetPort;

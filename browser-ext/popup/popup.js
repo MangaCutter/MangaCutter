@@ -1,8 +1,12 @@
 let downloadChapterButton = document.getElementById("downloadChapter");
 let downloadImagesButton = document.getElementById("downloadImages");
-let toggleProxyButton = document.getElementById("toggleProxy");
-let clientConnected = false;
-let proxyEnabled = false;
+
+function supportedService(srvc) {
+    let serviceURL = new URL(srvc);
+    if (serviceURL.host.includes("w11.mangafreak.net"))
+        return "/js/mangafreak.js";
+    return "";
+}
 
 function setConnectionLabelStatus(status) {
     let connectionLabel = document.getElementById("clientStatus");
@@ -15,86 +19,41 @@ function setConnectionLabelStatus(status) {
     }
 }
 
-function setProxyLabelStatus(status) {
-    let proxyLabel = document.getElementById("proxyStatus");
-    if (status === true) {
-        proxyLabel.className = "ok";
-        proxyLabel.innerText = "Proxy enabled";
-        toggleProxyButton.innerText = "Disable proxy";
-    } else {
-        proxyLabel.className = "error";
-        proxyLabel.innerText = "Proxy disabled";
-        toggleProxyButton.innerText = "Enable proxy";
-    }
-}
-
-function gotProxyStatus(item) {
-    setProxyLabelStatus(item.proxyStatus);
-    if (!proxyEnabled && item.proxyStatus) {
-        browser.tabs.query({currentWindow: true, active: true}).then(function (tabs) {
-            let tab = tabs[0];
-            let serviceUrl = tab.url;
-            let ss = supportedService(serviceUrl);
-            if (ss !== "") {
-                downloadChapterButton.onclick = () => browser.tabs.executeScript(tab.id, {file: ss});
-                downloadChapterButton.removeAttribute("disabled");
-            } else {
-                downloadChapterButton.setAttribute("disabled", "");
-            }
-            downloadImagesButton.removeAttribute("disabled");
-            downloadImagesButton.onclick = () => browser.tabs.executeScript(tab.id, {file: "/js/image_injector.js"});
-        });
-    }
-    if (proxyEnabled && !item.proxyStatus) {
-        downloadChapterButton.setAttribute("disabled", "");
-        downloadImagesButton.setAttribute("disabled", "");
-    }
-    proxyEnabled = item.proxyStatus;
-}
-
-function gotConnectionStatus(item) {
-    setConnectionLabelStatus(item.connectionStatus);
-    clientConnected = item.connectionStatus;
-    if (clientConnected) {
-        toggleProxyButton.removeAttribute("disabled");
-    } else {
-        toggleProxyButton.setAttribute("disabled", "");
-    }
-}
-
 function onError(event) {
     console.log(event);
 }
 
-function supportedService(srvc) {
-    let serviceURL = new URL(srvc);
-    if (serviceURL.host.includes("w11.mangafreak.net"))
-        return "/js/mangafreak.js";
-    return "";
-}
-
 function loadConnectionStatus() {
-    browser.storage.local.get("connectionStatus").then(gotConnectionStatus, onError);
-}
-
-function loadProxyStatus() {
-    browser.storage.local.get("proxyStatus").then(gotProxyStatus, onError);
+    browser.storage.local.get("connectionStatus").then((item) => {
+        setConnectionLabelStatus(item.connectionStatus);
+        if (item.connectionStatus) {
+            browser.tabs.query({currentWindow: true, active: true}).then(function (tabs) {
+                let tab = tabs[0];
+                let serviceUrl = tab.url;
+                let serviceCSFilepath = supportedService(serviceUrl);
+                if (serviceCSFilepath !== "") {
+                    downloadChapterButton.onclick = () => browser.runtime.sendMessage({
+                        type: "dc",
+                        tab: tab.id,
+                        file: serviceCSFilepath
+                    });
+                    downloadChapterButton.removeAttribute("disabled");
+                } else {
+                    downloadChapterButton.setAttribute("disabled", "");
+                }
+                downloadChapterButton.onclick = () => browser.runtime.sendMessage({
+                    type: "dc",
+                    tab: tab.id,
+                    file: "/js/image_injector.js"
+                });
+                downloadImagesButton.removeAttribute("disabled");
+            }, onError);
+        } else {
+            downloadChapterButton.setAttribute("disabled", "");
+            downloadImagesButton.setAttribute("disabled", "");
+        }
+    }, onError);
 }
 
 loadConnectionStatus();
-loadProxyStatus();
-setInterval(loadConnectionStatus, 5000);
-setInterval(loadProxyStatus, 5000);
-
-browser.tabs.query({currentWindow: true, active: true}).then(function (tabs) {
-    let tab = tabs[0];
-    let serviceUrl = tab.url;
-    let ss = supportedService(serviceUrl);
-    if (ss !== "") {
-        downloadChapterButton.onclick = () => browser.tabs.executeScript(tab.id, {file: ss});
-        downloadChapterButton.removeAttribute("disabled");
-        downloadImagesButton.removeAttribute("disabled");
-    } else {
-        downloadChapterButton.setAttribute("disabled", "");
-    }
-});
+setInterval(loadConnectionStatus, 2000);

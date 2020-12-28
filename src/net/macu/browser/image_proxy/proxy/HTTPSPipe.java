@@ -1,5 +1,6 @@
 package net.macu.browser.image_proxy.proxy;
 
+import net.macu.browser.image_proxy.CapturedImageMap;
 import net.macu.util.UnblockableBufferedReader;
 import org.bouncycastle.tls.TlsServerProtocol;
 
@@ -10,7 +11,7 @@ import java.util.Calendar;
 
 public class HTTPSPipe {
 
-    public static void pipe(UnblockableBufferedReader in, OutputStream out, String targetHost) {
+    public static void pipe(UnblockableBufferedReader in, OutputStream out, String targetHost, CapturedImageMap capturedImages) {
         try {
             out.write("HTTP/1.1 200 OK\r\n\r\n".getBytes(StandardCharsets.US_ASCII));
         } catch (IOException e) {
@@ -24,7 +25,7 @@ public class HTTPSPipe {
             System.out.println(Thread.currentThread().getName() + " tls server created at time: " + Calendar.getInstance().getTime().toString());
             proto.accept(impl);
             System.out.println(Thread.currentThread().getName() + " ended tls handshake at time: " + Calendar.getInstance().getTime().toString());
-            new Handler(proto.getInputStream(), proto.getOutputStream(), true).start();
+            new Handler(proto.getInputStream(), proto.getOutputStream(), true, capturedImages).start();
         } catch (Exception e) {
             System.out.print(Thread.currentThread().getName() + " ");
             e.printStackTrace();

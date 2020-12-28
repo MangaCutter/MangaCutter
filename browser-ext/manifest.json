@@ -31,7 +31,8 @@
     "tabs",
     "storage",
     "cookies",
-    "proxy"
+    "proxy",
+    "privacy"
   ],
   "icons": {
     "48": "icons/icon.svg",
