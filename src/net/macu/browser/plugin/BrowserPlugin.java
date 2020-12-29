@@ -23,8 +23,8 @@ public class BrowserPlugin {
 
     private BrowserPlugin() {
         webSocketServer = new PluginWebSocketServer(50000, this);
-        httpProxy = new HTTPProxy(50001, capturedImages);
-        httpsProxy = new HTTPSProxy(50002, capturedImages);
+        httpsProxy = new HTTPSProxy(50006, capturedImages);
+        httpProxy = new HTTPProxy(50001, capturedImages, httpsProxy);
     }
 
     public static BrowserPlugin getPlugin() {

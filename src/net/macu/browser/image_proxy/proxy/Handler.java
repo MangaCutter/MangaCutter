@@ -19,33 +19,212 @@ public class Handler extends Thread {
     private static SocketFactory socketFactory = null;
     private static SSLSocketFactory sslSocketFactory = null;
     private static int Counter = 0;
-    private final InputStream browserInputStream;
+    protected final InputStream browserInputStream;
     private final boolean secure;
-    private Socket targetSocket;
-    private UnblockableBufferedReader browserReader;
-    private PrintWriter browserWriter;
-    private final OutputStream browserOutputStream;
+    protected Socket targetSocket;
+    protected UnblockableBufferedReader browserReader;
+    protected PrintWriter browserWriter;
+    protected final OutputStream browserOutputStream;
     private final CapturedImageMap capturedImages;
-    private UnblockableBufferedReader targetReader;
-    private PrintWriter targetWriter;
+    private HTTPSProxy httpsProxy;
+    protected UnblockableBufferedReader targetReader;
+    protected PrintWriter targetWriter;
     private OutputStream targetStream;
     private String protocolVersion = "HTTP/1.1";
-    private boolean keepAlive = false;
+    protected boolean keepAlive = false;
     private int keepAliveMax = 100;
     private int keepAliveRequestCount = 0;
     private int keepAliveTimeout = 6000;
     private int keepAliveTime = 0;
     private String lastTargetHost = "";
     private int lastTargetPort = -1;
+    protected static final int BREAK_EXIT_CODE = 1;
+    protected static final int RETURN_EXIT_CODE = -1;
+    protected static final int OK_EXIT_CODE = 0;
 
-    public Handler(InputStream in, OutputStream out, boolean secure, CapturedImageMap capturedImages) {
+    public Handler(InputStream in, OutputStream out, boolean secure, CapturedImageMap capturedImages, HTTPSProxy httpsProxy) {
         browserInputStream = in;
         browserOutputStream = out;
         this.capturedImages = capturedImages;
+        this.httpsProxy = httpsProxy;
         setDaemon(true);
         setName("Handler-" + (Counter));
         Counter++;
         this.secure = secure;
+    }
+
+    protected int handle() throws IOException {
+        if (keepAlive) {
+            if (keepAliveMax != -1 && keepAliveMax <= keepAliveRequestCount) {
+                return BREAK_EXIT_CODE;
+            } else {
+                keepAliveRequestCount++;
+            }
+            while (keepAliveTimeout >= keepAliveTime) {
+                if (browserReader.available() == 0) {
+                    try {
+                        Thread.sleep(100);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                    keepAliveTime += 100;
+                } else {
+                    break;
+                }
+            }
+            if (keepAliveTimeout != -1 && keepAliveTimeout <= keepAliveTime) {
+                return BREAK_EXIT_CODE;
+            } else {
+                keepAliveTimeout = 0;
+            }
+        }
+        String requestLine = browserReader.readLine(false);
+        String[] requestParts = requestLine.split(" ");
+        if (requestParts.length != 3) {
+            sendErrorStatusMessage(400, "Bad Request");
+            return BREAK_EXIT_CODE;
+        }
+        protocolVersion = requestParts[2];
+        if (!protocolVersion.equals("HTTP/1.1") && !protocolVersion.equals("HTTP/1")) {
+            sendErrorStatusMessage(400, "Bad Request");
+            return BREAK_EXIT_CODE;
+        }
+        String requestMethod = requestParts[0];
+        String requestUrl = requestParts[1];
+
+        //read request headers
+        String targetHost = "";
+        int targetPort = secure ? 443 : 80;
+        int requestContentLength = 0;
+        String requestEncoding = "identity";
+        ArrayList<Header> requestHeaders = new ArrayList<>();
+        String buffer;
+        while ((buffer = browserReader.readLine(false)) != null && !buffer.isEmpty()) {
+            Header h = new Header(buffer);
+            if (h.headerName.equals("Host")) {
+                int colonIndex = h.headerData.indexOf(":");
+                if (colonIndex != -1) {
+                    targetHost = h.headerData.substring(0, colonIndex);
+                    targetPort = Integer.parseInt(h.headerData.substring(colonIndex + 1));
+                } else {
+                    targetHost = h.headerData;
+                }
+            }
+            if (h.headerName.equals("Content-Length")) {
+                requestContentLength = Integer.parseInt(h.headerData);
+                continue;
+            }
+            if (h.headerName.equals("Connection")) {
+                keepAlive = h.headerData.equals("keep-alive");
+            }
+            if (h.headerName.equals("Accept-Encoding")) {
+                continue;
+            }
+            if (h.headerName.equals("Keep-Alive")) {
+                String[] params = h.headerData.split(",");
+                for (String p :
+                        params) {
+                    p = p.trim();
+                    String[] par = p.split("=");
+                    switch (par[0]) {
+                        case "timeout":
+                            keepAliveTimeout = Integer.parseInt(par[1]) * 1000;
+                            break;
+                        case "max":
+                            keepAliveMax = Integer.parseInt(par[1]);
+                            break;
+                    }
+                }
+            }
+            if (h.headerName.equals("Transfer-Encoding")) {
+                requestEncoding = h.headerData;
+                h.headerData = "identity";
+            }
+            requestHeaders.add(h);
+        }
+        byte[] requestBody;
+
+        //read request body
+        if (requestEncoding.equals("chunked")) {
+            requestBody = readChunkedBody(browserReader);
+        } else if (requestEncoding.equals("identity")) {
+            requestBody = readFixedSizeBody(requestContentLength, browserReader);
+        } else {
+            throw new UnsupportedOperationException("Unsupported encoding type: " + requestEncoding);
+        }
+        requestHeaders.add(new Header("Accept-Encoding", "identity"));
+        requestHeaders.add(new Header("Content-Length", String.valueOf(requestBody.length)));
+        if (requestMethod.equals("CONNECT")) {
+            httpsProxy.pipe(browserReader, browserOutputStream, targetHost);
+            return RETURN_EXIT_CODE;
+        }
+
+        if (!lastTargetHost.equals(targetHost) || lastTargetPort != targetPort) {
+            if (targetSocket != null) {
+                targetWriter.close();
+                targetReader.close();
+                targetSocket.close();
+            }
+            targetSocket = createSocket(targetHost, targetPort, secure);
+            targetStream = targetSocket.getOutputStream();
+            targetWriter = new PrintWriter(new BufferedWriter(new OutputStreamWriter(targetStream)));
+            targetReader = new UnblockableBufferedReader(targetSocket.getInputStream());
+            String targetAddress = targetSocket.getRemoteSocketAddress().toString();
+            targetPort = Integer.parseInt(targetAddress.substring(targetAddress.lastIndexOf(":") + 1));
+        }
+        sendMessage(requestMethod + " " + requestUrl + " " + protocolVersion, requestHeaders, requestBody, targetWriter, targetStream);
+
+        //read target response
+        String responseLine = targetReader.readLine(false);
+        String responseMethod = responseLine.substring(0, responseLine.indexOf(" "));
+        responseLine = responseLine.substring(responseLine.indexOf(" ") + 1);
+        int responseCode = Integer.parseInt(responseLine.substring(0, responseLine.indexOf(" ")));
+        String responseDescription = responseLine.substring(responseLine.indexOf(" ") + 1);
+        ArrayList<Header> responseHeaders = new ArrayList<>();
+        int responseContentLength = 0;
+        String responseEncoding = "identity";
+        boolean imageContentType = false;
+        while ((buffer = targetReader.readLine(false)) != null && !buffer.isEmpty()) {
+            Header h = new Header(buffer);
+            if (h.headerName.equals("Content-Length")) {
+                responseContentLength = Integer.parseInt(h.headerData);
+                continue;
+            }
+            if (h.headerName.equals("Connection")) {
+                keepAlive = h.headerData.equals("keep-alive");
+            }
+            if (h.headerName.equals("Transfer-Encoding")) {
+                responseEncoding = h.headerData;
+                h.headerData = "identity";
+            }
+            if (h.headerName.equals("Content-Type")) {
+                if (h.headerData.startsWith("image/"))
+                    imageContentType = true;
+            }
+            responseHeaders.add(h);
+        }
+        byte[] responseBody;
+        if (responseEncoding.equals("chunked")) {
+            responseBody = readChunkedBody(targetReader);
+        } else if (responseEncoding.equals("identity")) {
+            responseBody = readFixedSizeBody(responseContentLength, targetReader);
+        } else {
+            sendErrorStatusMessage(400, "Bad Request");
+            return BREAK_EXIT_CODE;
+        }
+        responseHeaders.add(new Header("Content-Length", String.valueOf(responseBody.length)));
+        sendMessage(responseMethod + " " + responseCode + " " + responseDescription, responseHeaders, responseBody, browserWriter, browserOutputStream);
+        if (imageContentType) {
+            BufferedImage interceptedImage = ImageIO.read(new ByteArrayInputStream(responseBody));
+            if (isURLValid(requestUrl))
+                capturedImages.putImage(requestUrl, interceptedImage);//todo change image signature
+            else if (isURLValid("http" + (secure ? "s" : "") + "://" + targetHost + requestUrl)) {
+                capturedImages.putImage("http" + (secure ? "s" : "") + "://" + targetHost + requestUrl, interceptedImage);
+            }
+        }
+        lastTargetPort = targetPort;
+        lastTargetHost = targetHost;
+        return OK_EXIT_CODE;
     }
 
     private static Socket createSocket(String host, int port, boolean secure) throws IOException {
@@ -115,177 +294,17 @@ public class Handler extends Thread {
         try {
             browserReader = new UnblockableBufferedReader(browserInputStream);
             browserWriter = new PrintWriter(new BufferedWriter(new OutputStreamWriter(browserOutputStream)));
+            handle_cycle:
             do {
-                if (keepAlive) {
-                    if (keepAliveMax != -1 && keepAliveMax <= keepAliveRequestCount) {
+                int retCode = handle();
+                switch (retCode) {
+                    case OK_EXIT_CODE:
                         break;
-                    } else {
-                        keepAliveRequestCount++;
-                    }
-                    while (keepAliveTimeout >= keepAliveTime) {
-                        if (browserReader.available() == 0) {
-                            try {
-                                Thread.sleep(100);
-                            } catch (InterruptedException e) {
-                                e.printStackTrace();
-                            }
-                            keepAliveTime += 100;
-                        } else {
-                            break;
-                        }
-                    }
-                    if (keepAliveTimeout != -1 && keepAliveTimeout <= keepAliveTime) {
-                        break;
-                    } else {
-                        keepAliveTimeout = 0;
-                    }
+                    case BREAK_EXIT_CODE:
+                        break handle_cycle;
+                    case RETURN_EXIT_CODE:
+                        return;
                 }
-                String requestLine = browserReader.readLine(false);
-                String[] requestParts = requestLine.split(" ");
-                if (requestParts.length != 3) {
-                    sendErrorStatusMessage(400, "Bad Request");
-                    break;
-                }
-                protocolVersion = requestParts[2];
-                if (!protocolVersion.equals("HTTP/1.1") && !protocolVersion.equals("HTTP/1")) {
-                    sendErrorStatusMessage(400, "Bad Request");
-                    break;
-                }
-                String requestMethod = requestParts[0];
-                String requestUrl = requestParts[1];
-
-                //read request headers
-                String targetHost = "";
-                int targetPort = secure ? 443 : 80;
-                int requestContentLength = 0;
-                String requestEncoding = "identity";
-                ArrayList<Header> requestHeaders = new ArrayList<>();
-                String buffer;
-                while ((buffer = browserReader.readLine(false)) != null && !buffer.isEmpty()) {
-                    Header h = new Header(buffer);
-                    if (h.headerName.equals("Host")) {
-                        int colonIndex = h.headerData.indexOf(":");
-                        if (colonIndex != -1) {
-                            targetHost = h.headerData.substring(0, colonIndex);
-                            targetPort = Integer.parseInt(h.headerData.substring(colonIndex + 1));
-                        } else {
-                            targetHost = h.headerData;
-                        }
-                    }
-                    if (h.headerName.equals("Content-Length")) {
-                        requestContentLength = Integer.parseInt(h.headerData);
-                        continue;
-                    }
-                    if (h.headerName.equals("Connection")) {
-                        keepAlive = h.headerData.equals("keep-alive");
-                    }
-                    if (h.headerName.equals("Accept-Encoding")) {
-                        continue;
-                    }
-                    if (h.headerName.equals("Keep-Alive")) {
-                        String[] params = h.headerData.split(",");
-                        for (String p :
-                                params) {
-                            p = p.trim();
-                            String[] par = p.split("=");
-                            switch (par[0]) {
-                                case "timeout":
-                                    keepAliveTimeout = Integer.parseInt(par[1]) * 1000;
-                                    break;
-                                case "max":
-                                    keepAliveMax = Integer.parseInt(par[1]);
-                                    break;
-                            }
-                        }
-                    }
-                    if (h.headerName.equals("Transfer-Encoding")) {
-                        requestEncoding = h.headerData;
-                        h.headerData = "identity";
-                    }
-                    requestHeaders.add(h);
-                }
-                byte[] requestBody;
-
-                //read request body
-                if (requestEncoding.equals("chunked")) {
-                    requestBody = readChunkedBody(browserReader);
-                } else if (requestEncoding.equals("identity")) {
-                    requestBody = readFixedSizeBody(requestContentLength, browserReader);
-                } else {
-                    throw new UnsupportedOperationException("Unsupported encoding type: " + requestEncoding);
-                }
-                requestHeaders.add(new Header("Accept-Encoding", "identity"));
-                requestHeaders.add(new Header("Content-Length", String.valueOf(requestBody.length)));
-                if (requestMethod.equals("CONNECT")) {
-                    HTTPSPipe.pipe(browserReader, browserOutputStream, targetHost, capturedImages);
-                    return;
-                }
-
-                if (!lastTargetHost.equals(targetHost) || lastTargetPort != targetPort) {
-                    if (targetSocket != null) {
-                        targetWriter.close();
-                        targetReader.close();
-                        targetSocket.close();
-                    }
-                    targetSocket = createSocket(targetHost, targetPort, secure);
-                    targetStream = targetSocket.getOutputStream();
-                    targetWriter = new PrintWriter(new BufferedWriter(new OutputStreamWriter(targetStream)));
-                    targetReader = new UnblockableBufferedReader(targetSocket.getInputStream());
-                    String targetAddress = targetSocket.getRemoteSocketAddress().toString();
-                    targetPort = Integer.parseInt(targetAddress.substring(targetAddress.lastIndexOf(":") + 1));
-                }
-                sendMessage(requestMethod + " " + requestUrl + " " + protocolVersion, requestHeaders, requestBody, targetWriter, targetStream);
-
-                //read target response
-                String responseLine = targetReader.readLine(false);
-                String responseMethod = responseLine.substring(0, responseLine.indexOf(" "));
-                responseLine = responseLine.substring(responseLine.indexOf(" ") + 1);
-                int responseCode = Integer.parseInt(responseLine.substring(0, responseLine.indexOf(" ")));
-                String responseDescription = responseLine.substring(responseLine.indexOf(" ") + 1);
-                ArrayList<Header> responseHeaders = new ArrayList<>();
-                int responseContentLength = 0;
-                String responseEncoding = "identity";
-                boolean imageContentType = false;
-                while ((buffer = targetReader.readLine(false)) != null && !buffer.isEmpty()) {
-                    Header h = new Header(buffer);
-                    if (h.headerName.equals("Content-Length")) {
-                        responseContentLength = Integer.parseInt(h.headerData);
-                        continue;
-                    }
-                    if (h.headerName.equals("Connection")) {
-                        keepAlive = h.headerData.equals("keep-alive");
-                    }
-                    if (h.headerName.equals("Transfer-Encoding")) {
-                        responseEncoding = h.headerData;
-                        h.headerData = "identity";
-                    }
-                    if (h.headerName.equals("Content-Type")) {
-                        if (h.headerData.startsWith("image/"))
-                            imageContentType = true;
-                    }
-                    responseHeaders.add(h);
-                }
-                byte[] responseBody;
-                if (responseEncoding.equals("chunked")) {
-                    responseBody = readChunkedBody(targetReader);
-                } else if (responseEncoding.equals("identity")) {
-                    responseBody = readFixedSizeBody(responseContentLength, targetReader);
-                } else {
-                    sendErrorStatusMessage(400, "Bad Request");
-                    break;
-                }
-                responseHeaders.add(new Header("Content-Length", String.valueOf(responseBody.length)));
-                sendMessage(responseMethod + " " + responseCode + " " + responseDescription, responseHeaders, responseBody, browserWriter, browserOutputStream);
-                if (imageContentType) {
-                    BufferedImage interceptedImage = ImageIO.read(new ByteArrayInputStream(responseBody));
-                    if (isURLValid(requestUrl))
-                        capturedImages.putImage(requestUrl, interceptedImage);//todo change image signature
-                    else if (isURLValid("http" + (secure ? "s" : "") + "://" + targetHost + requestUrl)) {
-                        capturedImages.putImage("http" + (secure ? "s" : "") + "://" + targetHost + requestUrl, interceptedImage);
-                    }
-                }
-                lastTargetPort = targetPort;
-                lastTargetHost = targetHost;
             } while (keepAlive);
             browserWriter.close();
             browserReader.close();
@@ -294,12 +313,6 @@ public class Handler extends Thread {
             targetSocket.close();
         } catch (IOException e) {
             e.printStackTrace();
-        }
-        browserWriter.close();
-        try {
-            browserReader.close();
-        } catch (IOException ioException) {
-            ioException.printStackTrace();
         }
         System.out.println(Thread.currentThread().getName() + " stopped");
     }

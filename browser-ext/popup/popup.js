@@ -41,7 +41,7 @@ function loadConnectionStatus() {
                 } else {
                     downloadChapterButton.setAttribute("disabled", "");
                 }
-                downloadChapterButton.onclick = () => browser.runtime.sendMessage({
+                downloadImagesButton.onclick = () => browser.runtime.sendMessage({
                     type: "dc",
                     tab: tab.id,
                     file: "/js/image_injector.js"

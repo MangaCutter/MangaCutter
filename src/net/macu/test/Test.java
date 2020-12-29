@@ -4,6 +4,8 @@ import net.macu.browser.image_proxy.proxy.CertificateAuthority;
 import net.macu.browser.plugin.BrowserPlugin;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
+import java.io.FileOutputStream;
+import java.io.PrintWriter;
 import java.security.Security;
 
 public class Test {
@@ -16,7 +18,7 @@ public class Test {
         bp.start();
 //        IOManager.initClient();
 //        System.out.println(CertificateAuthority.readPKCS12File(Streams.readAll(new FileInputStream("/home/user/ca/ca.p12"))).getCertificateChain()[0].toString());
-       /* CertificateAuthority root = CertificateAuthority.generateNewRootCA();
+        /*CertificateAuthority root = CertificateAuthority.generateNewRootCA();
         PrintWriter fos = new PrintWriter(new FileOutputStream("root.crt"));
         fos.print(root.getCertificateChainBase64Encoded());
         fos.close();

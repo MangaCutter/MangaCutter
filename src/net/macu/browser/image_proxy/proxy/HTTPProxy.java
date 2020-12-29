@@ -10,9 +10,11 @@ public class HTTPProxy extends Thread {
     private final int port;
     private ServerSocket ss;
     private final CapturedImageMap capturedImages;
+    private HTTPSProxy httpsProxy;
 
-    public HTTPProxy(int port, CapturedImageMap capturedImages) {
+    public HTTPProxy(int port, CapturedImageMap capturedImages, HTTPSProxy httpsProxy) {
         this.capturedImages = capturedImages;
+        this.httpsProxy = httpsProxy;
         setDaemon(true);
         this.port = port;
     }
@@ -28,7 +30,7 @@ public class HTTPProxy extends Thread {
         try {
             while (true) {
                 Socket s = ss.accept();
-                Handler handler = new Handler(s.getInputStream(), s.getOutputStream(), false, capturedImages);
+                Handler handler = new Handler(s.getInputStream(), s.getOutputStream(), false, capturedImages, httpsProxy);
                 handler.start();
             }
         } catch (IOException e) {

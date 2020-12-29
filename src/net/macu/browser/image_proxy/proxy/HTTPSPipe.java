@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
+import java.net.Socket;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 import java.nio.charset.StandardCharsets;
@@ -18,13 +19,18 @@ public class HTTPSPipe extends Thread {
 
     private HTTPSPipe() {
         setDaemon(true);
+        setName("HTTPSPipe");
     }
 
     public static void startHandler() {
         if (!handler.isAlive()) handler.start();
     }
 
-    public static synchronized void pipe(UnblockableBufferedReader in, OutputStream out, String targetHost, CapturedImageMap capturedImages) {
+    public static void addPipe(Pipe pipe) {
+        pipes.add(pipe);
+    }
+
+   /* public static synchronized void pipe(UnblockableBufferedReader in, OutputStream out, String targetHost, CapturedImageMap capturedImages) {
         try {
             out.write("HTTP/1.1 200 OK\r\n\r\n".getBytes(StandardCharsets.US_ASCII));
         } catch (IOException e) {
@@ -43,25 +49,22 @@ public class HTTPSPipe extends Thread {
             }
             return;
         }
-        SocketChannel s = null;
+        Socket s = null;
         try {
-            s = SocketChannel.open();
-            s.connect(new InetSocketAddress("127.0.0.1", 50002));
-            s.finishConnect();
+            s = new Socket("127.0.0.1", 50006);
         } catch (IOException e) {
             e.printStackTrace();
         }
         if (s != null) {
-//            InputStream dIn = null;
-//            OutputStream dOut = null;
-//            try {
-//                dIn = s.getInputStream();
-//                dOut = s.getOutputStream();
-//            } catch (IOException e) {
-//                e.printStackTrace();
-//            }
-            pipes.add(new Pipe(s, in, out));
-//            pipes.add(new Pipe(in, dOut));
+            InputStream inS = null;
+            OutputStream outS = null;
+            try {
+                inS = s.getInputStream();
+                outS = s.getOutputStream();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            pipes.add(new Pipe(in, out, inS, outS, s));
         } else {
             try {
                 in.close();
@@ -70,12 +73,13 @@ public class HTTPSPipe extends Thread {
                 e.printStackTrace();
             }
         }
-    }
+    }*/
 
     @Override
     public void run() {
         byte[] buffer = new byte[1024 * 16];
-        ByteBuffer buffer1 = ByteBuffer.allocate(1024 * 16);
+        int readS;
+        int readC;
         while (true) {
             long minWait = Long.MAX_VALUE;
             long maxWait = 0;
@@ -84,14 +88,25 @@ public class HTTPSPipe extends Thread {
                 Pipe pipe = pipes.get(i);
                 try {
                     long from = System.currentTimeMillis();
-                    if (pipe.handlerChannel.isOpen()) {
-                        if (pipe.inC.available() > 0) {
-                            int read = pipe.inC.read(buffer);
-                            pipe.handlerChannel.write(ByteBuffer.wrap(buffer, 0, read));
+                    do {
+                        if (pipe.inS.available() > 0) {
+                            while ((readS = pipe.inS.read(buffer)) == buffer.length) {
+                                pipe.outC.write(buffer, 0, readS);
+                            }
+                            pipe.outC.write(buffer, 0, readS);
+                        } else {
+                            readS = 0;
                         }
-                        int read = pipe.handlerChannel.read(buffer1);
-                        pipe.outC.write(buffer1.array(), 0, read);
-                    } else {
+                        if (pipe.inC.available() > 0) {
+                            while ((readC = pipe.inC.read(buffer)) == buffer.length) {
+                                pipe.outS.write(buffer, 0, readC);
+                            }
+                            pipe.outS.write(buffer, 0, readC);
+                        } else {
+                            readC = 0;
+                        }
+                    } while (readS + readC != 0);
+                    if (pipe.s.isClosed()) {
                         pipes.remove(i);
                         pipe.close();
                         i--;
@@ -109,26 +124,31 @@ public class HTTPSPipe extends Thread {
                     i--;
                 }
             }
-            if (minWait != 0 && maxWait != 0 && pipes.size() != 0)
+            if (minWait > 1 && maxWait > 1 && pipes.size() != 0)
                 System.out.println(minWait + " " + maxWait + " " + pipes.size());
         }
     }
 
-    private static class Pipe {
-        private final SocketChannel handlerChannel;
+    public static class Pipe {
         InputStream inC;
         OutputStream outC;
+        private Socket s;
+        InputStream inS;
+        OutputStream outS;
 
-        private Pipe(SocketChannel handlerChannel, InputStream inC, OutputStream outC) {
-            this.handlerChannel = handlerChannel;
+        public Pipe(InputStream inS, OutputStream outS, InputStream inC, OutputStream outC, Socket s) {
+            this.inS = inS;
+            this.outS = outS;
             this.inC = inC;
             this.outC = outC;
+            this.s = s;
         }
 
         private void close() throws IOException {
             inC.close();
             outC.close();
-            handlerChannel.close();
+            inS.close();
+            outS.close();
         }
     }
 }

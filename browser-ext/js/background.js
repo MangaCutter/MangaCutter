@@ -14,6 +14,8 @@ function sendQueueToServer() {
     if (sock.readyState === sock.OPEN) {
         for (let message of sendQueue) {
             sock.send(message);
+            console.log("to server");
+            console.log(message);
         }
         sendQueue = [];
     }
@@ -34,6 +36,8 @@ function onWebSocketClose() {
 }
 
 function onWebSocketMessage(event) {
+    console.log("from server");
+    console.log(event);
     let request = event.data;
     if (request.indexOf("open ") === 0) {
         browser.tabs.create({url: request.substr(5)}).catch(onError);
@@ -54,7 +58,9 @@ function onWebSocketMessage(event) {
         for (let i = 0; i < busyTabs.length; i++) {
             if (busyTabs[i].tab === tab) {
                 if (busyTabs[i].attempts < 5) {
-                    browser.tabs.reload(busyTabs[i].tab, {bypassCache: true}).then(browser.tabs.executeScript(busyTabs[i].tab, {file: busyTabs[i].file}));
+                    browser.tabs.reload(busyTabs[i].tab, {bypassCache: false}).then(() => {
+                        browser.tabs.executeScript(busyTabs[i].tab, {file: busyTabs[i].file});
+                    });
                     busyTabs[i].attempts++;
                 } else {
                     sendMsgToServer("alert browser.plugin.BrowserPlugin.onMessage.too_many_attempts");
@@ -95,15 +101,18 @@ function disableProxy() {
 createWebSocket();
 
 browser.runtime.onMessage.addListener(async (message, sender) => {
+    console.log("from cs");
+    console.log(message);
     if (message.type === "dc") {
         if (!proxyStatus)
             await enableProxy();
         if (proxyStatus) {
             busyTabs.push({tab: message.tab, file: message.file, attempts: 0});
-            browser.tabs.reload(message.tab, {bypassCache: true}).then(browser.tabs.executeScript(message.tab, {file: message.file}));
+            browser.tabs.reload(message.tab, {bypassCache: false}).then(browser.tabs.executeScript(message.tab, {file: message.file}));
         } //note: else branch is situated in enableProxy method
     }
     if (message.type === "su") {
-        sendMsgToServer("su " + sender.tab + "\t" + message.data);
+        sendMsgToServer("su " + sender.tab + "\t" + JSON.stringify(message.data));
+        console.log(message.data);
     }
 });
