@@ -26,7 +26,6 @@ public class Handler extends Thread {
     protected PrintWriter browserWriter;
     protected final OutputStream browserOutputStream;
     private final CapturedImageMap capturedImages;
-    private HTTPSProxy httpsProxy;
     protected UnblockableBufferedReader targetReader;
     protected PrintWriter targetWriter;
     private OutputStream targetStream;
@@ -34,19 +33,18 @@ public class Handler extends Thread {
     protected boolean keepAlive = false;
     private int keepAliveMax = 100;
     private int keepAliveRequestCount = 0;
-    private int keepAliveTimeout = 6000;
-    private int keepAliveTime = 0;
+    private long keepAliveTimeout = 6000;
+    private long keepAliveLastTime = 0;
     private String lastTargetHost = "";
     private int lastTargetPort = -1;
     protected static final int BREAK_EXIT_CODE = 1;
     protected static final int RETURN_EXIT_CODE = -1;
     protected static final int OK_EXIT_CODE = 0;
 
-    public Handler(InputStream in, OutputStream out, boolean secure, CapturedImageMap capturedImages, HTTPSProxy httpsProxy) {
+    public Handler(InputStream in, OutputStream out, boolean secure, CapturedImageMap capturedImages) {
         browserInputStream = in;
         browserOutputStream = out;
         this.capturedImages = capturedImages;
-        this.httpsProxy = httpsProxy;
         setDaemon(true);
         setName("Handler-" + (Counter));
         Counter++;
@@ -60,22 +58,16 @@ public class Handler extends Thread {
             } else {
                 keepAliveRequestCount++;
             }
-            while (keepAliveTimeout >= keepAliveTime) {
+            while (keepAliveTimeout >= System.currentTimeMillis() - keepAliveLastTime) {
                 if (browserReader.available() == 0) {
-                    try {
-                        Thread.sleep(100);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                    keepAliveTime += 100;
+                    Thread.yield();
                 } else {
                     break;
                 }
             }
-            if (keepAliveTimeout != -1 && keepAliveTimeout <= keepAliveTime) {
+            if (keepAliveTimeout != -1 && keepAliveTimeout < System.currentTimeMillis() - keepAliveLastTime) {
+                System.out.println(Thread.currentThread().getName()+" timeout");
                 return BREAK_EXIT_CODE;
-            } else {
-                keepAliveTimeout = 0;
             }
         }
         String requestLine = browserReader.readLine(false);
@@ -128,7 +120,7 @@ public class Handler extends Thread {
                     String[] par = p.split("=");
                     switch (par[0]) {
                         case "timeout":
-                            keepAliveTimeout = Integer.parseInt(par[1]) * 1000;
+                            keepAliveTimeout = Long.parseLong(par[1]) * 1000;
                             break;
                         case "max":
                             keepAliveMax = Integer.parseInt(par[1]);
@@ -155,7 +147,8 @@ public class Handler extends Thread {
         requestHeaders.add(new Header("Accept-Encoding", "identity"));
         requestHeaders.add(new Header("Content-Length", String.valueOf(requestBody.length)));
         if (requestMethod.equals("CONNECT")) {
-            httpsProxy.pipe(browserReader, browserOutputStream, targetHost);
+            HTTPSPipe.pipe(browserReader, browserOutputStream, targetHost, capturedImages);
+            System.out.println(Thread.currentThread().getName()+" stopped");
             return RETURN_EXIT_CODE;
         }
 
@@ -224,6 +217,7 @@ public class Handler extends Thread {
         }
         lastTargetPort = targetPort;
         lastTargetHost = targetHost;
+        keepAliveLastTime = System.currentTimeMillis();
         return OK_EXIT_CODE;
     }
 
