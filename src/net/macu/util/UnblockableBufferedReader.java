@@ -322,6 +322,6 @@ public class UnblockableBufferedReader extends InputStream {
 
     public int available() throws IOException {
         int available = in.available();
-        return available != 0 ? available : nChars - nextChar;
+        return available != 0 ? available + nChars - nextChar : nChars - nextChar;
     }
 }

@@ -2,6 +2,8 @@ package net.macu.browser.plugin;
 
 import net.macu.browser.image_proxy.CapturedImageMap;
 import net.macu.browser.image_proxy.proxy.HTTPProxy;
+import net.macu.browser.image_proxy.proxy.HTTPSPipe;
+import net.macu.browser.image_proxy.proxy.HTTPSProxy;
 import org.json.simple.JSONArray;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
@@ -16,11 +18,13 @@ public class BrowserPlugin {
     private static BrowserPlugin instance = null;
     private final PluginWebSocketServer webSocketServer;
     private final HTTPProxy httpProxy;
+    private final HTTPSProxy httpsProxy;
     private final CapturedImageMap capturedImages = new CapturedImageMap();
 
     private BrowserPlugin() {
         webSocketServer = new PluginWebSocketServer(50000, this);
         httpProxy = new HTTPProxy(50001, capturedImages);
+        httpsProxy = new HTTPSProxy(50002, capturedImages);
     }
 
     public static BrowserPlugin getPlugin() {
@@ -33,6 +37,8 @@ public class BrowserPlugin {
     }
 
     public void start() {
+        httpsProxy.start();
+        HTTPSPipe.startHandler();
         httpProxy.start();
         webSocketServer.start();
     }
