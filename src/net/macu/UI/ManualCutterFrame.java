@@ -302,7 +302,14 @@ public class ManualCutterFrame extends JFrame implements MouseListener, MouseMot
         return locker;
     }
 
-    public BufferedImage[] getResult() {
+    public BufferedImage[] waitForResults() {
+        synchronized (getLocker()) {
+            try {
+                getLocker().wait();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
         return result;
     }
 
@@ -516,7 +523,7 @@ public class ManualCutterFrame extends JFrame implements MouseListener, MouseMot
         if (ctrlPressed || altPressed) {
             zoom(-2 * e.getWheelRotation());
         } else {
-            scroll(SCROLL_SPEED.getInt() * (SCROLL_INVERSION.getBoolean() ? 1 : -1));
+            scroll(e.getWheelRotation() * SCROLL_SPEED.getInt() * (SCROLL_INVERSION.getBoolean() ? 1 : -1));
         }
         mouseMoved(e);
         c.repaint();

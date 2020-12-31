@@ -11,14 +11,7 @@ public class ManualCutter implements Cutter {
     @Override
     public BufferedImage[] cutScans(BufferedImage[] fragments) {
         mcf = new ManualCutterFrame(fragments);
-        synchronized (mcf.getLocker()) {
-            try {
-                mcf.getLocker().wait();
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
-        return mcf.getResult();
+        return mcf.waitForResults();
     }
 
     @Override
