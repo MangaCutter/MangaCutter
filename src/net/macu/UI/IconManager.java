@@ -84,4 +84,23 @@ public class IconManager {
     public static ImageIcon getSortIcon() {
         return sortIcon;
     }
+
+    public static ImageIcon getSpinnerIcon(int width, int height) {
+        SAXSVGDocumentFactory factory = new SAXSVGDocumentFactory(XMLResourceDescriptor.getXMLParserClassName());
+        TranscoderImpl transcoder = new TranscoderImpl();
+        TranscodingHints hints = new TranscodingHints();
+        hints.put(ImageTranscoder.KEY_DOM_IMPLEMENTATION, factory.getDOMImplementation(""));
+        hints.put(ImageTranscoder.KEY_DOCUMENT_ELEMENT_NAMESPACE_URI, SVGConstants.SVG_NAMESPACE_URI);
+        hints.put(ImageTranscoder.KEY_DOCUMENT_ELEMENT, SVGConstants.SVG_SVG_TAG);
+        hints.put(ImageTranscoder.KEY_XML_PARSER_VALIDATING, false);
+        hints.put(ImageTranscoder.KEY_WIDTH, (float) width);
+        hints.put(ImageTranscoder.KEY_HEIGHT, (float) height);
+        transcoder.setTranscodingHints(hints);
+        try {
+            transcoder.transcode(new TranscoderInput(IconManager.class.getResourceAsStream("spinner.svg")), null);
+        } catch (TranscoderException e) {
+            e.printStackTrace();
+        }
+        return new ImageIcon(transcoder.getImage());
+    }
 }

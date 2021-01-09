@@ -27,6 +27,7 @@ public class RequestFrame implements ImageListener {
     private static final Color DESELECTED_READY_BACKGROUND = new Color(0, 69, 0);
     private static final int THUMBNAIL_WIDTH = 50;
     private static final int THUMBNAIL_HEIGHT = 50;
+    private static ImageIcon WaitIcon;
     private final JPopupMenu sortModePopup = new JPopupMenu();
     private final ArrayList<Thumbnail> visible = new ArrayList<>();
     private final ArrayList<String> least = new ArrayList<>();
@@ -53,6 +54,7 @@ public class RequestFrame implements ImageListener {
     private boolean downloadingCompleted = false;
 
     public RequestFrame(ArrayList<String> captureList, CapturedImageProcessor processor, BrowserPlugin plugin, String tabId, String url) {
+        WaitIcon = IconManager.getSpinnerIcon(THUMBNAIL_WIDTH, THUMBNAIL_HEIGHT);
         this.plugin = plugin;
         this.tabId = tabId;
         this.url = url;
@@ -501,8 +503,7 @@ public class RequestFrame implements ImageListener {
                 g.drawImage(image, 0, 0, thumbWidth, thumbHeight, null);
                 return new ImageIcon(thumb);
             } else {
-                //todo set waiting icon
-                return new ImageIcon(new BufferedImage(THUMBNAIL_WIDTH, THUMBNAIL_HEIGHT, BufferedImage.TYPE_BYTE_GRAY));
+                return WaitIcon;
             }
         }
 
