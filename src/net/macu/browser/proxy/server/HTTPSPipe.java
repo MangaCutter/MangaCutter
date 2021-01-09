@@ -1,6 +1,7 @@
-package net.macu.browser.image_proxy.proxy;
+package net.macu.browser.proxy.server;
 
-import net.macu.browser.image_proxy.CapturedImageMap;
+import net.macu.browser.proxy.CapturedImageProcessor;
+import net.macu.browser.proxy.Handler;
 import net.macu.util.UnblockableBufferedReader;
 import org.bouncycastle.tls.TlsServerProtocol;
 
@@ -10,7 +11,7 @@ import java.nio.charset.StandardCharsets;
 
 public class HTTPSPipe {
 
-    public static void pipe(UnblockableBufferedReader in, OutputStream out, String targetHost, CapturedImageMap capturedImages) {
+    public static void pipe(UnblockableBufferedReader in, OutputStream out, String targetHost, CapturedImageProcessor capturedImages) {
         try {
             out.write("HTTP/1.1 200 OK\r\n\r\n".getBytes(StandardCharsets.US_ASCII));
         } catch (IOException e) {

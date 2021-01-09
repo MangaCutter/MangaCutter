@@ -1,6 +1,6 @@
-package net.macu.browser.image_proxy.proxy;
+package net.macu.browser.proxy;
 
-import net.macu.browser.image_proxy.CapturedImageMap;
+import net.macu.browser.proxy.server.HTTPSPipe;
 import net.macu.util.UnblockableBufferedReader;
 
 import javax.imageio.ImageIO;
@@ -25,7 +25,7 @@ public class Handler extends Thread {
     protected UnblockableBufferedReader browserReader;
     protected PrintWriter browserWriter;
     protected final OutputStream browserOutputStream;
-    private final CapturedImageMap capturedImages;
+    private final CapturedImageProcessor capturedImages;
     protected UnblockableBufferedReader targetReader;
     protected PrintWriter targetWriter;
     private OutputStream targetStream;
@@ -41,7 +41,7 @@ public class Handler extends Thread {
     protected static final int RETURN_EXIT_CODE = -1;
     protected static final int OK_EXIT_CODE = 0;
 
-    public Handler(InputStream in, OutputStream out, boolean secure, CapturedImageMap capturedImages) {
+    public Handler(InputStream in, OutputStream out, boolean secure, CapturedImageProcessor capturedImages) {
         browserInputStream = in;
         browserOutputStream = out;
         this.capturedImages = capturedImages;
@@ -66,7 +66,7 @@ public class Handler extends Thread {
                 }
             }
             if (keepAliveTimeout != -1 && keepAliveTimeout < System.currentTimeMillis() - keepAliveLastTime) {
-                System.out.println(Thread.currentThread().getName()+" timeout");
+                System.out.println(Thread.currentThread().getName() + " timeout");
                 return BREAK_EXIT_CODE;
             }
         }
@@ -93,6 +93,11 @@ public class Handler extends Thread {
         String buffer;
         while ((buffer = browserReader.readLine(false)) != null && !buffer.isEmpty()) {
             Header h = new Header(buffer);
+            if (h.headerName.equals("Accept-Encoding") ||
+                    h.headerName.equals("If-Modified-Since") ||
+                    h.headerName.equals("If-None-Match")) {
+                continue;
+            }
             if (h.headerName.equals("Host")) {
                 int colonIndex = h.headerData.indexOf(":");
                 if (colonIndex != -1) {
@@ -108,9 +113,6 @@ public class Handler extends Thread {
             }
             if (h.headerName.equals("Connection")) {
                 keepAlive = h.headerData.equals("keep-alive");
-            }
-            if (h.headerName.equals("Accept-Encoding")) {
-                continue;
             }
             if (h.headerName.equals("Keep-Alive")) {
                 String[] params = h.headerData.split(",");
@@ -148,7 +150,7 @@ public class Handler extends Thread {
         requestHeaders.add(new Header("Content-Length", String.valueOf(requestBody.length)));
         if (requestMethod.equals("CONNECT")) {
             HTTPSPipe.pipe(browserReader, browserOutputStream, targetHost, capturedImages);
-            System.out.println(Thread.currentThread().getName()+" stopped");
+            System.out.println(Thread.currentThread().getName() + " stopped");
             return RETURN_EXIT_CODE;
         }
 
@@ -176,7 +178,6 @@ public class Handler extends Thread {
         ArrayList<Header> responseHeaders = new ArrayList<>();
         int responseContentLength = 0;
         String responseEncoding = "identity";
-        boolean imageContentType = false;
         while ((buffer = targetReader.readLine(false)) != null && !buffer.isEmpty()) {
             Header h = new Header(buffer);
             if (h.headerName.equals("Content-Length")) {
@@ -189,10 +190,6 @@ public class Handler extends Thread {
             if (h.headerName.equals("Transfer-Encoding")) {
                 responseEncoding = h.headerData;
                 h.headerData = "identity";
-            }
-            if (h.headerName.equals("Content-Type")) {
-                if (h.headerData.startsWith("image/"))
-                    imageContentType = true;
             }
             responseHeaders.add(h);
         }
@@ -207,13 +204,17 @@ public class Handler extends Thread {
         }
         responseHeaders.add(new Header("Content-Length", String.valueOf(responseBody.length)));
         sendMessage(responseMethod + " " + responseCode + " " + responseDescription, responseHeaders, responseBody, browserWriter, browserOutputStream);
-        if (imageContentType) {
+        try {
             BufferedImage interceptedImage = ImageIO.read(new ByteArrayInputStream(responseBody));
-            if (isURLValid(requestUrl))
-                capturedImages.putImage(requestUrl, interceptedImage);//todo change image signature
-            else if (isURLValid("http" + (secure ? "s" : "") + "://" + targetHost + requestUrl)) {
-                capturedImages.putImage("http" + (secure ? "s" : "") + "://" + targetHost + requestUrl, interceptedImage);
+            if (interceptedImage != null) {
+                if (isURLValid(requestUrl))
+                    capturedImages.putImage(requestUrl, interceptedImage);//todo change image signature
+                else if (isURLValid("http" + (secure ? "s" : "") + "://" + targetHost + requestUrl)) {
+                    capturedImages.putImage("http" + (secure ? "s" : "") + "://" + targetHost + requestUrl, interceptedImage);
+                }
             }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
         lastTargetPort = targetPort;
         lastTargetHost = targetHost;

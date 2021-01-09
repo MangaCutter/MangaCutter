@@ -1,4 +1,4 @@
-package net.macu.browser.image_proxy.proxy;
+package net.macu.browser.proxy.cert;
 
 import org.bouncycastle.asn1.DERSequence;
 import org.bouncycastle.asn1.pkcs.ContentInfo;

@@ -11,6 +11,7 @@ public class L implements Parametrized {
     private static final String[] SUPPORTED_LANGUAGES = new String[]{
             "en", "ru"
     };
+    private static final String DEFAULT_LABEL_VALUE = "not_yet_implemented";
     private static Properties langBundle;
 
     public static void loadLanguageData() {
@@ -32,7 +33,9 @@ public class L implements Parametrized {
     }
 
     public static String get(String labelName, Object... args) {
-        return String.format(langBundle.getProperty(labelName, "not_yet_implemented"), args);
+        if (langBundle != null)
+            return String.format(langBundle.getProperty(labelName, DEFAULT_LABEL_VALUE), args);
+        else return DEFAULT_LABEL_VALUE;
     }
 
     public static Parameters getParameters() {

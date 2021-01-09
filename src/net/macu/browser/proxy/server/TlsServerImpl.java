@@ -1,5 +1,6 @@
-package net.macu.browser.image_proxy.proxy;
+package net.macu.browser.proxy.server;
 
+import net.macu.browser.proxy.cert.CertificateAuthority;
 import org.bouncycastle.tls.*;
 import org.bouncycastle.tls.crypto.TlsCertificate;
 import org.bouncycastle.tls.crypto.TlsCryptoParameters;

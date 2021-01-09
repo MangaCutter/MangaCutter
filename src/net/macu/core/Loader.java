@@ -19,6 +19,13 @@ import java.util.jar.JarFile;
 import java.util.jar.Manifest;
 
 public class Loader extends ClassLoader {
+    public static void main(String[] args) throws Throwable {
+        Loader loader = new Loader();
+        if (args.length > 0 && args[0].equals("--test"))
+            loader.invokeMain("net.macu.test.Test", args);
+        else
+            loader.invokeMain("net.macu.core.Main", args);
+    }
 
     /**
      * VM parameter key to turn on logging to file or console.
@@ -58,6 +65,7 @@ public class Loader extends ClassLoader {
     private PrintStream logger;
     private LogLevel logLevel;
     private Set<LogArea> hsLogArea;
+
     private boolean bLogConsole;
 
     /**
@@ -156,11 +164,6 @@ public class Loader extends ClassLoader {
             }
         });
     } // JarClassLoader()
-
-    public static void main(String[] args) throws Throwable {
-        Loader loader = new Loader();
-        loader.invokeMain("net.macu.test.Test", args);
-    }
 
     private void initLogger() {
         // Logger defaults:

@@ -1,4 +1,4 @@
-package net.macu.browser.image_proxy.proxy;
+package net.macu.browser.proxy.cert;
 
 import javax.net.ssl.KeyManager;
 import javax.net.ssl.KeyManagerFactory;

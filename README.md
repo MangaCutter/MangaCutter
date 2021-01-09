@@ -1,4 +1,4 @@
-# MaCu - MangaCutter
+# MangaCutter
 
 Application for downloading and manipulating with manga scans.
 Easy way to cut scans automatically fast and accurate.

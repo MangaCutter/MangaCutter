@@ -1,6 +1,7 @@
-package net.macu.browser.image_proxy.proxy;
+package net.macu.browser.proxy.server;
 
-import net.macu.browser.image_proxy.CapturedImageMap;
+import net.macu.browser.proxy.CapturedImageProcessor;
+import net.macu.browser.proxy.Handler;
 
 import java.io.IOException;
 import java.net.ServerSocket;
@@ -9,9 +10,9 @@ import java.net.Socket;
 public class HTTPProxy extends Thread {
     private final int port;
     private ServerSocket ss;
-    private final CapturedImageMap capturedImages;
+    private final CapturedImageProcessor capturedImages;
 
-    public HTTPProxy(int port, CapturedImageMap capturedImages) {
+    public HTTPProxy(int port, CapturedImageProcessor capturedImages) {
         this.capturedImages = capturedImages;
         setDaemon(true);
         this.port = port;

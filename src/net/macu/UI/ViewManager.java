@@ -1,5 +1,6 @@
 package net.macu.UI;
 
+import com.bulenkov.darcula.DarculaLaf;
 import net.macu.core.JobManager;
 import net.macu.core.Main;
 import net.macu.service.ServiceManager;
@@ -12,6 +13,7 @@ import javax.swing.filechooser.FileSystemView;
 import java.awt.*;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -95,6 +97,32 @@ public class ViewManager {
         return frame;
     }
 
+    public static void showPreviewFrame(BufferedImage image, Component parent) {
+        if (image != null) {
+            JFrame f = new JFrame(L.get("UI.ViewManager.preview_frame_title"));
+            f.add(new JScrollPane(new JLabel(new ImageIcon(image))));
+            f.setIconImage(IconManager.getBrandIcon());
+            f.setLocationRelativeTo(parent);
+            f.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+            f.setSize(600, 600);
+            f.addWindowListener(new WindowAdapter() {
+                @Override
+                public void windowClosing(WindowEvent e) {
+                    f.dispose();
+                }
+            });
+            f.setVisible(true);
+        }
+    }
+
+    public static void setLookAndFeel() {
+        try {
+            UIManager.setLookAndFeel(new DarculaLaf());
+        } catch (UnsupportedLookAndFeelException e) {
+            e.printStackTrace();
+        }
+    }
+
     private static void constructFileChoosers() {
         singleFileChooser = new JFileChooser();
         singleFileChooser.setDialogTitle(L.get("UI.ViewManager.file_chooser_title"));
@@ -129,6 +157,7 @@ public class ViewManager {
             frame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
             frame.setLocationRelativeTo(null);
             frame.setResizable(false);
+            frame.setIconImage(IconManager.getBrandIcon());
             frame.addWindowListener(new WindowAdapter() {
                 @Override
                 public void windowClosing(WindowEvent e) {

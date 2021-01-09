@@ -1,6 +1,7 @@
 package net.macu.core;
 
 import net.macu.UI.Form;
+import net.macu.UI.IconManager;
 import net.macu.UI.ViewManager;
 import net.macu.service.Service;
 import net.macu.settings.L;
@@ -50,6 +51,7 @@ public class Main {
         IOManager.checkUpdates();
         IOManager.initClient();
 
+        IconManager.loadIcons();
         ViewManager.createView();
     }
 

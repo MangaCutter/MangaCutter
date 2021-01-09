@@ -1,4 +1,4 @@
-package net.macu.browser.image_proxy.proxy;
+package net.macu.browser.proxy;
 
 public class Header {
     String headerName;

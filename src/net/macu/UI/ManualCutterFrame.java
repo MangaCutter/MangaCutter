@@ -262,6 +262,7 @@ public class ManualCutterFrame extends JFrame implements MouseListener, MouseMot
         setSize(600, 600);
         setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
         setLocationRelativeTo(ViewManager.getFrame());
+        setIconImage(IconManager.getBrandIcon());
         setVisible(true);
         addWindowListener(new WindowAdapter() {
             @Override
