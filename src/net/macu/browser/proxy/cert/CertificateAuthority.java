@@ -110,6 +110,7 @@ public class CertificateAuthority {
         JcaX509ExtensionUtils rootCertExtUtils = new JcaX509ExtensionUtils();
         rootCertBuilder.addExtension(Extension.basicConstraints, true, new BasicConstraints(true));
         rootCertBuilder.addExtension(Extension.subjectKeyIdentifier, false, rootCertExtUtils.createSubjectKeyIdentifier(rootKeyPair.getPublic()));
+        rootCertBuilder.addExtension(Extension.keyUsage, true, new KeyUsage(KeyUsage.keyCertSign));
         X509CertificateHolder rootCertHolder = rootCertBuilder.build(rootCertContentSigner);
         X509Certificate rootCert = new JcaX509CertificateConverter().setProvider(BC_PROVIDER).getCertificate(rootCertHolder);
         return new CertificateAuthority(new X509Certificate[]{rootCert}, rootKeyPair.getPrivate());
@@ -163,7 +164,7 @@ public class CertificateAuthority {
         issuedCertBuilder.addExtension(Extension.basicConstraints, true, new BasicConstraints(false));
         issuedCertBuilder.addExtension(Extension.authorityKeyIdentifier, false, issuedCertExtUtils.createAuthorityKeyIdentifier(certificateChain[0]));
         issuedCertBuilder.addExtension(Extension.subjectKeyIdentifier, false, issuedCertExtUtils.createSubjectKeyIdentifier(csr.getSubjectPublicKeyInfo()));
-        issuedCertBuilder.addExtension(Extension.keyUsage, false, new KeyUsage(KeyUsage.keyEncipherment));
+        issuedCertBuilder.addExtension(Extension.keyUsage, false, new KeyUsage(KeyUsage.digitalSignature | KeyUsage.keyAgreement));
         GeneralName[] names = new GeneralName[domains.size()];
         for (int i = 0; i < domains.size(); i++) {
             names[i] = new GeneralName(GeneralName.dNSName, domains.get(i));
