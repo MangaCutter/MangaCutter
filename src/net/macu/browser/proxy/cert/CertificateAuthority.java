@@ -104,7 +104,7 @@ public class CertificateAuthority implements Parametrized {
             rootCA = readPKCS12File(Base64.decode(ROOT_CA.getString()));
         } catch (Exception e) {
             e.printStackTrace();
-            //todo show error
+            //todo show error, ask to regenerate root ca
         }
     }
 

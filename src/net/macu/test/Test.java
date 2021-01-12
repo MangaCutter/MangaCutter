@@ -20,20 +20,6 @@ public class Test {
         CertificateAuthority.loadRootCA();
         BrowserPlugin bp = BrowserPlugin.getPlugin();
         bp.start();
-        /*ArrayList<String> map = new ArrayList<>();
-        for (int i = 0; i < 20; i++) {
-            map.add(String.format("http://example.com/ttt/%04d.png", i));
-        }
-        new Request(map, new CapturedImageProcessor());*/
-//        IOManager.initClient();
-//        System.out.println(CertificateAuthority.readPKCS12File(Streams.readAll(new FileInputStream("/home/user/ca/ca.p12"))).getCertificateChain()[0].toString());
-        /*CertificateAuthority root = CertificateAuthority.generateNewRootCA();
-        PrintWriter fos = new PrintWriter(new FileOutputStream("root.crt"));
-        fos.print(root.getCertificateChainBase64Encoded());
-        fos.close();
-        fos = new PrintWriter(new FileOutputStream("root.p12.enc"));
-        fos.print(root.getKeyPairKeystoreFileBase64Encoded("alias"));
-        fos.close();*/
     }
 
 }

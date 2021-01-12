@@ -24,7 +24,6 @@ public class HTTPSPipe {
             proto.accept(impl);
             new Handler(proto.getInputStream(), proto.getOutputStream(), true, capturedImages).start();
         } catch (Exception e) {
-            System.out.print(Thread.currentThread().getName() + " ");
             e.printStackTrace();
             try {
                 in.close();

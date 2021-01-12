@@ -296,6 +296,7 @@ public class ManualCutterFrame extends JFrame implements MouseListener, MouseMot
                 }
             }
         });
+        scrollThread.setDaemon(true);
         scrollThread.start();
     }
 

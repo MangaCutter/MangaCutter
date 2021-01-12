@@ -66,7 +66,6 @@ public class Handler extends Thread {
                 }
             }
             if (keepAliveTimeout != -1 && keepAliveTimeout < System.currentTimeMillis() - keepAliveLastTime) {
-                System.out.println(Thread.currentThread().getName() + " timeout");
                 return BREAK_EXIT_CODE;
             }
         }
@@ -150,7 +149,6 @@ public class Handler extends Thread {
         requestHeaders.add(new Header("Content-Length", String.valueOf(requestBody.length)));
         if (requestMethod.equals("CONNECT")) {
             HTTPSPipe.pipe(browserReader, browserOutputStream, targetHost, capturedImages);
-            System.out.println(Thread.currentThread().getName() + " stopped");
             return RETURN_EXIT_CODE;
         }
 
@@ -285,7 +283,6 @@ public class Handler extends Thread {
 
     @Override
     public void run() {
-        System.out.println(Thread.currentThread().getName() + " started");
         try {
             browserReader = new UnblockableBufferedReader(browserInputStream);
             browserWriter = new PrintWriter(new BufferedWriter(new OutputStreamWriter(browserOutputStream)));
@@ -309,7 +306,6 @@ public class Handler extends Thread {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        System.out.println(Thread.currentThread().getName() + " stopped");
     }
 
     private void sendErrorStatusMessage(int code, String description) {
