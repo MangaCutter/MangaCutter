@@ -18,7 +18,7 @@ public class ManualForm implements Form {
 
     public ManualForm() {
         browseButton.addActionListener(e -> {
-            String path = ViewManager.requestSelectDir(L.get("UI.ManualForm.browser_approve_button"));
+            String path = ViewManager.requestSelectDir();
             filePathTextField.setText(path);
         });
         pathLabel.setText(L.get("UI.ManualForm.path_label"));

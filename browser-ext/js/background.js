@@ -1,4 +1,4 @@
-browser.storage.local.set({connectionStatus: false});
+chrome.storage.local.set({connectionStatus: false});
 
 let sock;
 let sendQueue = [];
@@ -25,13 +25,13 @@ function onError(error) {
 }
 
 function onWebSocketOpen() {
-    browser.storage.local.set({connectionStatus: true});
+    chrome.storage.local.set({connectionStatus: true});
     console.log("web socket opened");
     sendQueueToServer();
 }
 
 function onWebSocketClose() {
-    browser.storage.local.set({connectionStatus: false});
+    chrome.storage.local.set({connectionStatus: false});
     disableProxy();
     setTimeout(createWebSocket, 2000);
 }
@@ -39,7 +39,7 @@ function onWebSocketClose() {
 function onWebSocketMessage(event) {
     let request = event.data;
     if (request.indexOf("open ") === 0) {
-        browser.tabs.create({url: request.substr(request.indexOf(" ") + 1)}).catch(onError);
+        chrome.tabs.create({url: request.substr(request.indexOf(" ") + 1)}).catch(onError);
     } else if (request.indexOf("completed ") === 0 || request.indexOf("canceled ") === 0) {
         console.log(request);
         let tab = request.substr(request.indexOf(" ") + 1);
@@ -59,8 +59,8 @@ function onWebSocketMessage(event) {
         for (let i = 0; i < busyTabs.length; i++) {
             if ((busyTabs[i].tab + "") === tab) {
                 if (busyTabs[i].attempts < 5) {
-                    browser.tabs.reload(busyTabs[i].tab, {bypassCache: false}).then(() => {
-                        browser.tabs.executeScript(busyTabs[i].tab, {file: busyTabs[i].file});
+                    chrome.tabs.reload(busyTabs[i].tab, {bypassCache: false}).then(() => {
+                        chrome.tabs.executeScript(busyTabs[i].tab, {file: busyTabs[i].file});
                     });
                     busyTabs[i].attempts++;
                 } else {
@@ -83,29 +83,59 @@ function createWebSocket() {
     sock.onclose = onWebSocketClose;
 }
 
-async function enableProxy() {
-    await browser.proxy.settings.get({}).then(async (settings) => {
-        if (settings.levelOfControl === "controllable_by_this_extension" ||
-            settings.levelOfControl === "controlled_by_this_extension") {
-            usersProxySettings = settings.value;
-            console.log(usersProxySettings);
-            await browser.proxy.settings.set({
-                value: {
-                    proxyType: "manual",
-                    http: "http://127.0.0.1:50001",
-                    httpProxyAll: true
-                }
-            }).then(() => proxyStatus = true, (e) => console.log(e));
-        }
-    }, (e) => console.log(e));
+async function enableProxy(after) {
+    if (typeof browser !== 'undefined') {
+        await browser.proxy.settings.get({}).then(async (settings) => {
+            if (settings.levelOfControl === "controllable_by_this_extension" ||
+                settings.levelOfControl === "controlled_by_this_extension") {
+                usersProxySettings = settings.value;
+                console.log(usersProxySettings);
+                await browser.proxy.settings.set({
+                    value: {
+                        proxyType: "manual",
+                        http: "http://127.0.0.1:50001",
+                        httpProxyAll: true
+                    }
+                }).then(() => {
+                    proxyStatus = true;
+                    after();
+                }, (e) => console.log(e));
+            }
+        }, (e) => console.log(e));
+    } else {
+        await chrome.proxy.settings.get({}, async (settings) => {
+            if (settings.levelOfControl === "controllable_by_this_extension" ||
+                settings.levelOfControl === "controlled_by_this_extension") {
+                usersProxySettings = settings.value;
+                console.log(usersProxySettings);
+                await chrome.proxy.settings.set({
+                    scope: "regular",
+                    value: {
+                        mode: "fixed_servers",
+                        rules: {
+                            singleProxy: {
+                                host: "127.0.0.1",
+                                port: 50001,
+                                scheme: "http"
+                            }
+                        }
+                    }
+                }, () => {
+                    proxyStatus = true;
+                    console.log("proxy enabled");
+                    after();
+                });
+            }
+        });
+    }
 }
 
 function disableProxy() {
     // browser.proxy.settings.set({value: usersProxySettings}).then(
     //     () => {
-    browser.proxy.settings.clear({}).then((e) => {
+    chrome.proxy.settings.clear({scope: "regular"}, () => {
         proxyStatus = false;
-        console.log("proxy disabled " + e);
+        console.log("proxy disabled");
     });
     // },
     // (ex) => {
@@ -118,23 +148,27 @@ function disableProxy() {
     // );
 }
 
-browser.runtime.onMessage.addListener(async (message, sender) => {
+function downloadChapter(message, sender) {
+    for (let i = 0; i < busyTabs.length; i++) {
+        if (busyTabs[i].tab === message.tab + "") {
+            sendMsgToServer("cancel " + message.tab);
+            console.log("cancel signal sent " + message.tab);
+        }
+        busyTabs.splice(i, 1);
+        i--;
+    }
+    busyTabs.push({tab: message.tab, file: message.file, attempts: 0});
+    chrome.tabs.reload(message.tab, {bypassCache: true}, () => chrome.tabs.executeScript(message.tab, {file: message.file}));
+}
 
+chrome.runtime.onMessage.addListener(async (message, sender) => {
+    console.log(message);
     if (message.type === "dc") {
         if (!proxyStatus) {
-            await enableProxy();
+            await enableProxy(() => downloadChapter(message, sender));
         }
         if (proxyStatus) {
-            for (let i = 0; i < busyTabs.length; i++) {
-                if (busyTabs[i].tab === message.tab + "") {
-                    sendMsgToServer("cancel " + message.tab);
-                    console.log("cancel signal sent " + message.tab);
-                }
-                busyTabs.splice(i, 1);
-                i--;
-            }
-            busyTabs.push({tab: message.tab, file: message.file, attempts: 0});
-            browser.tabs.reload(message.tab, {bypassCache: false}).then(browser.tabs.executeScript(message.tab, {file: message.file}));
+            downloadChapter(message, sender);
         } //note: else branch is situated in enableProxy method
     }
     if (message.type === "su") {

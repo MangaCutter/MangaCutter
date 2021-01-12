@@ -11,7 +11,7 @@ function getURLS() {
     return urls;
 }
 
-browser.runtime.sendMessage({
+chrome.runtime.sendMessage({
     "type": "su",
     "data": getURLS()
 });

@@ -1,14 +1,16 @@
-console.log("execution started");
-let urls = [];
-let query = document.querySelectorAll("img");
-if (query.length === 0) {
-    alert("This page is not a chapter");
-} else {
+function getURLS() {
+    let urls = [];
+    let query = document.querySelectorAll("img");
     query.forEach(function (item) {
+        if (item.src === "") {
+            urls.push(item.getAttribute("data"))
+        }
         urls.push(item.src);
     });
-    browser.runtime.sendMessage({
-        "type": "download-images",
-        "data": urls
-    });
+    return urls;
 }
+
+chrome.runtime.sendMessage({
+    "type": "su",
+    "data": getURLS()
+});

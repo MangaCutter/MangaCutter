@@ -3,15 +3,19 @@ package net.macu.core;
 import net.macu.UI.Form;
 import net.macu.UI.IconManager;
 import net.macu.UI.ViewManager;
+import net.macu.browser.plugin.BrowserPlugin;
+import net.macu.browser.proxy.cert.CertificateAuthority;
 import net.macu.service.Service;
 import net.macu.settings.L;
 import net.macu.settings.Settings;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.reflections.Reflections;
 
 import javax.swing.*;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.lang.reflect.InvocationTargetException;
+import java.security.Security;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -41,6 +45,13 @@ public class Main {
 
         Settings.collectParameters();
         L.loadLanguageData();
+
+        Security.addProvider(new BouncyCastleProvider());
+        CertificateAuthority.loadRootCA();
+
+        ViewManager.setLookAndFeel();
+
+        BrowserPlugin.getPlugin().start();
 
         Set<Class<? extends Form>> formsSet = reflections.getSubTypesOf(Form.class);
         forms = Collections.unmodifiableList(getInstances(formsSet));

@@ -1,6 +1,9 @@
 package net.macu.UI;
 
 import com.bulenkov.darcula.DarculaLaf;
+import net.macu.browser.plugin.BrowserPlugin;
+import net.macu.browser.proxy.cert.CertificateAuthority;
+import net.macu.core.FileFilterImpl;
 import net.macu.core.JobManager;
 import net.macu.core.Main;
 import net.macu.service.ServiceManager;
@@ -8,13 +11,10 @@ import net.macu.settings.L;
 
 import javax.swing.*;
 import javax.swing.event.HyperlinkEvent;
-import javax.swing.filechooser.FileFilter;
-import javax.swing.filechooser.FileSystemView;
 import java.awt.*;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.image.BufferedImage;
-import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
 
@@ -71,19 +71,21 @@ public class ViewManager {
         frame.setVisible(true);
     }
 
-    public static String requestSelectSingleFile(String approveButtonText) {
+    public static String requestSelectSingleFile(String extension) {
         String path = null;
-        if (singleFileChooser.showDialog(frame, approveButtonText) == JFileChooser.APPROVE_OPTION) {
+        singleFileChooser.resetChoosableFileFilters();
+        singleFileChooser.addChoosableFileFilter(new FileFilterImpl(extension));
+        if (singleFileChooser.showDialog(frame, L.get("UI.ViewManager.single_file_approve_button")) == JFileChooser.APPROVE_OPTION) {
             path = singleFileChooser.getSelectedFile().getAbsolutePath();
-            if (!path.toLowerCase().endsWith(".png")) {
-                path += ".png";
+            if (!path.toLowerCase().endsWith("." + extension)) {
+                path += "." + extension;
             }
         }
         return path;
     }
 
-    public static String requestSelectDir(String approveButtonText) {
-        if (dirChooser.showDialog(frame, approveButtonText) == JFileChooser.APPROVE_OPTION) {
+    public static String requestSelectDir() {
+        if (dirChooser.showDialog(frame, L.get("UI.ViewManager.dir_select_button")) == JFileChooser.APPROVE_OPTION) {
             return dirChooser.getSelectedFile().getAbsolutePath();
         }
         return null;
@@ -100,7 +102,10 @@ public class ViewManager {
     public static void showPreviewFrame(BufferedImage image, Component parent) {
         if (image != null) {
             JFrame f = new JFrame(L.get("UI.ViewManager.preview_frame_title"));
-            f.add(new JScrollPane(new JLabel(new ImageIcon(image))));
+            JScrollPane pane = new JScrollPane(new JLabel(new ImageIcon(image)));
+            pane.getVerticalScrollBar().setUnitIncrement(14);
+            pane.getHorizontalScrollBar().setUnitIncrement(14);
+            f.add(pane);
             f.setIconImage(IconManager.getBrandIcon());
             f.setLocationRelativeTo(parent);
             f.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
@@ -130,25 +135,12 @@ public class ViewManager {
         singleFileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
         singleFileChooser.setAcceptAllFileFilterUsed(false);
         singleFileChooser.setMultiSelectionEnabled(false);
-        singleFileChooser.setFileSystemView(FileSystemView.getFileSystemView());
-        singleFileChooser.addChoosableFileFilter(new FileFilter() {
-            @Override
-            public boolean accept(File f) {
-                return f.isDirectory() || f.getName().toLowerCase().endsWith(".png");
-            }
-
-            @Override
-            public String getDescription() {
-                return L.get("UI.ViewManager.png_image_description");
-            }
-        });
         dirChooser = new JFileChooser();
         dirChooser.setDialogTitle(L.get("UI.ViewManager.file_chooser_title"));
         dirChooser.setDialogType(JFileChooser.SAVE_DIALOG);
         dirChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
         dirChooser.setAcceptAllFileFilterUsed(false);
         dirChooser.setMultiSelectionEnabled(false);
-        dirChooser.setFileSystemView(FileSystemView.getFileSystemView());
     }
 
     private static void constructFrame() {
@@ -163,7 +155,6 @@ public class ViewManager {
                 public void windowClosing(WindowEvent e) {
                     JobManager.cancel();
                     frame.dispose();
-                    System.exit(0);
                 }
             });
         }
@@ -171,17 +162,27 @@ public class ViewManager {
 
     private static JMenuBar constructMenu() {
         JMenuBar bar = new JMenuBar();
-        JMenu helpManu = new JMenu(L.get("UI.ViewManager.help_menu"));
-        JMenuItem aboutItem = new JMenuItem(L.get("UI.ViewManager.about_menu"));
-        aboutItem.addActionListener(actionEvent -> ViewManager.showMessageDialog(L.get("UI.ViewManager.about_text", Main.getVersion())));
-        JMenuItem supportedServicesItem = new JMenuItem(L.get("UI.ViewManager.supported_services_menu"));
-        supportedServicesItem.addActionListener(actionEvent -> ViewManager.showMessageDialog(L.get("UI.ViewManager.supported_services_list", ServiceManager.getSupportedServicesList())));
-        helpManu.add(aboutItem);
-        helpManu.add(supportedServicesItem);
-        bar.add(helpManu);
+        JMenu fileMenu = new JMenu(L.get("UI.ViewManager.help_menu"));
         JMenuItem settingsMenu = new JMenuItem(L.get("UI.ViewManager.settings_menu"));
         settingsMenu.addActionListener(e -> settingsFrame.setVisible(true));
-        bar.add(settingsMenu);
+        fileMenu.add(settingsMenu);
+        JMenuItem supportedServicesItem = new JMenuItem(L.get("UI.ViewManager.supported_services_menu"));
+        supportedServicesItem.addActionListener(actionEvent -> ViewManager.showMessageDialog(L.get("UI.ViewManager.supported_services_list", ServiceManager.getSupportedServicesList())));
+        fileMenu.add(supportedServicesItem);
+        JMenuItem aboutItem = new JMenuItem(L.get("UI.ViewManager.about_menu"));
+        aboutItem.addActionListener(actionEvent -> ViewManager.showMessageDialog(L.get("UI.ViewManager.about_text", Main.getVersion())));
+        fileMenu.add(aboutItem);
+        bar.add(fileMenu);
+        JMenu pluginMenu = new JMenu(L.get("UI.ViewManager.plugin_menu"));
+        JMenuItem generateCertificateItem = new JMenuItem(L.get("UI.ViewManager.generate_certificate_menu"));
+        generateCertificateItem.addActionListener(e -> CertificateAuthority.openGenerateCertFrame());
+        pluginMenu.add(generateCertificateItem);
+        JMenuItem pluginConnectionItem = new JMenuItem(L.get("UI.ViewManager.plugin_connection_menu"));
+        pluginConnectionItem.addActionListener(e -> {
+            ViewManager.showMessageDialog(L.get("UI.ViewManager.plugin_connection", BrowserPlugin.getPlugin().isConnected() ? L.get("UI.ViewManager.plugin_connection_true") : L.get("UI.ViewManager.plugin_connection_false")));
+        });
+        pluginMenu.add(pluginConnectionItem);
+        bar.add(pluginMenu);
         return bar;
     }
 }

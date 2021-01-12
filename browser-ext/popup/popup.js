@@ -24,15 +24,15 @@ function onError(event) {
 }
 
 function loadConnectionStatus() {
-    browser.storage.local.get("connectionStatus").then((item) => {
+    chrome.storage.local.get(['connectionStatus'], (item) => {
         setConnectionLabelStatus(item.connectionStatus);
         if (item.connectionStatus) {
-            browser.tabs.query({currentWindow: true, active: true}).then(function (tabs) {
+            chrome.tabs.query({currentWindow: true, active: true}, (tabs) => {
                 let tab = tabs[0];
                 let serviceUrl = tab.url;
                 let serviceCSFilepath = supportedService(serviceUrl);
                 if (serviceCSFilepath !== "") {
-                    downloadChapterButton.onclick = () => browser.runtime.sendMessage({
+                    downloadChapterButton.onclick = () => chrome.runtime.sendMessage({
                         type: "dc",
                         tab: tab.id,
                         file: serviceCSFilepath
@@ -41,18 +41,18 @@ function loadConnectionStatus() {
                 } else {
                     downloadChapterButton.setAttribute("disabled", "");
                 }
-                downloadImagesButton.onclick = () => browser.runtime.sendMessage({
+                downloadImagesButton.onclick = () => chrome.runtime.sendMessage({
                     type: "dc",
                     tab: tab.id,
                     file: "/js/image_injector.js"
                 });
                 downloadImagesButton.removeAttribute("disabled");
-            }, onError);
+            });
         } else {
             downloadChapterButton.setAttribute("disabled", "");
             downloadImagesButton.setAttribute("disabled", "");
         }
-    }, onError);
+    });
 }
 
 loadConnectionStatus();

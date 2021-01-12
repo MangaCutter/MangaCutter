@@ -18,7 +18,7 @@ public class SinglePageForm implements Form {
 
     public SinglePageForm() {
         browseButton.addActionListener(e -> {
-            String path = ViewManager.requestSelectSingleFile(L.get("UI.SinglePageForm.browser_approve_button"));
+            String path = ViewManager.requestSelectSingleFile("png");
             filePathTextField.setText(path);
         });
         pathLabel.setText(L.get("UI.SinglePageForm.path_label"));

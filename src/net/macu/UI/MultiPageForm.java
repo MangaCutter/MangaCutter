@@ -27,7 +27,7 @@ public class MultiPageForm implements Form {
     public MultiPageForm() {
         toleranceLabel.setText(String.format("%3d", toleranceSlider.getValue()));
         browseButton.addActionListener(e -> {
-            String path = ViewManager.requestSelectDir(L.get("UI.MultiPageForm.browser_approve_button"));
+            String path = ViewManager.requestSelectDir();
             filePathTextField.setText(path);
         });
         saveGradientCheckBox.addActionListener(e -> onGradientCheckBoxSwitched());

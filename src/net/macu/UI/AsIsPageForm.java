@@ -19,7 +19,7 @@ public class AsIsPageForm implements Form {
     public AsIsPageForm() {
         $$$setupUI$$$();
         browseButton.addActionListener(e -> {
-            String path = ViewManager.requestSelectDir(L.get("UI.AsIsPageForm.browser_approve_button"));
+            String path = ViewManager.requestSelectDir();
             filePathTextField.setText(path);
         });
         filePathLabel.setText(L.get("UI.AsIsPageForm.label"));

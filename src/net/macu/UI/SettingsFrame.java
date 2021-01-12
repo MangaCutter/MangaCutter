@@ -135,8 +135,7 @@ public class SettingsFrame extends JDialog {
         setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
         setLocationRelativeTo(ViewManager.getFrame());
         pack();
-        setSize(new Dimension(540, Math.min(getHeight(), 350)));
-        setResizable(false);
+        setSize(new Dimension(Math.max(getWidth(), 540), Math.min(getHeight(), 350)));
     }
 
     private void discardScheduledSettings() {

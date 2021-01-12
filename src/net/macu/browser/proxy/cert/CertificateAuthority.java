@@ -1,5 +1,10 @@
 package net.macu.browser.proxy.cert;
 
+import net.macu.UI.ViewManager;
+import net.macu.settings.L;
+import net.macu.settings.Parameter;
+import net.macu.settings.Parameters;
+import net.macu.settings.Parametrized;
 import org.bouncycastle.asn1.DERSequence;
 import org.bouncycastle.asn1.pkcs.ContentInfo;
 import org.bouncycastle.asn1.pkcs.PKCSObjectIdentifiers;
@@ -15,6 +20,7 @@ import org.bouncycastle.cert.X509v3CertificateBuilder;
 import org.bouncycastle.cert.jcajce.JcaX509CertificateConverter;
 import org.bouncycastle.cert.jcajce.JcaX509ExtensionUtils;
 import org.bouncycastle.cert.jcajce.JcaX509v3CertificateBuilder;
+import org.bouncycastle.jcajce.provider.digest.SHA256;
 import org.bouncycastle.operator.ContentSigner;
 import org.bouncycastle.operator.InputDecryptorProvider;
 import org.bouncycastle.operator.bc.BcDefaultDigestProvider;
@@ -27,10 +33,9 @@ import org.bouncycastle.tls.crypto.TlsCrypto;
 import org.bouncycastle.tls.crypto.impl.jcajce.JcaTlsCrypto;
 import org.bouncycastle.tls.crypto.impl.jcajce.JcaTlsCryptoProvider;
 import org.bouncycastle.util.encoders.Base64;
-import org.bouncycastle.util.io.Streams;
 
 import java.io.ByteArrayOutputStream;
-import java.io.FileInputStream;
+import java.io.FileWriter;
 import java.math.BigInteger;
 import java.security.*;
 import java.security.cert.Certificate;
@@ -40,7 +45,8 @@ import java.security.spec.ECGenParameterSpec;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.util.*;
 
-public class CertificateAuthority {
+public class CertificateAuthority implements Parametrized {
+    private static final Parameter ROOT_CA = new Parameter(Parameter.Type.STRING_TYPE, "browser.proxy.cert.CertificateAuthority.root_ca");
     private static CertificateAuthority rootCA;
     private static final char[] MAIN_PASSWORD = new char[]{'a', 'b', 'c', 'd', 'e', 'f'};
     private static final String BC_PROVIDER = "BC";
@@ -51,7 +57,6 @@ public class CertificateAuthority {
     private final PrivateKey privateKey;
 
     public CertificateAuthority(X509Certificate[] certificateChain, PrivateKey privateKey) {
-
         this.certificateChain = certificateChain;
         this.privateKey = privateKey;
     }
@@ -94,6 +99,41 @@ public class CertificateAuthority {
         return new CertificateAuthority(new X509Certificate[]{certificate}, privateKey);
     }
 
+    public static void loadRootCA() {
+        try {
+            rootCA = readPKCS12File(Base64.decode(ROOT_CA.getString()));
+        } catch (Exception e) {
+            e.printStackTrace();
+            //todo show error
+        }
+    }
+
+    public static CertificateAuthority getRootCA() {
+        return rootCA;
+    }
+
+    public synchronized static void openGenerateCertFrame() {
+        String path = ViewManager.requestSelectSingleFile("crt");
+        if (path != null) {
+            try {
+                CertificateAuthority newRoot = generateNewRootCA();
+                FileWriter out = new FileWriter(path);
+                out.append(newRoot.getCertificateChainBase64Encoded());
+                out.flush();
+                ROOT_CA.setValue(newRoot.getKeyPairKeystoreFileBase64Encoded("alias"));
+                rootCA = newRoot;
+                ViewManager.showMessageDialog(L.get("browser.proxy.cert.CertificateAuthority.openGenerateCertFrame.certificate_generated", newRoot.getSHA256Fingerprint()));
+            } catch (Exception e) {
+                e.printStackTrace();
+                //todo show error
+            }
+        }
+    }
+
+    public static TlsCrypto getCrypto() {
+        return crypto;
+    }
+
     public static CertificateAuthority generateNewRootCA() throws Exception {
         KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("EC", BC_PROVIDER);
         keyPairGenerator.initialize(new ECGenParameterSpec("secp256r1"), crypto.getSecureRandom());
@@ -116,25 +156,16 @@ public class CertificateAuthority {
         return new CertificateAuthority(new X509Certificate[]{rootCert}, rootKeyPair.getPrivate());
     }
 
-    public static void loadRootCA() throws Exception {
-        rootCA = readPKCS12File(Base64.decode(Streams.readAll(new FileInputStream("root.p12.enc"))));
-        System.out.println("Root CA loaded");
-    }
-
-    public static CertificateAuthority getRootCA() {
-        return rootCA;
-    }
-
-    public static TlsCrypto getCrypto() {
-        return crypto;
-    }
-
     public X509Certificate[] getCertificateChain() {
         return certificateChain;
     }
 
     public PrivateKey getPrivate() {
         return privateKey;
+    }
+
+    public static Parameters getParameters() {
+        return new Parameters("browser.proxy.cert.CertificateAuthority", ROOT_CA);
     }
 
     public KeyStore issueSubKeyStore(List<String> domains) throws Exception {
@@ -197,5 +228,21 @@ public class CertificateAuthority {
         ByteArrayOutputStream keyStoreOs = new ByteArrayOutputStream();
         sslKeyStore.store(keyStoreOs, MAIN_PASSWORD);
         return Base64.toBase64String(keyStoreOs.toByteArray());
+    }
+
+    public String getSHA256Fingerprint() {
+        byte[] cert;
+        try {
+            cert = certificateChain[0].getEncoded();
+        } catch (CertificateEncodingException e) {
+            e.printStackTrace();
+            return "INVALID_CERTIFICATE_DO_NOT_ADD_IT_TO_TRUSTED_ROOT_CA_CONTACT_WITH_DEVELOPERS";
+        }
+        StringBuilder sig = new StringBuilder();
+        for (byte b : new SHA256.Digest().digest(cert)) {
+            sig.append(String.format("%02x", Byte.toUnsignedInt(b)).toUpperCase()).append(":");
+        }
+        sig.deleteCharAt(sig.length() - 1);
+        return sig.toString();
     }
 }

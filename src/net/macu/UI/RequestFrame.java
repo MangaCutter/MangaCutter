@@ -490,17 +490,19 @@ public class RequestFrame implements ImageListener {
             if (image != null) {
                 int thumbWidth;
                 int thumbHeight;
-                if (((float) THUMBNAIL_HEIGHT) / THUMBNAIL_WIDTH > ((float) image.getHeight()) / image.getWidth()) {
+                if (((float) THUMBNAIL_HEIGHT) / THUMBNAIL_WIDTH < ((float) image.getHeight()) / image.getWidth()) {
                     thumbHeight = THUMBNAIL_HEIGHT;
                     thumbWidth = (int) (((float) image.getWidth()) / image.getHeight() * THUMBNAIL_HEIGHT);
                 } else {
                     thumbWidth = THUMBNAIL_WIDTH;
                     thumbHeight = (int) (((float) image.getHeight()) / image.getWidth() * THUMBNAIL_WIDTH);
                 }
-                BufferedImage thumb = new BufferedImage(thumbWidth, thumbHeight, BufferedImage.TYPE_INT_RGB);
+                BufferedImage thumb = new BufferedImage(THUMBNAIL_WIDTH, THUMBNAIL_HEIGHT, BufferedImage.TYPE_INT_RGB);
                 Graphics2D g = thumb.createGraphics();
                 g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
-                g.drawImage(image, 0, 0, thumbWidth, thumbHeight, null);
+                g.setColor(new Color(0x000000));
+                g.fillRect(0, 0, THUMBNAIL_WIDTH, THUMBNAIL_HEIGHT);
+                g.drawImage(image, (THUMBNAIL_WIDTH - thumbWidth) / 2, (THUMBNAIL_HEIGHT - thumbHeight) / 2, thumbWidth, thumbHeight, null);
                 return new ImageIcon(thumb);
             } else {
                 return WaitIcon;

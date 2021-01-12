@@ -19,7 +19,7 @@ public class BrowserPlugin {
     private final CapturedImageProcessor capturedImages = new CapturedImageProcessor();
     private final TreeMap<String, RequestFrame> activeRequests = new TreeMap<>();
 
-    private BrowserPlugin() {
+    public BrowserPlugin() {
         webSocketServer = new PluginWebSocketServer(50000, this);
         httpProxy = new HTTPProxy(50001, capturedImages);
     }
@@ -29,24 +29,9 @@ public class BrowserPlugin {
         return instance;
     }
 
-    public void openUrlInDefaultBrowser(String url) {
-        sendMessage("open " + url);
-    }
-
     public void start() {
         httpProxy.start();
         webSocketServer.start();
-    }
-
-    public boolean waitUntilConnected(int timeout) {
-        for (int i = 0; i < timeout && !webSocketServer.isConnected(); i++) {
-            try {
-                Thread.sleep(1000);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
-        return webSocketServer.isConnected();
     }
 
     void onMessage(String message) {
@@ -98,5 +83,9 @@ public class BrowserPlugin {
         } else {
             //todo in case of disconnection
         }
+    }
+
+    public boolean isConnected() {
+        return webSocketServer.isConnected();
     }
 }
