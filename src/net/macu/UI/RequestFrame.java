@@ -19,7 +19,7 @@ import java.util.Comparator;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
-public class RequestFrame implements ImageListener {
+public class RequestFrame extends JFrame implements ImageListener {
     //todo add reload counter
     private static final Color SELECTED_PENDING_BACKGROUND = new Color(175, 82, 0);
     private static final Color DESELECTED_PENDING_BACKGROUND = new Color(125, 59, 0);
@@ -32,7 +32,7 @@ public class RequestFrame implements ImageListener {
     private final ArrayList<Thumbnail> visible = new ArrayList<>();
     private final ArrayList<String> least = new ArrayList<>();
     private final CapturedImageProcessor processor;
-    private final JFrame frame;
+    //    private final JFrame frame;
     private final BrowserPlugin plugin;
     private final String tabId;
     private JButton forceCompleteButton;
@@ -54,12 +54,26 @@ public class RequestFrame implements ImageListener {
     private boolean downloadingCompleted = false;
 
     public RequestFrame(ArrayList<String> captureList, CapturedImageProcessor processor, BrowserPlugin plugin, String tabId, String url) {
+        super(L.get("UI.RequestFrame.frame_title", url));
+        $$$setupUI$$$();
+        setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+        setLocationRelativeTo(null);
+        setIconImage(IconManager.getBrandIcon());
+        setResizable(true);
+        addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosing(WindowEvent e) {
+                cancel();
+            }
+        });
+        setContentPane($$$getRootComponent$$$());
+        pack();
+        setSize(700, Math.min(Math.max(400, getHeight()), 500));
         WaitIcon = IconManager.getSpinnerIcon(THUMBNAIL_WIDTH, THUMBNAIL_HEIGHT);
         this.plugin = plugin;
         this.tabId = tabId;
         this.url = url;
         this.original = captureList;
-        $$$setupUI$$$();
         filterLabel.setText(L.get("UI.RequestFrame.filter_label"));
         deselectAllVisibleButton.setText(L.get("UI.RequestFrame.deselect_all_visible_button"));
         selectOnlyVisibleButton.setText(L.get("UI.RequestFrame.select_only_visible_button"));
@@ -116,24 +130,9 @@ public class RequestFrame implements ImageListener {
         forceCompleteButton.addActionListener(e -> {
             complete();
         });
-        frame = new JFrame(L.get("UI.RequestFrame.frame_title", url));
-        frame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
-        frame.setLocationRelativeTo(ViewManager.getFrame());
-        frame.setIconImage(IconManager.getBrandIcon());
-        frame.setResizable(true);
-        frame.addWindowListener(new WindowAdapter() {
-            @Override
-            public void windowClosing(WindowEvent e) {
-                cancel();
-            }
-        });
-        frame.setContentPane($$$getRootComponent$$$());
-        frame.pack();
-        frame.setSize(700, Math.min(Math.max(400, frame.getHeight()), 500));
         this.processor = processor;
         processor.addImageListener(this);
-        frame.setVisible(true);
-        frame.requestFocus();
+        setVisible(true);
     }
 
     public void reload(ArrayList<String> urls, String tabUrl) {
@@ -156,7 +155,7 @@ public class RequestFrame implements ImageListener {
         applyFilter();
         SwingUtilities.updateComponentTreeUI(imagesPanel);
         url = tabUrl;
-        frame.setTitle(L.get("UI.RequestFrame.frame_title", url));
+        setTitle(L.get("UI.RequestFrame.frame_title", url));
     }
 
     @Override
@@ -174,14 +173,14 @@ public class RequestFrame implements ImageListener {
     }
 
     public void onCancelRequest() {
-        ViewManager.showMessageDialog(L.get("UI.RequestFrame.onCancel.message"));
+        ViewManager.showMessageDialog(L.get("UI.RequestFrame.onCancel.message"), this);
         if (!downloadingCompleted)
             processor.removeImageListener(this);
-        frame.dispose();
+        dispose();
     }
 
     public void onTooManyAttempts() {
-        ViewManager.showMessageDialog(L.get("browser.plugin.BrowserPlugin.onMessage.too_many_attempts"));
+        ViewManager.showMessageDialog(L.get("browser.plugin.BrowserPlugin.onMessage.too_many_attempts"), this);
         onLoadingComplete();
     }
 
@@ -294,13 +293,20 @@ public class RequestFrame implements ImageListener {
             plugin.onRequestCancel(tabId);
             processor.removeImageListener(this);
         }
-        frame.dispose();
+        dispose();
         downloadingCompleted = true;
     }
 
     private void complete() {
         if (!downloadingCompleted) onLoadingComplete();
-        //todo
+        ArrayList<BufferedImage> ready = new ArrayList<>();
+        for (Thumbnail thumbnail : thumbnails) {
+            if (thumbnail.ready) {
+                ready.add(thumbnail.image);
+            }
+        }
+        new MainView(ready.toArray(new BufferedImage[0]), url);
+        dispose();
     }
 
     /**

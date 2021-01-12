@@ -261,13 +261,12 @@ public class ManualCutterFrame extends JFrame implements MouseListener, MouseMot
         g = buffer.createGraphics();
         setSize(600, 600);
         setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
-        setLocationRelativeTo(ViewManager.getFrame());
         setIconImage(IconManager.getBrandIcon());
-        setVisible(true);
+        ManualCutterFrame mcf = this;
         addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
-                if (ViewManager.showConfirmDialog(L.get("UI.ManualCutterFrame.cancel"))) {
+                if (ViewManager.showConfirmDialog(L.get("UI.ManualCutterFrame.cancel"), mcf)) {
                     result = null;
                     dispose();
                     synchronized (locker) {
@@ -286,10 +285,11 @@ public class ManualCutterFrame extends JFrame implements MouseListener, MouseMot
                 if (isVisible()) {
                     if (dragging == Drag.CUT_BOX) {
                         int y = MouseInfo.getPointerInfo().getLocation().y - c.getLocationOnScreen().y - viewportVerticalOffset;
-                        if (y < 0)
+                        if (y < 0) {
                             scroll(SCROLL_SPEED.getInt() * (SCROLL_INVERSION.getBoolean() ? 1 : -1));
-                        else if (y >= viewportHeight - 1)
+                        } else if (y >= viewportHeight - 1) {
                             scroll(SCROLL_SPEED.getInt() * (SCROLL_INVERSION.getBoolean() ? -1 : 1));
+                        }
                         updateDraggedBoxPos();
                         c.repaint();
                     }
@@ -298,6 +298,7 @@ public class ManualCutterFrame extends JFrame implements MouseListener, MouseMot
         });
         scrollThread.setDaemon(true);
         scrollThread.start();
+        setVisible(true);
     }
 
     public Object getLocker() {
@@ -691,7 +692,7 @@ public class ManualCutterFrame extends JFrame implements MouseListener, MouseMot
     }
 
     private void confirm() {
-        if (ViewManager.showConfirmDialog(L.get("UI.ManualCutterFrame.accept"))) {
+        if (ViewManager.showConfirmDialog(L.get("UI.ManualCutterFrame.accept"), this)) {
             for (int i = 0; i < cutLines.size() - 1; i++) {
                 if (cutLines.get(i) == cutLines.get(i + 1)) {
                     cutLines.remove(i);

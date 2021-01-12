@@ -13,14 +13,14 @@ public class Naver implements Service {
     private boolean cancel = false;
 
     @Override
-    public List<String> parsePage(String uri) {
-        ViewManager.startProgress(1, L.get("service.Naver.parsePage.progress"));
+    public List<String> parsePage(String uri, ViewManager viewManager) {
+        viewManager.startProgress(1, L.get("service.Naver.parsePage.progress"));
         try {
             String sb = IOManager.sendRequest(uri);
             if (cancel) return null;
             return Jsoup.parse(sb).selectFirst("div.wt_viewer").select("img").eachAttr("src");
         } catch (IOException e) {
-            ViewManager.showMessageDialog(L.get("service.Naver.parsePage.io_exception", e.toString()));
+            ViewManager.showMessageDialog(L.get("service.Naver.parsePage.io_exception", e.toString()), viewManager.getView());
             e.printStackTrace();
         }
         return null;

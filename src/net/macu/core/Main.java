@@ -2,6 +2,7 @@ package net.macu.core;
 
 import net.macu.UI.Form;
 import net.macu.UI.IconManager;
+import net.macu.UI.MainView;
 import net.macu.UI.ViewManager;
 import net.macu.browser.plugin.BrowserPlugin;
 import net.macu.browser.proxy.cert.CertificateAuthority;
@@ -33,6 +34,8 @@ public class Main {
     }
 
     public static void main(String[] args) {
+        System.setProperty(org.slf4j.impl.SimpleLogger.DEFAULT_LOG_LEVEL_KEY, "Info");
+
         Thread.setDefaultUncaughtExceptionHandler((t, e) -> {
             e.printStackTrace();
             StringWriter sw = new StringWriter();
@@ -51,11 +54,8 @@ public class Main {
 
         ViewManager.setLookAndFeel();
 
-        BrowserPlugin.getPlugin().start();
-
         Set<Class<? extends Form>> formsSet = reflections.getSubTypesOf(Form.class);
         forms = Collections.unmodifiableList(getInstances(formsSet));
-
         Set<Class<? extends Service>> servicesSet = reflections.getSubTypesOf(Service.class);
         services = Collections.unmodifiableList(getInstances(servicesSet));
 
@@ -63,7 +63,11 @@ public class Main {
         IOManager.initClient();
 
         IconManager.loadIcons();
-        ViewManager.createView();
+        ViewManager.initFileChoosers();
+
+        new MainView();
+
+        BrowserPlugin.getPlugin().start();
     }
 
     private static <T> List<T> getInstances(Set<Class<? extends T>> classSet) {

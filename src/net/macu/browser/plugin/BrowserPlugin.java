@@ -36,7 +36,7 @@ public class BrowserPlugin {
 
     void onMessage(String message) {
         if (message.startsWith("alert ")) {
-            ViewManager.showMessageDialog(L.get(message.substring(6)));
+            ViewManager.showMessageDialog(L.get(message.substring(6)), null);
         } else if (message.startsWith("su ")) {
             try {
                 JSONObject packet = (JSONObject) new JSONParser().parse(message.substring(message.indexOf(" ") + 1));

@@ -20,8 +20,8 @@ public class AcQq implements Service {
     private boolean cancel = false;
 
     @Override
-    public List<String> parsePage(String uri) {
-        ViewManager.startProgress(1, L.get("service.AcQq.parsePage.progress"));
+    public List<String> parsePage(String uri, ViewManager viewManager) {
+        viewManager.startProgress(1, L.get("service.AcQq.parsePage.progress"));
         try {
             String jsonData = "";
             while (true) {
@@ -29,7 +29,7 @@ public class AcQq implements Service {
                 String html = IOManager.sendRequest(uri);
                 String[] parts = html.split("<script>");
                 if (parts.length != 4) {
-                    ViewManager.showMessageDialog(L.get("service.AcQq.parsePage.unknown_format"));
+                    ViewManager.showMessageDialog(L.get("service.AcQq.parsePage.unknown_format"), viewManager.getView());
                     return null;
                 }
                 String keyEval = parts[2].substring(0, parts[2].indexOf("</script>")).trim();
@@ -87,11 +87,13 @@ public class AcQq implements Service {
                 return list;
             } catch (ParseException e) {
                 e.printStackTrace();
-                ViewManager.showMessageDialog(L.get("service.AcQq.parsePage.parse_exception", e.toString()));
+                ViewManager.showMessageDialog(L.get("service.AcQq.parsePage.parse_exception", e.toString()),
+                        viewManager.getView());
             }
         } catch (IOException e) {
             e.printStackTrace();
-            ViewManager.showMessageDialog(L.get("service.AcQq.parsePage.io_exception", e.toString()));
+            ViewManager.showMessageDialog(L.get("service.AcQq.parsePage.io_exception", e.toString()),
+                    viewManager.getView());
         }
         return null;
     }

@@ -63,16 +63,19 @@ public class IOManager implements Parametrized {
                     .getFirstHeader("location").getValue();
             String tag = location.substring(location.lastIndexOf("/") + 1);
             if (!tag.equals(Main.getVersion())) {
-                ViewManager.showMessageDialog(L.get("core.IOManager.checkUpdates.new_ver", location, location));
+                ViewManager.showMessageDialog(
+                        L.get("core.IOManager.checkUpdates.new_ver", location, location), null);
             }
         } catch (IOException e) {
-            ViewManager.showMessageDialog(L.get("core.IOManager.checkUpdates.execute_exception", e.toString()));
+            ViewManager.showMessageDialog(
+                    L.get("core.IOManager.checkUpdates.execute_exception", e.toString()), null);
             e.printStackTrace();
         }
         try {
             cs.close();
         } catch (IOException e) {
-            ViewManager.showMessageDialog(L.get("core.IOManager.checkUpdates.close_client_exception", e.toString()));
+            ViewManager.showMessageDialog(
+                    L.get("core.IOManager.checkUpdates.close_client_exception", e.toString()), null);
             e.printStackTrace();
         }
     }

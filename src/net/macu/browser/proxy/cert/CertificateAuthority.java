@@ -113,7 +113,7 @@ public class CertificateAuthority implements Parametrized {
     }
 
     public synchronized static void openGenerateCertFrame() {
-        String path = ViewManager.requestSelectSingleFile("crt");
+        String path = ViewManager.requestChooseSingleFile("crt", null);
         if (path != null) {
             try {
                 CertificateAuthority newRoot = generateNewRootCA();
@@ -122,7 +122,7 @@ public class CertificateAuthority implements Parametrized {
                 out.flush();
                 ROOT_CA.setValue(newRoot.getKeyPairKeystoreFileBase64Encoded("alias"));
                 rootCA = newRoot;
-                ViewManager.showMessageDialog(L.get("browser.proxy.cert.CertificateAuthority.openGenerateCertFrame.certificate_generated", newRoot.getSHA256Fingerprint()));
+                ViewManager.showMessageDialog(L.get("browser.proxy.cert.CertificateAuthority.openGenerateCertFrame.certificate_generated", newRoot.getSHA256Fingerprint()), null);
             } catch (Exception e) {
                 e.printStackTrace();
                 //todo show error

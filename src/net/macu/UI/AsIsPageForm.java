@@ -19,7 +19,7 @@ public class AsIsPageForm implements Form {
     public AsIsPageForm() {
         $$$setupUI$$$();
         browseButton.addActionListener(e -> {
-            String path = ViewManager.requestSelectDir();
+            String path = ViewManager.requestChooseDir(null);
             filePathTextField.setText(path);
         });
         filePathLabel.setText(L.get("UI.AsIsPageForm.label"));
@@ -30,7 +30,7 @@ public class AsIsPageForm implements Form {
     public boolean validateInput() {
         String path = filePathTextField.getText();
         if (path.isEmpty()) {
-            ViewManager.showMessageDialog(L.get("UI.AsIsPageForm.validateInput.empty_path"));
+            ViewManager.showMessageDialog(L.get("UI.AsIsPageForm.validateInput.empty_path"), null);
             return false;
         }
         return true;

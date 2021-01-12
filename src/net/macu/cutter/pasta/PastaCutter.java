@@ -27,8 +27,8 @@ public class PastaCutter implements Cutter, Parametrized {
     }
 
     @Override
-    public BufferedImage[] cutScans(BufferedImage[] fragments) {
-        return drawFrames(recognizeFrames(fragments));
+    public BufferedImage[] cutScans(BufferedImage[] fragments, ViewManager viewManager) {
+        return drawFrames(recognizeFrames(fragments, viewManager), viewManager);
     }
 
     @Override
@@ -40,8 +40,8 @@ public class PastaCutter implements Cutter, Parametrized {
         return new Parameters("cutter.pasta.PastaCutter", MIN_HEIGHT, BORDERS_WIDTH);
     }
 
-    private List<Frame> recognizeFrames(BufferedImage[] fragments) {
-        ViewManager.startProgress(fragments.length, L.get("cutter.pasta.PastaCutter.recognizeFrames.progress", 0, fragments.length));
+    private List<Frame> recognizeFrames(BufferedImage[] fragments, ViewManager viewManager) {
+        viewManager.startProgress(fragments.length, L.get("cutter.pasta.PastaCutter.recognizeFrames.progress", 0, fragments.length));
         ArrayList<Frame> frameInfo = new ArrayList<>();
         boolean scanlineOnWhite = true;
         current = new Frame(fragments);
@@ -103,7 +103,7 @@ public class PastaCutter implements Cutter, Parametrized {
                     scanlineOnWhite = true;
                 }
             }
-            ViewManager.incrementProgress(L.get("cutter.pasta.PastaCutter.recognizeFrames.progress", (i + 1), fragments.length));
+            viewManager.incrementProgress(L.get("cutter.pasta.PastaCutter.recognizeFrames.progress", (i + 1), fragments.length));
         }
 
         if (scanlineOnWhite) {
@@ -142,9 +142,9 @@ public class PastaCutter implements Cutter, Parametrized {
         }
     }
 
-    private BufferedImage[] drawFrames(List<Frame> frames) {
+    private BufferedImage[] drawFrames(List<Frame> frames, ViewManager viewManager) {
         if (cancel) return null;
-        ViewManager.startProgress(frames.size(), L.get("cutter.pasta.PastaCutter.drawFrames.progress", 0, frames.size()));
+        viewManager.startProgress(frames.size(), L.get("cutter.pasta.PastaCutter.drawFrames.progress", 0, frames.size()));
         ArrayList<BufferedImage> arr = new ArrayList<>();
         int curHeight = 0;
         int prevEnd = -1;
@@ -152,14 +152,14 @@ public class PastaCutter implements Cutter, Parametrized {
             if (cancel) return null;
             if (curHeight + frames.get(i).height < perfectHeight && i != frames.size() - 1) {
                 curHeight += frames.get(i).height;
-                ViewManager.startProgress(frames.size(), L.get("cutter.pasta.PastaCutter.drawFrames.progress", (i + 1), frames.size()));
+                viewManager.startProgress(frames.size(), L.get("cutter.pasta.PastaCutter.drawFrames.progress", (i + 1), frames.size()));
             } else {
                 Frame from = frames.get(prevEnd + 1);
                 Frame to;
                 if (curHeight > 0 && perfectHeight - curHeight <= frames.get(i).height + curHeight - perfectHeight) {
                     i--;
                 } else {
-                    ViewManager.startProgress(frames.size(), L.get("cutter.pasta.PastaCutter.drawFrames.progress", (i + 1), frames.size()));
+                    viewManager.startProgress(frames.size(), L.get("cutter.pasta.PastaCutter.drawFrames.progress", (i + 1), frames.size()));
                 }
                 to = frames.get(i);
                 prevEnd = i;

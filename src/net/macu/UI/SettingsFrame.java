@@ -15,13 +15,14 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 
-public class SettingsFrame extends JDialog {
+public class SettingsFrame extends JFrame {
+    private static SettingsFrame frame = null;
     private final JButton applyButton;
 
     private final HashMap<Parameter, Object> scheduledChanges = new HashMap<>();
 
-    public SettingsFrame() {
-        super(ViewManager.getFrame(), L.get("UI.SettingsFrame.frame_title"));
+    private SettingsFrame() {
+        super(L.get("UI.SettingsFrame.frame_title"));
         applyButton = new JButton(L.get("UI.SettingsFrame.apply_button"));
         applyButton.setEnabled(false);
         JPanel root = new JPanel();
@@ -35,7 +36,7 @@ public class SettingsFrame extends JDialog {
             if (parameters.isEmpty()) return;
             JPanel panel = new JPanel();
             panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
-            panel.setBorder(BorderFactory.createTitledBorder(L.get(parameters.getName())));
+            panel.setBorder(BorderFactory.createTitledBorder(L.get(parameters.getName())));//todo add empty border
             parameters.sort(Comparator.comparing(Parameter::getType));
             parameters.forEach(parameter -> {
                 JPanel p = new JPanel();
@@ -133,9 +134,14 @@ public class SettingsFrame extends JDialog {
             }
         });
         setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
-        setLocationRelativeTo(ViewManager.getFrame());
+        setLocationRelativeTo(null);
         pack();
         setSize(new Dimension(Math.max(getWidth(), 540), Math.min(getHeight(), 350)));
+    }
+
+    public static void openFrame() {
+        if (frame == null) frame = new SettingsFrame();
+        frame.setVisible(true);
     }
 
     private void discardScheduledSettings() {

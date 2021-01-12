@@ -18,7 +18,7 @@ public class ManualForm implements Form {
 
     public ManualForm() {
         browseButton.addActionListener(e -> {
-            String path = ViewManager.requestSelectDir();
+            String path = ViewManager.requestChooseDir(null);
             filePathTextField.setText(path);
         });
         pathLabel.setText(L.get("UI.ManualForm.path_label"));
@@ -29,7 +29,7 @@ public class ManualForm implements Form {
     public boolean validateInput() {
         String path = filePathTextField.getText();
         if (path.isEmpty()) {
-            ViewManager.showMessageDialog(L.get("UI.ManualForm.validateInput.empty_path"));
+            ViewManager.showMessageDialog(L.get("UI.ManualForm.validateInput.empty_path"), null);
             return false;
         }
         return true;

@@ -1,14 +1,17 @@
 package net.macu.service;
 
+import net.macu.UI.ViewManager;
+
 import java.util.List;
 
 public interface Service {
     /**
      * Parses manga page and return resolved URIs to images in logical order
      *
-     * @param uri link to manga chapter of this service
+     * @param uri         link to manga chapter of this service
+     * @param viewManager
      */
-    List<String> parsePage(String uri);
+    List<String> parsePage(String uri, ViewManager viewManager);
 
     /**
      * Whether the given uri is belongs to this service

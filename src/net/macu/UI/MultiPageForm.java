@@ -27,7 +27,7 @@ public class MultiPageForm implements Form {
     public MultiPageForm() {
         toleranceLabel.setText(String.format("%3d", toleranceSlider.getValue()));
         browseButton.addActionListener(e -> {
-            String path = ViewManager.requestSelectDir();
+            String path = ViewManager.requestChooseDir(null);
             filePathTextField.setText(path);
         });
         saveGradientCheckBox.addActionListener(e -> onGradientCheckBoxSwitched());
@@ -44,24 +44,24 @@ public class MultiPageForm implements Form {
     public boolean validateInput() {
         String path = filePathTextField.getText();
         if (path.isEmpty()) {
-            ViewManager.showMessageDialog(L.get("UI.MultiPageForm.validateInput.empty_path"));
+            ViewManager.showMessageDialog(L.get("UI.MultiPageForm.validateInput.empty_path"), null);
             return false;
         }
         if (perfectHeightTextField.getText().isEmpty()) {
-            ViewManager.showMessageDialog(L.get("UI.MultiPageForm.validateInput.empty_height"));
+            ViewManager.showMessageDialog(L.get("UI.MultiPageForm.validateInput.empty_height"), null);
             return false;
         }
         try {
             if (Integer.parseInt(perfectHeightTextField.getText()) < 0) {
-                ViewManager.showMessageDialog(L.get("UI.MultiPageForm.validateInput.negative_height"));
+                ViewManager.showMessageDialog(L.get("UI.MultiPageForm.validateInput.negative_height"), null);
                 return false;
             }
         } catch (NumberFormatException e) {
-            ViewManager.showMessageDialog(L.get("UI.MultiPageForm.validateInput.nan_height", perfectHeightTextField.getText()));
+            ViewManager.showMessageDialog(L.get("UI.MultiPageForm.validateInput.nan_height", perfectHeightTextField.getText()), null);
             return false;
         }
         if (saveGradientCheckBox.isSelected() && toleranceSlider.getValue() > 0) {
-            ViewManager.showMessageDialog(L.get("UI.MultiPageForm.validateInput.conflicted_parameters"));
+            ViewManager.showMessageDialog(L.get("UI.MultiPageForm.validateInput.conflicted_parameters"), null);
             return false;
         }
         return true;

@@ -10,8 +10,8 @@ public class SingleScanCutter implements Cutter {
     private boolean cancel = false;
 
     @Override
-    public BufferedImage[] cutScans(BufferedImage[] fragments) {
-        ViewManager.startProgress(fragments.length, L.get("cutter.SingleScanCutter.cutScans.progress", 0, fragments.length));
+    public BufferedImage[] cutScans(BufferedImage[] fragments, ViewManager viewManager) {
+        viewManager.startProgress(fragments.length, L.get("cutter.SingleScanCutter.cutScans.progress", 0, fragments.length));
         int height = 0;
         int width = 0;
         for (BufferedImage fragment : fragments) {
@@ -27,7 +27,7 @@ public class SingleScanCutter implements Cutter {
             if (cancel) return null;
             g.drawImage(fragments[i], 0, currentHeight, null);
             currentHeight += fragments[i].getHeight();
-            ViewManager.incrementProgress(L.get("cutter.SingleScanCutter.cutScans.progress", i + 1, fragments.length));
+            viewManager.incrementProgress(L.get("cutter.SingleScanCutter.cutScans.progress", i + 1, fragments.length));
         }
         return new BufferedImage[]{dst};
     }

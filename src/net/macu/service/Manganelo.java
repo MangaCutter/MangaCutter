@@ -1,3 +1,4 @@
+/*
 package net.macu.service;
 
 import net.macu.UI.ViewManager;
@@ -13,15 +14,15 @@ public class Manganelo implements Service {
     private boolean cancel = false;
 
     @Override
-    public List<String> parsePage(String uri) {
-        ViewManager.startProgress(1, "Скачивание главной страницы");
+    public List<String> parsePage(String uri, ViewManager viewManager) {
+        viewManager.startProgress(1, "Скачивание главной страницы");
         try {
             String sb = IOManager.sendRequest(uri);
             if (cancel) return null;
-            ViewManager.incrementProgress("Скачана главная страница");
+            viewManager.incrementProgress("Скачана главная страница");
             return Jsoup.parse(sb).selectFirst("div.container-chapter-reader").select("img").eachAttr("src");
         } catch (IOException e) {
-            ViewManager.showMessageDialog("Не удалось скачать главную страницу: " + e.toString());
+            viewManager.showMessageDialog("Не удалось скачать главную страницу: " + e.toString());
             e.printStackTrace();
         }
         return null;
@@ -40,3 +41,4 @@ public class Manganelo implements Service {
         cancel = true;
     }
 }
+*/

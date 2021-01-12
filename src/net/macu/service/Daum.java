@@ -17,8 +17,8 @@ public class Daum implements Service {
     private boolean cancel = false;
 
     @Override
-    public List<String> parsePage(String uri) {
-        ViewManager.startProgress(1, L.get("service.Daum.parsePage.progress"));
+    public List<String> parsePage(String uri, ViewManager viewManager) {
+        viewManager.startProgress(1, L.get("service.Daum.parsePage.progress"));
         String viewerImagesUrl = "http://webtoon.daum.net/data/pc/webtoon/viewer_images/" + uri.substring(uri.lastIndexOf("/") + 1);
         try {
             JSONObject json = (JSONObject) new JSONParser().parse(IOManager.sendRequest(viewerImagesUrl));
@@ -27,10 +27,12 @@ public class Daum implements Service {
             data.forEach(o -> list[((int) ((long) ((JSONObject) o).get("imageOrder"))) - 1] = (String) ((JSONObject) o).get("url"));
             return Arrays.asList(list);
         } catch (ParseException e) {
-            ViewManager.showMessageDialog(L.get("service.Daum.parsePage.parse_exception", e.toString()));
+            ViewManager.showMessageDialog(L.get("service.Daum.parsePage.parse_exception", e.toString()),
+                    viewManager.getView());
             e.printStackTrace();
         } catch (IOException e) {
-            ViewManager.showMessageDialog(L.get("service.Daum.parsePage.io_exception", e.toString()));
+            ViewManager.showMessageDialog(L.get("service.Daum.parsePage.io_exception", e.toString()),
+                    viewManager.getView());
             e.printStackTrace();
         }
         return null;

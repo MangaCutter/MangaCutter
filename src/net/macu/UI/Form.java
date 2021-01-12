@@ -12,4 +12,6 @@ public interface Form {
     String getDescription();
 
     Pipeline getConfiguredPipeline();
+
+    //todo override toString
 }

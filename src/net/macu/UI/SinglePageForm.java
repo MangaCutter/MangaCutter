@@ -18,7 +18,7 @@ public class SinglePageForm implements Form {
 
     public SinglePageForm() {
         browseButton.addActionListener(e -> {
-            String path = ViewManager.requestSelectSingleFile("png");
+            String path = ViewManager.requestChooseSingleFile("png", null);
             filePathTextField.setText(path);
         });
         pathLabel.setText(L.get("UI.SinglePageForm.path_label"));
@@ -29,11 +29,11 @@ public class SinglePageForm implements Form {
     public boolean validateInput() {
         String path = filePathTextField.getText();
         if (path.isEmpty()) {
-            ViewManager.showMessageDialog(L.get("UI.SinglePageForm.validateInput.empty_path"));
+            ViewManager.showMessageDialog(L.get("UI.SinglePageForm.validateInput.empty_path"), null);
             return false;
         }
         if (!path.endsWith(".png")) {
-            return ViewManager.showConfirmDialog(L.get("UI.SinglePageForm.validateInput.path_without_extension"));
+            return ViewManager.showConfirmDialog(L.get("UI.SinglePageForm.validateInput.path_without_extension"), null);
         }
         return true;
     }
