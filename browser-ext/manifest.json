@@ -2,7 +2,7 @@
   "manifest_version": 2,
   "name": "MangaCutter Browser adapter",
   "version": "1.0",
-  "description": "Add-on for MangaCutter capabilities extention",
+  "description": "Add-on for MangaCutter capabilities extension",
   "background": {
     "scripts": [
       "js/background.js"
@@ -29,5 +29,12 @@
   "icons": {
     "48": "icons/icon.svg",
     "96": "icons/icon.svg"
+  },
+  "incognito": "spanning",
+  "browser_specific_settings": {
+    "gecko": {
+      "update_url": "https://example.com/updates.json",
+      "id": "{340f1970-c458-40cc-a39e-3d978f843f4e}"
+    }
   }
 }
