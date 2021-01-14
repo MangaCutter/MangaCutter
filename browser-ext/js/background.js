@@ -83,25 +83,15 @@ function createWebSocket() {
     sock.onclose = onWebSocketClose;
 }
 
+function handleRequest(requestInfo) {
+    return {type: "http", host: "127.0.0.1", port: 50001};
+}
+
 async function enableProxy(after) {
     if (typeof browser !== 'undefined') {
-        await browser.proxy.settings.get({}).then(async (settings) => {
-            if (settings.levelOfControl === "controllable_by_this_extension" ||
-                settings.levelOfControl === "controlled_by_this_extension") {
-                usersProxySettings = settings.value;
-                console.log(usersProxySettings);
-                await browser.proxy.settings.set({
-                    value: {
-                        proxyType: "manual",
-                        http: "http://127.0.0.1:50001",
-                        httpProxyAll: true
-                    }
-                }).then(() => {
-                    proxyStatus = true;
-                    after();
-                }, (e) => console.log(e));
-            }
-        }, (e) => console.log(e));
+        browser.proxy.onRequest.addListener(handleRequest, {urls: ["<all_urls>"]});
+        console.log("proxy enabled")
+        after();
     } else {
         await chrome.proxy.settings.get({}, async (settings) => {
             if (settings.levelOfControl === "controllable_by_this_extension" ||
@@ -131,21 +121,15 @@ async function enableProxy(after) {
 }
 
 function disableProxy() {
-    // browser.proxy.settings.set({value: usersProxySettings}).then(
-    //     () => {
-    chrome.proxy.settings.clear({scope: "regular"}, () => {
-        proxyStatus = false;
+    if (browser !== "undefined") {
+        browser.proxy.onRequest.removeListener(handleRequest);
         console.log("proxy disabled");
-    });
-    // },
-    // (ex) => {
-    //     console.log(ex);
-    //     browser.proxy.settings.clear({}).then((e) => {
-    //         proxyStatus = false;
-    //         console.log("proxy disabled " + e);
-    //     });
-    // }
-    // );
+    } else {
+        chrome.proxy.settings.clear({scope: "regular"}, () => {
+            proxyStatus = false;
+            console.log("proxy disabled");
+        });
+    }
 }
 
 function downloadChapter(message, sender) {
