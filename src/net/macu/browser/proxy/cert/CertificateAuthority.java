@@ -186,7 +186,7 @@ public class CertificateAuthority implements Parametrized {
         Date endDate = calendar.getTime();
         BigInteger issuedCertSerialNum = new BigInteger(Long.toString(crypto.getSecureRandom().nextLong()));
         KeyPair issuedCertKeyPair = keyPairGenerator.generateKeyPair();
-        PKCS10CertificationRequestBuilder p10Builder = new JcaPKCS10CertificationRequestBuilder(new X500Name("CN=" + domains.get(0)), issuedCertKeyPair.getPublic()/*certificateChain[0].getPublicKey()*/);
+        PKCS10CertificationRequestBuilder p10Builder = new JcaPKCS10CertificationRequestBuilder(new X500Name("CN=" + domains.get(0)), issuedCertKeyPair.getPublic());
         JcaContentSignerBuilder csrBuilder = new JcaContentSignerBuilder("SHA256withECDSA").setProvider(BC_PROVIDER);
         ContentSigner csrContentSigner = csrBuilder.build(privateKey);
         PKCS10CertificationRequest csr = p10Builder.build(csrContentSigner);
@@ -207,7 +207,7 @@ public class CertificateAuthority implements Parametrized {
         ArrayList<X509Certificate> issuedCertificateChain = new ArrayList<>();
         issuedCertificateChain.add(issuedCert);
         Collections.addAll(issuedCertificateChain, certificateChain);
-        return new CertificateAuthority(issuedCertificateChain.toArray(new X509Certificate[0]), issuedCertKeyPair.getPrivate()/*privateKey*/);
+        return new CertificateAuthority(issuedCertificateChain.toArray(new X509Certificate[0]), issuedCertKeyPair.getPrivate());
     }
 
     public String getCertificateChainBase64Encoded() throws CertificateEncodingException {
