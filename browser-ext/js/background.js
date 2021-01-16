@@ -121,7 +121,7 @@ async function enableProxy(after) {
 }
 
 function disableProxy() {
-    if (browser !== "undefined") {
+    if (typeof browser !== "undefined") {
         browser.proxy.onRequest.removeListener(handleRequest);
         console.log("proxy disabled");
     } else {

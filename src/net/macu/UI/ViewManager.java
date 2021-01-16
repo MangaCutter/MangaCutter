@@ -28,7 +28,6 @@ public class ViewManager {
             s = "<html>" + s.replaceAll("\n", "<br>") + "</html>";
         }
         JEditorPane editorPane1 = new JEditorPane("text/html", s);
-        editorPane1.setBackground(new JLabel().getBackground());
         editorPane1.addHyperlinkListener(e -> {
             if (e.getEventType().equals(HyperlinkEvent.EventType.ACTIVATED)) {
                 try {
@@ -38,12 +37,14 @@ public class ViewManager {
                 }
             }
         });
+        editorPane1.setEditable(false);
         JOptionPane pane = new JOptionPane(editorPane1, JOptionPane.INFORMATION_MESSAGE, JOptionPane.DEFAULT_OPTION, null, null, null);
         pane.addPropertyChangeListener(evt -> {
             synchronized (locker) {
                 locker.notify();
             }
         });
+        editorPane1.setBackground(pane.getBackground());
         pane.selectInitialValue();
         JFrame f = new JFrame(L.get("UI.ViewManager.message_dialog_title"));
         f.setIconImage(IconManager.getBrandIcon());
@@ -87,12 +88,14 @@ public class ViewManager {
                 }
             }
         });
+        editorPane1.setEditable(false);
         JOptionPane pane = new JOptionPane(editorPane1, JOptionPane.QUESTION_MESSAGE, JOptionPane.YES_NO_OPTION, null, null, null);
         pane.addPropertyChangeListener(evt -> {
             synchronized (locker) {
                 locker.notify();
             }
         });
+        editorPane1.setBackground(pane.getBackground());
         pane.selectInitialValue();
         JFrame f = new JFrame(L.get("UI.ViewManager.confirm_dialog_title"));
         f.setIconImage(IconManager.getBrandIcon());
