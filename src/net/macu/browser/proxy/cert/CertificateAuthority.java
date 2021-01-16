@@ -20,7 +20,7 @@ import org.bouncycastle.cert.X509v3CertificateBuilder;
 import org.bouncycastle.cert.jcajce.JcaX509CertificateConverter;
 import org.bouncycastle.cert.jcajce.JcaX509ExtensionUtils;
 import org.bouncycastle.cert.jcajce.JcaX509v3CertificateBuilder;
-import org.bouncycastle.jcajce.provider.digest.SHA256;
+import org.bouncycastle.jcajce.provider.digest.SHA1;
 import org.bouncycastle.operator.ContentSigner;
 import org.bouncycastle.operator.InputDecryptorProvider;
 import org.bouncycastle.operator.bc.BcDefaultDigestProvider;
@@ -262,7 +262,7 @@ public class CertificateAuthority implements Parametrized {
             return "INVALID_CERTIFICATE_DO_NOT_ADD_IT_TO_TRUSTED_ROOT_CA_CONTACT_WITH_DEVELOPERS";
         }
         StringBuilder sig = new StringBuilder();
-        for (byte b : new SHA256.Digest().digest(cert)) {
+        for (byte b : new SHA1.Digest().digest(cert)) {
             sig.append(String.format("%02x", Byte.toUnsignedInt(b)).toUpperCase()).append(":");
         }
         sig.deleteCharAt(sig.length() - 1);
