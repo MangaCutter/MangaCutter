@@ -36,6 +36,7 @@ import org.bouncycastle.util.encoders.Base64;
 
 import java.io.ByteArrayOutputStream;
 import java.io.FileWriter;
+import java.io.IOException;
 import java.math.BigInteger;
 import java.security.*;
 import java.security.cert.Certificate;
@@ -47,7 +48,7 @@ import java.util.*;
 
 public class CertificateAuthority implements Parametrized {
     private static final Parameter ROOT_CA = new Parameter(Parameter.Type.STRING_TYPE, "browser.proxy.cert.CertificateAuthority.root_ca");
-    private static CertificateAuthority rootCA;
+    private static CertificateAuthority rootCA = null;
     private static final char[] MAIN_PASSWORD = new char[]{'a', 'b', 'c', 'd', 'e', 'f'};
     private static final String BC_PROVIDER = "BC";
     private static final String KET_STORE_TYPE = "PKCS12";
@@ -130,6 +131,24 @@ public class CertificateAuthority implements Parametrized {
             } catch (Exception e) {
                 ViewManager.showMessageDialog(L.get("browser.proxy.cert.CertificateAuthority.openGenerateCertFrame.certificate_generation_failed", e.toString()), null);
                 e.printStackTrace();
+            }
+        }
+    }
+
+    public static void openExportCertificateFrame() {
+        String path = ViewManager.requestChooseSingleFile("crt", null);
+        if (path != null) {
+            if (rootCA != null) {
+                try {
+                    FileWriter out = new FileWriter(path);
+                    out.append(rootCA.getCertificateChainBase64Encoded());
+                    out.flush();
+                } catch (IOException | CertificateEncodingException e) {
+                    e.printStackTrace();
+                    ViewManager.showMessageDialog(L.get("browser.proxy.cert.CertificateAuthority.openExportCertificateFrame.certificate_export_failed"), null);
+                }
+            } else {
+                ViewManager.showMessageDialog(L.get("browser.proxy.cert.CertificateAuthority.openExportCertificateFrame.certificate_does_not_exist"), null);
             }
         }
     }

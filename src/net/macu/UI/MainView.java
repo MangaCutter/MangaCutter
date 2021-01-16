@@ -93,6 +93,10 @@ public class MainView extends JFrame {
                                     L.get("UI.ViewManager.plugin_connection_true") :
                                     L.get("UI.ViewManager.plugin_connection_false")), this)).start());
             pluginMenu.add(pluginConnectionItem);
+            JMenuItem exportCertificateItem = new JMenuItem(L.get("UI.ViewManager.certificate_export_menu"));
+            exportCertificateItem.addActionListener(e ->
+                    new Thread(CertificateAuthority::openExportCertificateFrame).start());
+            pluginMenu.add(exportCertificateItem);
             bar.add(pluginMenu);
             setJMenuBar(bar);
         }
