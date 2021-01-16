@@ -51,7 +51,7 @@ public class Handler extends Thread {
         this.secure = secure;
     }
 
-    protected int handle() throws IOException {
+    protected int handle() throws Exception {
         if (keepAlive) {
             if (keepAliveMax != -1 && keepAliveMax <= keepAliveRequestCount) {
                 return BREAK_EXIT_CODE;
@@ -304,6 +304,9 @@ public class Handler extends Thread {
             targetReader.close();
             targetSocket.close();
         } catch (IOException e) {
+            e.printStackTrace();
+        } catch (NullPointerException ignored) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }

@@ -266,13 +266,15 @@ public class ManualCutterFrame extends JFrame implements MouseListener, MouseMot
         addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
-                if (ViewManager.showConfirmDialog(L.get("UI.ManualCutterFrame.cancel"), mcf)) {
-                    result = null;
-                    dispose();
-                    synchronized (locker) {
-                        locker.notifyAll();
+                new Thread(() -> {
+                    if (ViewManager.showConfirmDialog(L.get("UI.ManualCutterFrame.cancel"), mcf)) {
+                        result = null;
+                        dispose();
+                        synchronized (locker) {
+                            locker.notifyAll();
+                        }
                     }
-                }
+                }).start();
             }
         });
         Thread scrollThread = new Thread(() -> {

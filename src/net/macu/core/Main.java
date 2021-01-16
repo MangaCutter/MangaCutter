@@ -25,7 +25,6 @@ import java.util.Set;
 public class Main {
     private static List<Form> forms;
     private static List<Service> services;
-    private static final int VERSION_MINOR = 4;
     private static Reflections reflections;
 
     static {
@@ -48,6 +47,7 @@ public class Main {
 
         Settings.collectParameters();
         L.loadLanguageData();
+        IconManager.loadIcons();
 
         Security.addProvider(new BouncyCastleProvider());
         CertificateAuthority.loadRootCA();
@@ -62,7 +62,6 @@ public class Main {
         IOManager.checkUpdates();
         IOManager.initClient();
 
-        IconManager.loadIcons();
         ViewManager.initFileChoosers();
 
         new MainView();
@@ -101,6 +100,6 @@ public class Main {
     }
 
     public static String getVersion() {
-        return "v" + forms.size() + "." + services.size() + "." + VERSION_MINOR;
+        return "v5.0.0";
     }
 }

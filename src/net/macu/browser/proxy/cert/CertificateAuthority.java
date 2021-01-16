@@ -100,11 +100,15 @@ public class CertificateAuthority implements Parametrized {
     }
 
     public static void loadRootCA() {
+        if (ROOT_CA.getString() == null) {
+            ViewManager.showMessageDialog(L.get("browser.proxy.cert.CertificateAuthority.openGenerateCertFrame.saved_certificate_is_empty"), null);
+            return;
+        }
         try {
             rootCA = readPKCS12File(Base64.decode(ROOT_CA.getString()));
         } catch (Exception e) {
             e.printStackTrace();
-            //todo show error, ask to regenerate root ca
+            ViewManager.showMessageDialog(L.get("browser.proxy.cert.CertificateAuthority.openGenerateCertFrame.certificate_loading_failed", e.toString()), null);
         }
     }
 
@@ -124,8 +128,8 @@ public class CertificateAuthority implements Parametrized {
                 rootCA = newRoot;
                 ViewManager.showMessageDialog(L.get("browser.proxy.cert.CertificateAuthority.openGenerateCertFrame.certificate_generated", newRoot.getSHA256Fingerprint()), null);
             } catch (Exception e) {
+                ViewManager.showMessageDialog(L.get("browser.proxy.cert.CertificateAuthority.openGenerateCertFrame.certificate_generation_failed", e.toString()), null);
                 e.printStackTrace();
-                //todo show error
             }
         }
     }

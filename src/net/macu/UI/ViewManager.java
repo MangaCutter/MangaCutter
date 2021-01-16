@@ -23,11 +23,13 @@ public class ViewManager {
     }
 
     public static void showMessageDialog(String s, Component parent) {
+        Object locker = new Object();
         if (!s.startsWith("<html>")) {
             s = "<html>" + s.replaceAll("\n", "<br>") + "</html>";
         }
-        JEditorPane ep = new JEditorPane("text/html", s);
-        ep.addHyperlinkListener(e -> {
+        JEditorPane editorPane1 = new JEditorPane("text/html", s);
+        editorPane1.setBackground(new JLabel().getBackground());
+        editorPane1.addHyperlinkListener(e -> {
             if (e.getEventType().equals(HyperlinkEvent.EventType.ACTIVATED)) {
                 try {
                     Desktop.getDesktop().browse(e.getURL().toURI());
@@ -36,13 +38,93 @@ public class ViewManager {
                 }
             }
         });
-        ep.setEditable(false);
-        ep.setBackground(new JLabel().getBackground());
-        JOptionPane.showMessageDialog(parent, ep);
+        JOptionPane pane = new JOptionPane(editorPane1, JOptionPane.INFORMATION_MESSAGE, JOptionPane.DEFAULT_OPTION, null, null, null);
+        pane.addPropertyChangeListener(evt -> {
+            synchronized (locker) {
+                locker.notify();
+            }
+        });
+        pane.selectInitialValue();
+        JFrame f = new JFrame(L.get("UI.ViewManager.message_dialog_title"));
+        f.setIconImage(IconManager.getBrandIcon());
+        f.setLocationRelativeTo(parent);
+        f.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+        f.setResizable(false);
+        f.addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosing(WindowEvent e) {
+                synchronized (locker) {
+                    locker.notify();
+                }
+            }
+        });
+        f.setContentPane(pane);
+        f.pack();
+        f.setVisible(true);
+        synchronized (locker) {
+            try {
+                locker.wait();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+        f.dispose();
     }
 
     public static boolean showConfirmDialog(String s, Component parent) {
-        return JOptionPane.showConfirmDialog(parent, s, L.get("UI.ViewManager.confirm_dialog_title"), JOptionPane.YES_NO_CANCEL_OPTION) == JOptionPane.OK_OPTION;
+        Object locker = new Object();
+        if (!s.startsWith("<html>")) {
+            s = "<html>" + s.replaceAll("\n", "<br>") + "</html>";
+        }
+        JEditorPane editorPane1 = new JEditorPane("text/html", s);
+        editorPane1.setBackground(new JLabel().getBackground());
+        editorPane1.addHyperlinkListener(e -> {
+            if (e.getEventType().equals(HyperlinkEvent.EventType.ACTIVATED)) {
+                try {
+                    Desktop.getDesktop().browse(e.getURL().toURI());
+                } catch (IOException | URISyntaxException ioException) {
+                    ioException.printStackTrace();
+                }
+            }
+        });
+        JOptionPane pane = new JOptionPane(editorPane1, JOptionPane.QUESTION_MESSAGE, JOptionPane.YES_NO_OPTION, null, null, null);
+        pane.addPropertyChangeListener(evt -> {
+            synchronized (locker) {
+                locker.notify();
+            }
+        });
+        pane.selectInitialValue();
+        JFrame f = new JFrame(L.get("UI.ViewManager.confirm_dialog_title"));
+        f.setIconImage(IconManager.getBrandIcon());
+        f.setLocationRelativeTo(parent);
+        f.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+        f.setResizable(false);
+        f.addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosing(WindowEvent e) {
+                synchronized (locker) {
+                    locker.notify();
+                }
+            }
+        });
+        f.setContentPane(pane);
+        f.pack();
+        f.setVisible(true);
+        synchronized (locker) {
+            try {
+                locker.wait();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+        f.dispose();
+
+        Object selectedValue = pane.getValue();
+        if (selectedValue == null)
+            return false;
+        if (selectedValue instanceof Integer)
+            return (Integer) selectedValue == JOptionPane.OK_OPTION;
+        return false;
     }
 
     public static String requestChooseSingleFile(String extension, Component parent) {

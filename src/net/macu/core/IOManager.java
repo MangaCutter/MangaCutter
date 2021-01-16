@@ -59,7 +59,7 @@ public class IOManager implements Parametrized {
         CloseableHttpClient cs = HttpClients.custom()
                 .setDefaultRequestConfig(RequestConfig.custom().setRedirectsEnabled(false).build()).build();
         try {
-            String location = cs.execute(new HttpGet("https://github.com/MasterLogick/MangaCutter/releases/latest"))
+            String location = cs.execute(new HttpGet("https://github.com/MangaCutter/MangaCutter/releases/latest"))
                     .getFirstHeader("location").getValue();
             String tag = location.substring(location.lastIndexOf("/") + 1);
             if (!tag.equals(Main.getVersion())) {

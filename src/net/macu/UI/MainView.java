@@ -41,8 +41,16 @@ public class MainView extends JFrame {
         addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
-                jobManager.cancel();
-                dispose();
+                new Thread(() -> {
+                    jobManager.cancel();
+                    if (!prepared) {
+                        if (ViewManager.showConfirmDialog(L.get("UI.MainView.confirm_exit"), viewManager.getView())) {
+                            System.exit(0);
+                        }
+                    } else {
+                        dispose();
+                    }
+                }).start();
             }
         });
         setContentPane($$$getRootComponent$$$());
@@ -61,30 +69,29 @@ public class MainView extends JFrame {
             JMenuBar bar = new JMenuBar();
             JMenu fileMenu = new JMenu(L.get("UI.ViewManager.help_menu"));
             JMenuItem settingsMenu = new JMenuItem(L.get("UI.ViewManager.settings_menu"));
-            settingsMenu.addActionListener(e -> SettingsFrame.openFrame());
+            settingsMenu.addActionListener(e -> new Thread(() -> SettingsFrame.openFrame()).start());
             fileMenu.add(settingsMenu);
             JMenuItem supportedServicesItem = new JMenuItem(L.get("UI.ViewManager.supported_services_menu"));
-            supportedServicesItem.addActionListener(actionEvent ->
+            supportedServicesItem.addActionListener(actionEvent -> new Thread(() ->
                     ViewManager.showMessageDialog(L.get("UI.ViewManager.supported_services_list",
-                            ServiceManager.getSupportedServicesList()), this));
+                            ServiceManager.getSupportedServicesList()), this)).start());
             fileMenu.add(supportedServicesItem);
             JMenuItem aboutItem = new JMenuItem(L.get("UI.ViewManager.about_menu"));
-            aboutItem.addActionListener(actionEvent -> ViewManager.showMessageDialog(
-                    L.get("UI.ViewManager.about_text", Main.getVersion()), this));
+            aboutItem.addActionListener(actionEvent -> new Thread(() -> ViewManager.showMessageDialog(
+                    L.get("UI.ViewManager.about_text", Main.getVersion()), this)).start());
             fileMenu.add(aboutItem);
             bar.add(fileMenu);
             JMenu pluginMenu = new JMenu(L.get("UI.ViewManager.plugin_menu"));
             JMenuItem generateCertificateItem =
                     new JMenuItem(L.get("UI.ViewManager.generate_certificate_menu"));
-            generateCertificateItem.addActionListener(e -> CertificateAuthority.openGenerateCertFrame());
+            generateCertificateItem.addActionListener(e -> new Thread(CertificateAuthority::openGenerateCertFrame).start());
             pluginMenu.add(generateCertificateItem);
             JMenuItem pluginConnectionItem = new JMenuItem(L.get("UI.ViewManager.plugin_connection_menu"));
-            pluginConnectionItem.addActionListener(e -> {
-                ViewManager.showMessageDialog(L.get("UI.ViewManager.plugin_connection",
-                        BrowserPlugin.getPlugin().isConnected() ?
-                                L.get("UI.ViewManager.plugin_connection_true") :
-                                L.get("UI.ViewManager.plugin_connection_false")), this);
-            });
+            pluginConnectionItem.addActionListener(e -> new Thread(() ->
+                    ViewManager.showMessageDialog(L.get("UI.ViewManager.plugin_connection",
+                            BrowserPlugin.getPlugin().isConnected() ?
+                                    L.get("UI.ViewManager.plugin_connection_true") :
+                                    L.get("UI.ViewManager.plugin_connection_false")), this)).start());
             pluginMenu.add(pluginConnectionItem);
             bar.add(pluginMenu);
             setJMenuBar(bar);
@@ -97,7 +104,6 @@ public class MainView extends JFrame {
                 startButton.setEnabled(true);
                 cancelButton.setEnabled(false);
             });
-            t.setDaemon(true);
             t.start();
         });
         startButton.addActionListener(e -> {
@@ -121,7 +127,6 @@ public class MainView extends JFrame {
                 cancelButton.setEnabled(false);
                 startButton.setEnabled(true);
             });
-            t.setDaemon(true);
             t.start();
         });
         pathSelector.addItemListener(e -> {

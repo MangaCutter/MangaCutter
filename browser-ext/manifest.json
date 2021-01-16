@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
   "name": "MangaCutter Browser adapter",
-  "version": "1.0",
+  "version": "1.1",
   "description": "Add-on for MangaCutter capabilities extension",
   "background": {
     "scripts": [
@@ -10,8 +10,9 @@
   },
   "browser_action": {
     "default_icon": {
-      "19": "icons/icon.svg",
-      "38": "icons/icon.svg"
+      "48": "icons/48.png",
+      "96": "icons/96.png",
+      "192": "icons/192.png"
     },
     "default_title": "MangaCutter",
     "default_popup": "popup/popup.html"
@@ -27,13 +28,14 @@
     "privacy"
   ],
   "icons": {
-    "48": "icons/icon.svg",
-    "96": "icons/icon.svg"
+    "48": "icons/48.png",
+    "96": "icons/96.png",
+    "192": "icons/192.png"
   },
   "incognito": "spanning",
   "browser_specific_settings": {
     "gecko": {
-      "update_url": "https://example.com/updates.json",
+      "update_url": "https://mangacutter.github.io/MangaCutter/firefox/updates.json",
       "id": "{340f1970-c458-40cc-a39e-3d978f843f4e}"
     }
   }

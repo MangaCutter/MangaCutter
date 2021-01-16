@@ -3,8 +3,8 @@
     "{340f1970-c458-40cc-a39e-3d978f843f4e}": {
       "updates": [
         {
-          "version": "1.0",
-          "update_link": "https://example.com/addon-0.1.xpi"
+          "version": "1.1",
+          "update_link": "https://mangacutter.github.io/MangaCutter/releases/MangaCutter_v1.0-firefox.xpi"
         }
       ]
     }
