@@ -333,26 +333,30 @@ public class ManualCutterFrame extends JFrame implements MouseListener, MouseMot
 
     @Override
     public void keyPressed(KeyEvent e) {
-        ctrlPressed = (e.getModifiers() & KeyEvent.CTRL_MASK) != 0;
-        altPressed = (e.getModifiers() & KeyEvent.ALT_MASK) != 0;
-        if (e.getKeyCode() == KeyEvent.VK_SUBTRACT && (ctrlPressed || altPressed)) {
-            zoom(-2);
-            c.repaint();
-        }
-        if (e.getKeyCode() == KeyEvent.VK_ADD && (ctrlPressed || altPressed)) {
-            zoom(2);
-            c.repaint();
-        }
+        new Thread(() -> {
+            ctrlPressed = (e.getModifiers() & KeyEvent.CTRL_MASK) != 0;
+            altPressed = (e.getModifiers() & KeyEvent.ALT_MASK) != 0;
+            if (e.getKeyCode() == KeyEvent.VK_SUBTRACT && (ctrlPressed || altPressed)) {
+                zoom(-2);
+                c.repaint();
+            }
+            if (e.getKeyCode() == KeyEvent.VK_ADD && (ctrlPressed || altPressed)) {
+                zoom(2);
+                c.repaint();
+            }
+        }).start();
     }
 
     @Override
     public void keyReleased(KeyEvent e) {
-        if (e.getKeyCode() == KeyEvent.VK_CONTROL) {
-            ctrlPressed = false;
-        }
-        if (e.getKeyCode() == KeyEvent.VK_ALT) {
-            altPressed = false;
-        }
+        new Thread(() -> {
+            if (e.getKeyCode() == KeyEvent.VK_CONTROL) {
+                ctrlPressed = false;
+            }
+            if (e.getKeyCode() == KeyEvent.VK_ALT) {
+                altPressed = false;
+            }
+        }).start();
     }
 
     @Override
@@ -361,51 +365,55 @@ public class ManualCutterFrame extends JFrame implements MouseListener, MouseMot
 
     @Override
     public void mouseMoved(MouseEvent e) {
-        if (dragging == Drag.NOTHING) {
-            if ((pressedButton & ADD_SELECTED) != 0 && MouseInfo.getPointerInfo().getLocation().getY() >= viewportVerticalOffset) {
-                c.repaint();
-            }
-            int posY = MouseInfo.getPointerInfo().getLocation().y - c.getLocationOnScreen().y - viewportVerticalOffset;
-            int posX = MouseInfo.getPointerInfo().getLocation().x - c.getLocationOnScreen().x;
-            if ((cutterColumnWidth - LEADER_WIDTH - cutterBoxWidth <= posX && posX <= cutterColumnWidth - LEADER_WIDTH) ||
-                    (viewportWidth - cutterColumnWidth + LEADER_WIDTH <= posX && posX <= viewportWidth - cutterColumnWidth + LEADER_WIDTH + cutterBoxWidth)) {
-                int onImagePos = toSRCCoordinates(imageViewportStart + posY);
-                for (int i = 1; i < cutLines.size() - 1; i++) {
-                    if (onImagePos - toSRCCoordinates(CUTTER_BOX_HEIGHT / 2) <= cutLines.get(i) &&
-                            cutLines.get(i) <= onImagePos + toSRCCoordinates(CUTTER_BOX_HEIGHT / 2)) {
-                        if ((pressedButton & ADD_SELECTED) != 0 && posY >= 0) {
-                            setCursor(new Cursor(Cursor.N_RESIZE_CURSOR));
-                        } else {
-                            hasMarkedForRemove = true;
-                            setCursor(new Cursor(Cursor.HAND_CURSOR));
-                            c.repaint();
+        new Thread(() -> {
+            if (dragging == Drag.NOTHING) {
+                if ((pressedButton & ADD_SELECTED) != 0 && MouseInfo.getPointerInfo().getLocation().getY() >= viewportVerticalOffset) {
+                    c.repaint();
+                }
+                int posY = MouseInfo.getPointerInfo().getLocation().y - c.getLocationOnScreen().y - viewportVerticalOffset;
+                int posX = MouseInfo.getPointerInfo().getLocation().x - c.getLocationOnScreen().x;
+                if ((cutterColumnWidth - LEADER_WIDTH - cutterBoxWidth <= posX && posX <= cutterColumnWidth - LEADER_WIDTH) ||
+                        (viewportWidth - cutterColumnWidth + LEADER_WIDTH <= posX && posX <= viewportWidth - cutterColumnWidth + LEADER_WIDTH + cutterBoxWidth)) {
+                    int onImagePos = toSRCCoordinates(imageViewportStart + posY);
+                    for (int i = 1; i < cutLines.size() - 1; i++) {
+                        if (onImagePos - toSRCCoordinates(CUTTER_BOX_HEIGHT / 2) <= cutLines.get(i) &&
+                                cutLines.get(i) <= onImagePos + toSRCCoordinates(CUTTER_BOX_HEIGHT / 2)) {
+                            if ((pressedButton & ADD_SELECTED) != 0 && posY >= 0) {
+                                setCursor(new Cursor(Cursor.N_RESIZE_CURSOR));
+                            } else {
+                                hasMarkedForRemove = true;
+                                setCursor(new Cursor(Cursor.HAND_CURSOR));
+                                c.repaint();
+                            }
+                            return;
                         }
-                        return;
                     }
                 }
+                if (hasMarkedForRemove) {
+                    hasMarkedForRemove = false;
+                    c.repaint();
+                } else {
+                    setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
+                }
             }
-            if (hasMarkedForRemove) {
-                hasMarkedForRemove = false;
-                c.repaint();
-            } else {
-                setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
-            }
-        }
+        }).start();
     }
 
     @Override
     public void mouseDragged(MouseEvent e) {
-        switch (dragging) {
-            case SLIDER:
-                setViewportStart((int) ((float) (e.getY() - viewportVerticalOffset - sliderDragPoint) / viewportHeight * srcHeight * ((float) previewWidth) / srcWidth));
-                c.repaint();
-                break;
-            case CUT_BOX:
-                setCursor(new Cursor(Cursor.N_RESIZE_CURSOR));
-                updateDraggedBoxPos();
-                c.repaint();
-                break;
-        }
+        new Thread(() -> {
+            switch (dragging) {
+                case SLIDER:
+                    setViewportStart((int) ((float) (e.getY() - viewportVerticalOffset - sliderDragPoint) / viewportHeight * srcHeight * ((float) previewWidth) / srcWidth));
+                    c.repaint();
+                    break;
+                case CUT_BOX:
+                    setCursor(new Cursor(Cursor.N_RESIZE_CURSOR));
+                    updateDraggedBoxPos();
+                    c.repaint();
+                    break;
+            }
+        }).start();
     }
 
     @Override
@@ -418,105 +426,109 @@ public class ManualCutterFrame extends JFrame implements MouseListener, MouseMot
 
     @Override
     public void mouseReleased(MouseEvent e) {
-        dragging = Drag.NOTHING;
-        if (e.getY() <= BUTTON_PANEL_HEIGHT / 2 + buttonRadius && e.getY() >= BUTTON_PANEL_HEIGHT / 2 - buttonRadius) {
-            for (int i = 0; i < buttonCount - 1; i++) {
-                if (e.getX() <= distanceBetweenCenters * (i + 1) + buttonRadius && e.getX() >= distanceBetweenCenters * (i + 1) - buttonRadius) {
-                    if ((pressedButton & (1 << i)) != 0) {
-                        switch (i) {
-                            case 0:
-                                zoom(2);
-                                pressedButton &= (~ZOOM_IN_SELECTED);
-                                break;
-                            case 1:
-                                zoom(-2);
-                                pressedButton &= (~ZOOM_OUT_SELECTED);
-                                break;
-                            case 2:
-                                pressedButton &= (~REMOVE_SELECTED);
-                                break;
-                            case 3:
-                                pressedButton &= (~ADD_SELECTED);
-                                break;
+        new Thread(() -> {
+            dragging = Drag.NOTHING;
+            if (e.getY() <= BUTTON_PANEL_HEIGHT / 2 + buttonRadius && e.getY() >= BUTTON_PANEL_HEIGHT / 2 - buttonRadius) {
+                for (int i = 0; i < buttonCount - 1; i++) {
+                    if (e.getX() <= distanceBetweenCenters * (i + 1) + buttonRadius && e.getX() >= distanceBetweenCenters * (i + 1) - buttonRadius) {
+                        if ((pressedButton & (1 << i)) != 0) {
+                            switch (i) {
+                                case 0:
+                                    zoom(2);
+                                    pressedButton &= (~ZOOM_IN_SELECTED);
+                                    break;
+                                case 1:
+                                    zoom(-2);
+                                    pressedButton &= (~ZOOM_OUT_SELECTED);
+                                    break;
+                                case 2:
+                                    pressedButton &= (~REMOVE_SELECTED);
+                                    break;
+                                case 3:
+                                    pressedButton &= (~ADD_SELECTED);
+                                    break;
+                            }
                         }
+                        break;
                     }
-                    break;
                 }
-            }
-            if (e.getX() <= distanceBetweenCenters * buttonCount - buttonRadius + finishButtonWidth && e.getX() >= distanceBetweenCenters * buttonCount - buttonRadius) {
-                if ((pressedButton & CONFIRM_SELECTED) != 0) {
-                    confirm();
-                    pressedButton &= (~CONFIRM_SELECTED);
+                if (e.getX() <= distanceBetweenCenters * buttonCount - buttonRadius + finishButtonWidth && e.getX() >= distanceBetweenCenters * buttonCount - buttonRadius) {
+                    if ((pressedButton & CONFIRM_SELECTED) != 0) {
+                        confirm();
+                        pressedButton &= (~CONFIRM_SELECTED);
+                    }
                 }
+                pressedButton &= (~ZOOM_OUT_SELECTED) & (~ZOOM_IN_SELECTED) & (~CONFIRM_SELECTED);
+                c.repaint();
             }
-            pressedButton &= (~ZOOM_OUT_SELECTED) & (~ZOOM_IN_SELECTED) & (~CONFIRM_SELECTED);
-            c.repaint();
-        }
-        if ((pressedButton & ZOOM_IN_SELECTED) != 0 || (pressedButton & ZOOM_OUT_SELECTED) != 0 || (pressedButton & CONFIRM_SELECTED) != 0) {
-            pressedButton &= (~ZOOM_OUT_SELECTED) & (~ZOOM_IN_SELECTED) & (~CONFIRM_SELECTED);
-            c.repaint();
-        }
+            if ((pressedButton & ZOOM_IN_SELECTED) != 0 || (pressedButton & ZOOM_OUT_SELECTED) != 0 || (pressedButton & CONFIRM_SELECTED) != 0) {
+                pressedButton &= (~ZOOM_OUT_SELECTED) & (~ZOOM_IN_SELECTED) & (~CONFIRM_SELECTED);
+                c.repaint();
+            }
+        }).start();
     }
 
     @Override
     public void mousePressed(MouseEvent e) {
-        if (e.getX() >= c.getWidth() - SLIDER_WIDTH && e.getY() <= sliderEnd && e.getY() >= sliderStart) {
-            sliderDragPoint = e.getY() - sliderStart;
-            dragging = Drag.SLIDER;
-        }
-        if ((e.getX() <= cutterColumnWidth - LEADER_WIDTH && e.getX() >= cutterColumnWidth - LEADER_WIDTH - cutterBoxWidth) ||
-                (e.getX() <= viewportWidth - cutterBoxWidth && e.getX() >= cutterColumnWidth + previewWidth + LEADER_WIDTH)) {
-            int pos = e.getY() - viewportVerticalOffset + imageViewportStart;
-            for (int i = 1; i < cutLines.size() - 1; i++) {
-                int cutLinePos = toViewportCoordinates(cutLines.get(i));
-                if (pos >= cutLinePos - CUTTER_BOX_HEIGHT / 2 && pos <= cutLinePos + CUTTER_BOX_HEIGHT / 2) {
-                    if ((pressedButton & REMOVE_SELECTED) != 0) {
-                        cutLines.remove(i);
+        new Thread(() -> {
+            if (e.getX() >= c.getWidth() - SLIDER_WIDTH && e.getY() <= sliderEnd && e.getY() >= sliderStart) {
+                sliderDragPoint = e.getY() - sliderStart;
+                dragging = Drag.SLIDER;
+            }
+            if ((e.getX() <= cutterColumnWidth - LEADER_WIDTH && e.getX() >= cutterColumnWidth - LEADER_WIDTH - cutterBoxWidth) ||
+                    (e.getX() <= viewportWidth - cutterBoxWidth && e.getX() >= cutterColumnWidth + previewWidth + LEADER_WIDTH)) {
+                int pos = e.getY() - viewportVerticalOffset + imageViewportStart;
+                for (int i = 1; i < cutLines.size() - 1; i++) {
+                    int cutLinePos = toViewportCoordinates(cutLines.get(i));
+                    if (pos >= cutLinePos - CUTTER_BOX_HEIGHT / 2 && pos <= cutLinePos + CUTTER_BOX_HEIGHT / 2) {
+                        if ((pressedButton & REMOVE_SELECTED) != 0) {
+                            cutLines.remove(i);
+                            c.repaint();
+                        } else {
+                            druggingBoxIndex = i;
+                            druggingBoxStart = pos - cutLinePos;
+                            dragging = Drag.CUT_BOX;
+                            break;
+                        }
+                    }
+                }
+            }
+            if (e.getY() <= BUTTON_PANEL_HEIGHT / 2 + buttonRadius && e.getY() >= BUTTON_PANEL_HEIGHT / 2 - buttonRadius) {
+                for (int i = 0; i < buttonCount - 1; i++) {
+                    if (e.getX() <= distanceBetweenCenters * (i + 1) + buttonRadius && e.getX() >= distanceBetweenCenters * (i + 1) - buttonRadius) {
+                        pressedButton |= (1 << i);
+                        if (i == 2) {
+                            pressedButton &= (~REMOVE_SELECTED);
+                        }
+                        if (i == 3) {
+                            pressedButton &= (~ADD_SELECTED);
+                        }
+                    }
+                }
+                if (e.getX() <= distanceBetweenCenters * buttonCount - buttonRadius + finishButtonWidth && e.getX() >= distanceBetweenCenters * buttonCount - buttonRadius) {
+                    pressedButton |= CONFIRM_SELECTED;
+                }
+                c.repaint();
+            }
+            if (dragging == Drag.NOTHING) {
+                int posY = MouseInfo.getPointerInfo().getLocation().y - c.getLocationOnScreen().y - viewportVerticalOffset;
+                if ((pressedButton & ADD_SELECTED) != 0 && posY >= 0) {
+                    int onImagePos = toSRCCoordinates(imageViewportStart + posY);
+                    int prevIndex = 0;
+                    for (int i = 0; i < cutLines.size(); i++) {
+                        if (cutLines.get(i) < onImagePos) {
+                            prevIndex = i;
+                        }
+                    }
+                    if (toViewportCoordinates(onImagePos - cutLines.get(prevIndex)) >= 5 * CUTTER_BOX_HEIGHT &&
+                            toViewportCoordinates(cutLines.get(prevIndex + 1) - onImagePos) >= 5 * CUTTER_BOX_HEIGHT) {
+                        cutLines.add(onImagePos);
+                        cutLines.sort(Integer::compareTo);
                         c.repaint();
-                    } else {
-                        druggingBoxIndex = i;
-                        druggingBoxStart = pos - cutLinePos;
-                        dragging = Drag.CUT_BOX;
-                        break;
                     }
                 }
             }
-        }
-        if (e.getY() <= BUTTON_PANEL_HEIGHT / 2 + buttonRadius && e.getY() >= BUTTON_PANEL_HEIGHT / 2 - buttonRadius) {
-            for (int i = 0; i < buttonCount - 1; i++) {
-                if (e.getX() <= distanceBetweenCenters * (i + 1) + buttonRadius && e.getX() >= distanceBetweenCenters * (i + 1) - buttonRadius) {
-                    pressedButton |= (1 << i);
-                    if (i == 2) {
-                        pressedButton &= (~REMOVE_SELECTED);
-                    }
-                    if (i == 3) {
-                        pressedButton &= (~ADD_SELECTED);
-                    }
-                }
-            }
-            if (e.getX() <= distanceBetweenCenters * buttonCount - buttonRadius + finishButtonWidth && e.getX() >= distanceBetweenCenters * buttonCount - buttonRadius) {
-                pressedButton |= CONFIRM_SELECTED;
-            }
-            c.repaint();
-        }
-        if (dragging == Drag.NOTHING) {
-            int posY = MouseInfo.getPointerInfo().getLocation().y - c.getLocationOnScreen().y - viewportVerticalOffset;
-            if ((pressedButton & ADD_SELECTED) != 0 && posY >= 0) {
-                int onImagePos = toSRCCoordinates(imageViewportStart + posY);
-                int prevIndex = 0;
-                for (int i = 0; i < cutLines.size(); i++) {
-                    if (cutLines.get(i) < onImagePos) {
-                        prevIndex = i;
-                    }
-                }
-                if (toViewportCoordinates(onImagePos - cutLines.get(prevIndex)) >= 5 * CUTTER_BOX_HEIGHT &&
-                        toViewportCoordinates(cutLines.get(prevIndex + 1) - onImagePos) >= 5 * CUTTER_BOX_HEIGHT) {
-                    cutLines.add(onImagePos);
-                    cutLines.sort(Integer::compareTo);
-                    c.repaint();
-                }
-            }
-        }
+        }).start();
     }
 
     public static Parameters getParameters() {
@@ -525,13 +537,15 @@ public class ManualCutterFrame extends JFrame implements MouseListener, MouseMot
 
     @Override
     public void mouseWheelMoved(MouseWheelEvent e) {
-        if (ctrlPressed || altPressed) {
-            zoom(-2 * e.getWheelRotation());
-        } else {
-            scroll(e.getWheelRotation() * SCROLL_SPEED.getInt() * (SCROLL_INVERSION.getBoolean() ? 1 : -1));
-        }
-        mouseMoved(e);
-        c.repaint();
+        new Thread(() -> {
+            if (ctrlPressed || altPressed) {
+                zoom(-2 * e.getWheelRotation());
+            } else {
+                scroll(e.getWheelRotation() * SCROLL_SPEED.getInt() * (SCROLL_INVERSION.getBoolean() ? 1 : -1));
+            }
+            mouseMoved(e);
+            c.repaint();
+        }).start();
     }
 
     private void drawCutLine(int linePos, String topLabel, String bottomLabel, boolean fillButtons) {

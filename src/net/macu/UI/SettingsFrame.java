@@ -125,6 +125,7 @@ public class SettingsFrame extends JFrame {
         p.add(applyButton);
         root.add(scrollPane);
         root.add(p);
+        setIconImage(IconManager.getBrandIcon());
         setContentPane(root);
         addWindowListener(new WindowAdapter() {
             @Override

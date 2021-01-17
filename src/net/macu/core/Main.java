@@ -59,8 +59,8 @@ public class Main {
         Set<Class<? extends Service>> servicesSet = reflections.getSubTypesOf(Service.class);
         services = Collections.unmodifiableList(getInstances(servicesSet));
 
-        IOManager.checkUpdates();
         IOManager.initClient();
+        IOManager.checkUpdates();
 
         ViewManager.initFileChoosers();
 
@@ -100,6 +100,6 @@ public class Main {
     }
 
     public static String getVersion() {
-        return "v5.0.0";
+        return "v5.0.1";
     }
 }
