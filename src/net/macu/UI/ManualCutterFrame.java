@@ -119,13 +119,17 @@ public class ManualCutterFrame extends JFrame implements MouseListener, MouseMot
                             linePos <= viewportHeight + CUTTER_BOX_HEIGHT / 2 + g.getFontMetrics().getHeight() + 4 + CUTTER_BOX_HEIGHT) {
                         boolean fill = true;
                         if ((pressedButton & REMOVE_SELECTED) != 0) {
-                            int posY = MouseInfo.getPointerInfo().getLocation().y - c.getLocationOnScreen().y;
-                            int posX = MouseInfo.getPointerInfo().getLocation().x - c.getLocationOnScreen().x;
-                            if ((cutterColumnWidth - LEADER_WIDTH - cutterBoxWidth <= posX && posX <= cutterColumnWidth - LEADER_WIDTH) ||
-                                    (viewportWidth - cutterColumnWidth + LEADER_WIDTH <= posX && posX <= viewportWidth - cutterColumnWidth + LEADER_WIDTH + cutterBoxWidth)) {
-                                if (linePos - CUTTER_BOX_HEIGHT / 2 <= posY && posY <= linePos + CUTTER_BOX_HEIGHT / 2) {
-                                    fill = false;
+                            try {
+                                int posY = MouseInfo.getPointerInfo().getLocation().y - c.getLocationOnScreen().y;
+                                int posX = MouseInfo.getPointerInfo().getLocation().x - c.getLocationOnScreen().x;
+                                if ((cutterColumnWidth - LEADER_WIDTH - cutterBoxWidth <= posX && posX <= cutterColumnWidth - LEADER_WIDTH) ||
+                                        (viewportWidth - cutterColumnWidth + LEADER_WIDTH <= posX && posX <= viewportWidth - cutterColumnWidth + LEADER_WIDTH + cutterBoxWidth)) {
+                                    if (linePos - CUTTER_BOX_HEIGHT / 2 <= posY && posY <= linePos + CUTTER_BOX_HEIGHT / 2) {
+                                        fill = false;
+                                    }
                                 }
+                            } catch (IllegalComponentStateException ex) {
+                                ex.printStackTrace();
                             }
                         }
                         drawCutLine(linePos, (i != 0) ? String.valueOf(cutLines.get(i) - cutLines.get(i - 1)) : "",
@@ -133,19 +137,23 @@ public class ManualCutterFrame extends JFrame implements MouseListener, MouseMot
                     }
                 }
                 if (dragging == Drag.NOTHING) {
-                    int posY = MouseInfo.getPointerInfo().getLocation().y - c.getLocationOnScreen().y - viewportVerticalOffset;
-                    if ((pressedButton & ADD_SELECTED) != 0 && posY >= 0) {
-                        int onImagePos = toSRCCoordinates(imageViewportStart + posY);
-                        int prevIndex = 0;
-                        for (int i = 0; i < cutLines.size(); i++) {
-                            if (cutLines.get(i) < onImagePos) {
-                                prevIndex = i;
+                    try {
+                        int posY = MouseInfo.getPointerInfo().getLocation().y - c.getLocationOnScreen().y - viewportVerticalOffset;
+                        if ((pressedButton & ADD_SELECTED) != 0 && posY >= 0) {
+                            int onImagePos = toSRCCoordinates(imageViewportStart + posY);
+                            int prevIndex = 0;
+                            for (int i = 0; i < cutLines.size(); i++) {
+                                if (cutLines.get(i) < onImagePos) {
+                                    prevIndex = i;
+                                }
                             }
+                            if (toViewportCoordinates(onImagePos - cutLines.get(prevIndex)) >= 5 * CUTTER_BOX_HEIGHT &&
+                                    toViewportCoordinates(cutLines.get(prevIndex + 1) - onImagePos) >= 5 * CUTTER_BOX_HEIGHT)
+                                drawCutLine(posY + viewportVerticalOffset, String.valueOf(onImagePos - cutLines.get(prevIndex)),
+                                        String.valueOf(cutLines.get(prevIndex + 1) - onImagePos), false);
                         }
-                        if (toViewportCoordinates(onImagePos - cutLines.get(prevIndex)) >= 5 * CUTTER_BOX_HEIGHT &&
-                                toViewportCoordinates(cutLines.get(prevIndex + 1) - onImagePos) >= 5 * CUTTER_BOX_HEIGHT)
-                            drawCutLine(posY + viewportVerticalOffset, String.valueOf(onImagePos - cutLines.get(prevIndex)),
-                                    String.valueOf(cutLines.get(prevIndex + 1) - onImagePos), false);
+                    } catch (IllegalComponentStateException ex) {
+                        ex.printStackTrace();
                     }
                 }
 
@@ -286,14 +294,18 @@ public class ManualCutterFrame extends JFrame implements MouseListener, MouseMot
                 }
                 if (isVisible()) {
                     if (dragging == Drag.CUT_BOX) {
-                        int y = MouseInfo.getPointerInfo().getLocation().y - c.getLocationOnScreen().y - viewportVerticalOffset;
-                        if (y < 0) {
-                            scroll(SCROLL_SPEED.getInt() * (SCROLL_INVERSION.getBoolean() ? 1 : -1));
-                        } else if (y >= viewportHeight - 1) {
-                            scroll(SCROLL_SPEED.getInt() * (SCROLL_INVERSION.getBoolean() ? -1 : 1));
+                        try {
+                            int y = MouseInfo.getPointerInfo().getLocation().y - c.getLocationOnScreen().y - viewportVerticalOffset;
+                            if (y < 0) {
+                                scroll(SCROLL_SPEED.getInt() * (SCROLL_INVERSION.getBoolean() ? 1 : -1));
+                            } else if (y >= viewportHeight - 1) {
+                                scroll(SCROLL_SPEED.getInt() * (SCROLL_INVERSION.getBoolean() ? -1 : 1));
+                            }
+                            updateDraggedBoxPos();
+                            c.repaint();
+                        } catch (IllegalComponentStateException ex) {
+                            ex.printStackTrace();
                         }
-                        updateDraggedBoxPos();
-                        c.repaint();
                     }
                 }
             }
@@ -370,24 +382,28 @@ public class ManualCutterFrame extends JFrame implements MouseListener, MouseMot
                 if ((pressedButton & ADD_SELECTED) != 0 && MouseInfo.getPointerInfo().getLocation().getY() >= viewportVerticalOffset) {
                     c.repaint();
                 }
-                int posY = MouseInfo.getPointerInfo().getLocation().y - c.getLocationOnScreen().y - viewportVerticalOffset;
-                int posX = MouseInfo.getPointerInfo().getLocation().x - c.getLocationOnScreen().x;
-                if ((cutterColumnWidth - LEADER_WIDTH - cutterBoxWidth <= posX && posX <= cutterColumnWidth - LEADER_WIDTH) ||
-                        (viewportWidth - cutterColumnWidth + LEADER_WIDTH <= posX && posX <= viewportWidth - cutterColumnWidth + LEADER_WIDTH + cutterBoxWidth)) {
-                    int onImagePos = toSRCCoordinates(imageViewportStart + posY);
-                    for (int i = 1; i < cutLines.size() - 1; i++) {
-                        if (onImagePos - toSRCCoordinates(CUTTER_BOX_HEIGHT / 2) <= cutLines.get(i) &&
-                                cutLines.get(i) <= onImagePos + toSRCCoordinates(CUTTER_BOX_HEIGHT / 2)) {
-                            if ((pressedButton & ADD_SELECTED) != 0 && posY >= 0) {
-                                setCursor(new Cursor(Cursor.N_RESIZE_CURSOR));
-                            } else {
-                                hasMarkedForRemove = true;
-                                setCursor(new Cursor(Cursor.HAND_CURSOR));
-                                c.repaint();
+                try {
+                    int posY = MouseInfo.getPointerInfo().getLocation().y - c.getLocationOnScreen().y - viewportVerticalOffset;
+                    int posX = MouseInfo.getPointerInfo().getLocation().x - c.getLocationOnScreen().x;
+                    if ((cutterColumnWidth - LEADER_WIDTH - cutterBoxWidth <= posX && posX <= cutterColumnWidth - LEADER_WIDTH) ||
+                            (viewportWidth - cutterColumnWidth + LEADER_WIDTH <= posX && posX <= viewportWidth - cutterColumnWidth + LEADER_WIDTH + cutterBoxWidth)) {
+                        int onImagePos = toSRCCoordinates(imageViewportStart + posY);
+                        for (int i = 1; i < cutLines.size() - 1; i++) {
+                            if (onImagePos - toSRCCoordinates(CUTTER_BOX_HEIGHT / 2) <= cutLines.get(i) &&
+                                    cutLines.get(i) <= onImagePos + toSRCCoordinates(CUTTER_BOX_HEIGHT / 2)) {
+                                if ((pressedButton & ADD_SELECTED) != 0 && posY >= 0) {
+                                    setCursor(new Cursor(Cursor.N_RESIZE_CURSOR));
+                                } else {
+                                    hasMarkedForRemove = true;
+                                    setCursor(new Cursor(Cursor.HAND_CURSOR));
+                                    c.repaint();
+                                }
+                                return;
                             }
-                            return;
                         }
                     }
+                } catch (IllegalComponentStateException ex) {
+                    ex.printStackTrace();
                 }
                 if (hasMarkedForRemove) {
                     hasMarkedForRemove = false;
@@ -511,21 +527,25 @@ public class ManualCutterFrame extends JFrame implements MouseListener, MouseMot
                 c.repaint();
             }
             if (dragging == Drag.NOTHING) {
-                int posY = MouseInfo.getPointerInfo().getLocation().y - c.getLocationOnScreen().y - viewportVerticalOffset;
-                if ((pressedButton & ADD_SELECTED) != 0 && posY >= 0) {
-                    int onImagePos = toSRCCoordinates(imageViewportStart + posY);
-                    int prevIndex = 0;
-                    for (int i = 0; i < cutLines.size(); i++) {
-                        if (cutLines.get(i) < onImagePos) {
-                            prevIndex = i;
+                try {
+                    int posY = MouseInfo.getPointerInfo().getLocation().y - c.getLocationOnScreen().y - viewportVerticalOffset;
+                    if ((pressedButton & ADD_SELECTED) != 0 && posY >= 0) {
+                        int onImagePos = toSRCCoordinates(imageViewportStart + posY);
+                        int prevIndex = 0;
+                        for (int i = 0; i < cutLines.size(); i++) {
+                            if (cutLines.get(i) < onImagePos) {
+                                prevIndex = i;
+                            }
+                        }
+                        if (toViewportCoordinates(onImagePos - cutLines.get(prevIndex)) >= 5 * CUTTER_BOX_HEIGHT &&
+                                toViewportCoordinates(cutLines.get(prevIndex + 1) - onImagePos) >= 5 * CUTTER_BOX_HEIGHT) {
+                            cutLines.add(onImagePos);
+                            cutLines.sort(Integer::compareTo);
+                            c.repaint();
                         }
                     }
-                    if (toViewportCoordinates(onImagePos - cutLines.get(prevIndex)) >= 5 * CUTTER_BOX_HEIGHT &&
-                            toViewportCoordinates(cutLines.get(prevIndex + 1) - onImagePos) >= 5 * CUTTER_BOX_HEIGHT) {
-                        cutLines.add(onImagePos);
-                        cutLines.sort(Integer::compareTo);
-                        c.repaint();
-                    }
+                } catch (IllegalComponentStateException ex) {
+                    ex.printStackTrace();
                 }
             }
         }).start();
@@ -659,30 +679,34 @@ public class ManualCutterFrame extends JFrame implements MouseListener, MouseMot
     }
 
     private void updateDraggedBoxPos() {
-        int srcPos = toSRCCoordinates(MouseInfo.getPointerInfo().getLocation().y - c.getLocationOnScreen().y - viewportVerticalOffset + imageViewportStart - druggingBoxStart);
-        if (srcPos < 0) srcPos = 0;
-        else if (srcPos > srcHeight) srcPos = srcHeight;
-        if (srcPos > cutLines.get(druggingBoxIndex + 1)) {
-            int tmp = druggingBoxIndex;
-            for (int i = druggingBoxIndex; i < cutLines.size(); i++) {
-                if (cutLines.get(druggingBoxIndex + 1) < srcPos) druggingBoxIndex++;
+        try {
+            int srcPos = toSRCCoordinates(MouseInfo.getPointerInfo().getLocation().y - c.getLocationOnScreen().y - viewportVerticalOffset + imageViewportStart - druggingBoxStart);
+            if (srcPos < 0) srcPos = 0;
+            else if (srcPos > srcHeight) srcPos = srcHeight;
+            if (srcPos > cutLines.get(druggingBoxIndex + 1)) {
+                int tmp = druggingBoxIndex;
+                for (int i = druggingBoxIndex; i < cutLines.size(); i++) {
+                    if (cutLines.get(druggingBoxIndex + 1) < srcPos) druggingBoxIndex++;
+                }
+                if (tmp != druggingBoxIndex) {
+                    cutLines.remove(tmp);
+                    cutLines.add(druggingBoxIndex, srcPos);
+                }
             }
-            if (tmp != druggingBoxIndex) {
-                cutLines.remove(tmp);
-                cutLines.add(druggingBoxIndex, srcPos);
+            if (srcPos < cutLines.get(druggingBoxIndex - 1)) {
+                int tmp = druggingBoxIndex;
+                for (int i = druggingBoxIndex; i < cutLines.size(); i++) {
+                    if (cutLines.get(druggingBoxIndex - 1) > srcPos) druggingBoxIndex--;
+                }
+                if (tmp != druggingBoxIndex) {
+                    cutLines.remove(tmp);
+                    cutLines.add(druggingBoxIndex, srcPos);
+                }
             }
+            cutLines.set(druggingBoxIndex, srcPos);
+        } catch (IllegalComponentStateException ex) {
+            ex.printStackTrace();
         }
-        if (srcPos < cutLines.get(druggingBoxIndex - 1)) {
-            int tmp = druggingBoxIndex;
-            for (int i = druggingBoxIndex; i < cutLines.size(); i++) {
-                if (cutLines.get(druggingBoxIndex - 1) > srcPos) druggingBoxIndex--;
-            }
-            if (tmp != druggingBoxIndex) {
-                cutLines.remove(tmp);
-                cutLines.add(druggingBoxIndex, srcPos);
-            }
-        }
-        cutLines.set(druggingBoxIndex, srcPos);
     }
 
     private void scroll(int units) {

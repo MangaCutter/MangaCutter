@@ -43,6 +43,8 @@ public class Main {
             JOptionPane.showMessageDialog(null, "Error: " + sw.toString());
         });
 
+        ViewManager.setLookAndFeel();
+
         reflections = new Reflections("net.macu");
 
         Settings.collectParameters();
@@ -51,8 +53,6 @@ public class Main {
 
         Security.addProvider(new BouncyCastleProvider());
         CertificateAuthority.loadRootCA();
-
-        ViewManager.setLookAndFeel();
 
         Set<Class<? extends Form>> formsSet = reflections.getSubTypesOf(Form.class);
         forms = Collections.unmodifiableList(getInstances(formsSet));

@@ -101,12 +101,15 @@ public class CertificateAuthority implements Parametrized {
     }
 
     public static void loadRootCA() {
-        if (ROOT_CA.getString() == null) {
+        if (ROOT_CA.getString() == null || ROOT_CA.getString().isEmpty()) {
             ViewManager.showMessageDialog(L.get("browser.proxy.cert.CertificateAuthority.openGenerateCertFrame.saved_certificate_is_empty"), null);
             return;
         }
         try {
             rootCA = readPKCS12File(Base64.decode(ROOT_CA.getString()));
+        } catch (NullPointerException e) {
+            ViewManager.showMessageDialog(L.get("browser.proxy.cert.CertificateAuthority.openGenerateCertFrame.saved_certificate_is_empty"), null);
+            return;
         } catch (Exception e) {
             e.printStackTrace();
             ViewManager.showMessageDialog(L.get("browser.proxy.cert.CertificateAuthority.openGenerateCertFrame.certificate_loading_failed", e.toString()), null);
