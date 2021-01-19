@@ -180,13 +180,13 @@ public class ViewManager {
     }
 
     public static void initFileChoosers() {
-        singleFileChooser = new JFileChooser();
+        singleFileChooser = new IconifiedFileChooser(IconManager.getBrandIcon());
         singleFileChooser.setDialogTitle(L.get("UI.ViewManager.file_chooser_title"));
         singleFileChooser.setDialogType(JFileChooser.SAVE_DIALOG);
         singleFileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
         singleFileChooser.setAcceptAllFileFilterUsed(false);
         singleFileChooser.setMultiSelectionEnabled(false);
-        dirChooser = new JFileChooser();
+        dirChooser = new IconifiedFileChooser(IconManager.getBrandIcon());
         dirChooser.setDialogTitle(L.get("UI.ViewManager.file_chooser_title"));
         dirChooser.setDialogType(JFileChooser.SAVE_DIALOG);
         dirChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
