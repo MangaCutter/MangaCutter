@@ -7,7 +7,7 @@ process for well-known browsers.
 
 Browser Adapter needs ports 50000 and 50001 to be free.
 
-After this you can add MangaCutter root CA to your browser ([How-To](how-to-add-root-ca.md))
+After installation, you can add MangaCutter root CA to your browser ([How-To](how-to-add-root-ca.md))
 
 ## Mozilla Firefox
 
@@ -18,7 +18,7 @@ After this you can add MangaCutter root CA to your browser ([How-To](how-to-add-
 
    ![You will see this dialog window](img/firefox-plugin-installation.png)
 4. Click `Add` button.
-5. Congratulations! you have successfully installed MangaCutter Browser Adapter.
+5. Congratulations! You have successfully installed MangaCutter Browser Adapter.
 
 ## Opera
 
@@ -30,10 +30,10 @@ After this you can add MangaCutter root CA to your browser ([How-To](how-to-add-
    ![Notification from Opera](img/opera-plugin-installation.png)
 4. Open [extensions page](opera://extensions)
 5. Here you will see disabled extension.
-   
+
    ![It will be same as here](img/opera-plugin-installation-extensions-window.png)
 6. Click `Install` button.
-7. Congratulations! you have successfully installed MangaCutter Browser Adapter.
+7. Congratulations! You have successfully installed MangaCutter Browser Adapter.
 
 ## Google Chrome
 
@@ -44,12 +44,11 @@ additional actions.
    file `MangaCutter-chrome.zip`.
 2. Download it.
 3. Extract files to any empty directory.
-4. Open [extensions page](chrome://extensions/) in Google Chrome.
+4. Open [extensions page](chrome://extensions/).
 5. Enable `Developer mode` in upper right corner.
 
    ![`Developer Mode` button](img/chrome-plugin-installation-devmode-button.png)
 6. Click `Load unpacked` button and select directory that contains extracted extension files.
 
    ![`Load unpacked` button](img/chrome-plugin-installation-load-unpacked.png)
-7. Congratulations! If you can see MangaCutter Browser Adapter panel then you have successfully installed Browser
-   Adapter.
+7. Congratulations! You have successfully installed Browser Adapter.
