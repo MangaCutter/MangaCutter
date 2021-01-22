@@ -7,6 +7,7 @@ import net.macu.browser.plugin.BrowserPlugin;
 import net.macu.browser.proxy.CapturedImageProcessor;
 import net.macu.browser.proxy.ImageListener;
 import net.macu.settings.L;
+import net.macu.settings.Settings;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -80,7 +81,7 @@ public class RequestFrame extends JFrame implements ImageListener {
         selectAllVisibleButton.setText(L.get("UI.RequestFrame.select_all_visible_button"));
         cancelButton.setText(L.get("UI.RequestFrame.cancel_button"));
         reloadButton.setText(L.get("UI.RequestFrame.reload_button"));
-        imagePreviewScrollPane.getVerticalScrollBar().setUnitIncrement(14);
+        imagePreviewScrollPane.getVerticalScrollBar().setUnitIncrement(Settings.Settings_MasterScrollSpeed.getValue());
         sortModeButton.setIcon(IconManager.getSortIcon());
         for (SortMode mode : SortMode.values()) {
             JMenuItem item = new JMenuItem(L.get("UI.RequestFrame.SortMode." + mode.name()));

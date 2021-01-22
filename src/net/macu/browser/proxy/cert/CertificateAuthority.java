@@ -2,9 +2,7 @@ package net.macu.browser.proxy.cert;
 
 import net.macu.UI.ViewManager;
 import net.macu.settings.L;
-import net.macu.settings.Parameter;
-import net.macu.settings.Parameters;
-import net.macu.settings.Parametrized;
+import net.macu.settings.Settings;
 import org.bouncycastle.asn1.DERSequence;
 import org.bouncycastle.asn1.pkcs.ContentInfo;
 import org.bouncycastle.asn1.pkcs.PKCSObjectIdentifiers;
@@ -46,8 +44,7 @@ import java.security.spec.ECGenParameterSpec;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.util.*;
 
-public class CertificateAuthority implements Parametrized {
-    private static final Parameter ROOT_CA = new Parameter(Parameter.Type.STRING_TYPE, "browser.proxy.cert.CertificateAuthority.root_ca");
+public class CertificateAuthority {
     private static CertificateAuthority rootCA = null;
     private static final char[] MAIN_PASSWORD = new char[]{'a', 'b', 'c', 'd', 'e', 'f'};
     private static final String BC_PROVIDER = "BC";
@@ -101,12 +98,12 @@ public class CertificateAuthority implements Parametrized {
     }
 
     public static void loadRootCA() {
-        if (ROOT_CA.getString() == null || ROOT_CA.getString().isEmpty()) {
+        if (Settings.CertificateAuthority_RootCA.getValue() == null || Settings.CertificateAuthority_RootCA.getValue().isEmpty()) {
             ViewManager.showMessageDialog(L.get("browser.proxy.cert.CertificateAuthority.openGenerateCertFrame.saved_certificate_is_empty"), null);
             return;
         }
         try {
-            rootCA = readPKCS12File(Base64.decode(ROOT_CA.getString()));
+            rootCA = readPKCS12File(Base64.decode(Settings.CertificateAuthority_RootCA.getValue()));
         } catch (NullPointerException e) {
             ViewManager.showMessageDialog(L.get("browser.proxy.cert.CertificateAuthority.openGenerateCertFrame.saved_certificate_is_empty"), null);
             return;
@@ -128,7 +125,7 @@ public class CertificateAuthority implements Parametrized {
                 FileWriter out = new FileWriter(path);
                 out.append(newRoot.getCertificateChainBase64Encoded());
                 out.flush();
-                ROOT_CA.setValue(newRoot.getKeyPairKeystoreFileBase64Encoded("alias"));
+                Settings.CertificateAuthority_RootCA.setValue(newRoot.getKeyPairKeystoreFileBase64Encoded("alias"));
                 rootCA = newRoot;
                 ViewManager.showMessageDialog(L.get("browser.proxy.cert.CertificateAuthority.openGenerateCertFrame.certificate_generated", newRoot.getSHA256Fingerprint()), null);
             } catch (Exception e) {
@@ -188,10 +185,6 @@ public class CertificateAuthority implements Parametrized {
 
     public PrivateKey getPrivate() {
         return privateKey;
-    }
-
-    public static Parameters getParameters() {
-        return new Parameters("browser.proxy.cert.CertificateAuthority", ROOT_CA);
     }
 
     public KeyStore issueSubKeyStore(List<String> domains) throws Exception {

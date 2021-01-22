@@ -3,6 +3,7 @@ package net.macu.UI;
 import com.bulenkov.darcula.DarculaLaf;
 import net.macu.core.FileFilterImpl;
 import net.macu.settings.L;
+import net.macu.settings.Settings;
 
 import javax.swing.*;
 import javax.swing.event.HyperlinkEvent;
@@ -154,8 +155,8 @@ public class ViewManager {
         if (image != null) {
             JFrame f = new JFrame(L.get("UI.ViewManager.preview_frame_title"));
             JScrollPane pane = new JScrollPane(new JLabel(new ImageIcon(image)));
-            pane.getVerticalScrollBar().setUnitIncrement(14);
-            pane.getHorizontalScrollBar().setUnitIncrement(14);
+            pane.getVerticalScrollBar().setUnitIncrement(Settings.Settings_MasterScrollSpeed.getValue());
+            pane.getHorizontalScrollBar().setUnitIncrement(Settings.Settings_MasterScrollSpeed.getValue());
             f.add(pane);
             f.setIconImage(IconManager.getBrandIcon());
             f.setLocationRelativeTo(parent);

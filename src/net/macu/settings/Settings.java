@@ -2,36 +2,30 @@ package net.macu.settings;
 
 
 import net.macu.UI.ViewManager;
-import net.macu.core.Main;
 
 import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Properties;
+import java.util.*;
 import java.util.prefs.BackingStoreException;
 import java.util.prefs.Preferences;
 
 public class Settings {
-    private static final ArrayList<Parameters> parametersLsit = new ArrayList<>();
-    static Preferences preferences;
+
+    public static final IntSetting ManualCutterFrame_ScrollSpeed = new IntSetting("UI.ManualCutterFrame.additional_scroll_speed");
+    public static final BooleanSetting ManualCutterFrame_ScrollInversion = new BooleanSetting("UI.ManualCutterFrame.scroll_inversion");
+    public static final StringSetting CertificateAuthority_RootCA = new StringSetting("browser.proxy.cert.CertificateAuthority.root_ca");
+    public static final StringSetting IOManager_UserAgent = new StringSetting("core.IOManager.user_agent");
+    public static final IntSetting ImageColorStream_BufferHeight = new IntSetting("cutter.pasta.ImageColorStream.buffer_height");
+    public static final IntSetting PastaCutter_MinHeight = new IntSetting("cutter.pasta.PastaCutter.min_height");
+    public static final IntSetting PastaCutter_BordersWidth = new IntSetting("cutter.pasta.PastaCutter.borders_width");
+    public static final StringSetting L_Lang = new StringSetting("settings.L.LANG");
+    public static final IntSetting Settings_MasterScrollSpeed = new IntSetting("settings.Settings.master_scroll_speed");
+    private static final ArrayList<Setting> allSettings = new ArrayList<>();
+    private static Preferences preferences;
     private static Properties defaults;
 
     public static void collectParameters() {
         if (preferences != null) return;
         preferences = Preferences.userNodeForPackage(Settings.class);
-        Main.getReflections().getSubTypesOf(Parametrized.class).forEach(aClass -> {
-            try {
-                parametersLsit.add((Parameters) aClass.getMethod("getParameters").invoke(null));
-            } catch (IllegalAccessException e) {
-                e.printStackTrace();
-            } catch (InvocationTargetException e) {
-                e.printStackTrace();
-            } catch (NoSuchMethodException e) {
-                e.printStackTrace();
-            }
-        });
         defaults = new Properties();
         try {
             defaults.load(Settings.class.getResourceAsStream("defaultSettings.properties"));
@@ -51,22 +45,27 @@ public class Settings {
                         L.get("settings.Settings.collectParameters.put_defaults_exception", e.toString()), null);
             }
         });
-        parametersLsit.forEach(parameters -> parameters.forEach(parameter -> {
-            switch (parameter.getType()) {
-                case BOOLEAN_TYPE:
-                    parameter.setValue(preferences.getBoolean(parameter.getName(), false));
-                    break;
-                case STRING_TYPE:
-                    parameter.setValue(preferences.get(parameter.getName(), ""));
-                    break;
-                case INT_TYPE:
-                    parameter.setValue(preferences.getInt(parameter.getName(), Integer.MIN_VALUE));
-                    break;
-            }
-        }));
+        allSettings.add(ManualCutterFrame_ScrollSpeed);
+        allSettings.add(ManualCutterFrame_ScrollInversion);
+        allSettings.add(CertificateAuthority_RootCA);
+        allSettings.add(IOManager_UserAgent);
+        allSettings.add(ImageColorStream_BufferHeight);
+        allSettings.add(PastaCutter_MinHeight);
+        allSettings.add(PastaCutter_BordersWidth);
+        allSettings.add(L_Lang);
+        allSettings.add(Settings_MasterScrollSpeed);
+        allSettings.sort(Comparator.comparing(Setting::getName));
+        allSettings.forEach(setting -> {
+            if (setting instanceof StringSetting)
+                setting.setValue(preferences.get(setting.getName(), ""));
+            else if (setting instanceof IntSetting)
+                setting.setValue(preferences.getInt(setting.getName(), Integer.MAX_VALUE));
+            else if (setting instanceof BooleanSetting)
+                setting.setValue(preferences.getBoolean(setting.getName(), false));
+        });
     }
 
-    public static List<Parameters> getAllParameters() {
-        return parametersLsit;
+    public static List<Setting> getAllSettings() {
+        return allSettings;
     }
 }

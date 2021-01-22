@@ -2,9 +2,7 @@ package net.macu.core;
 
 import net.macu.UI.ViewManager;
 import net.macu.settings.L;
-import net.macu.settings.Parameter;
-import net.macu.settings.Parameters;
-import net.macu.settings.Parametrized;
+import net.macu.settings.Settings;
 import org.apache.http.HttpEntity;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -21,8 +19,7 @@ import java.io.InputStreamReader;
 import java.net.URISyntaxException;
 import java.util.concurrent.TimeUnit;
 
-public class IOManager implements Parametrized {
-    private static final Parameter USER_AGENT = new Parameter(Parameter.Type.STRING_TYPE, "core.IOManager.user_agent");
+public class IOManager {
     private static CloseableHttpClient client = null;
     public static final String RELEASE_REPOSITORY = "https://github.com/MangaCutter/MangaCutter/releases";
     public static final String LATEST_SUFFIX = "/latest";
@@ -54,7 +51,7 @@ public class IOManager implements Parametrized {
         if (client == null) {
             client = HttpClients.custom()
                     .setRedirectStrategy(LaxRedirectStrategy.INSTANCE)
-                    .setUserAgent(USER_AGENT.getString())
+                    .setUserAgent(Settings.IOManager_UserAgent.getValue())
                     .setConnectionTimeToLive(20, TimeUnit.SECONDS)
                     .build();
         }
@@ -88,9 +85,5 @@ public class IOManager implements Parametrized {
                     L.get("core.IOManager.checkUpdates.close_client_exception", e.toString()), null);
             e.printStackTrace();
         }
-    }
-
-    public static Parameters getParameters() {
-        return new Parameters("core.IOManager", USER_AGENT);
     }
 }

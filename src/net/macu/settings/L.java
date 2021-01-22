@@ -6,8 +6,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Properties;
 
-public class L implements Parametrized {
-    private static final Parameter LANG = new Parameter(Parameter.Type.STRING_TYPE, "settings.L.LANG");
+public class L {
     private static final String[] SUPPORTED_LANGUAGES = new String[]{
             "en", "ru"
     };
@@ -15,7 +14,7 @@ public class L implements Parametrized {
     private static Properties langBundle;
 
     public static void loadLanguageData() {
-        String lang = LANG.getString();
+        String lang = Settings.L_Lang.getValue();
         langBundle = new Properties();
         if (Arrays.asList(SUPPORTED_LANGUAGES).contains(lang) && !lang.equals("en")) {
             try {
@@ -36,9 +35,5 @@ public class L implements Parametrized {
         if (langBundle != null)
             return String.format(langBundle.getProperty(labelName, DEFAULT_LABEL_VALUE), args);
         else return DEFAULT_LABEL_VALUE;
-    }
-
-    public static Parameters getParameters() {
-        return new Parameters("settings.L", LANG);
     }
 }

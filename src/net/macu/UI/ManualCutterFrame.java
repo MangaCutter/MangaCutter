@@ -2,9 +2,7 @@ package net.macu.UI;
 
 import net.macu.cutter.pasta.Frame;
 import net.macu.settings.L;
-import net.macu.settings.Parameter;
-import net.macu.settings.Parameters;
-import net.macu.settings.Parametrized;
+import net.macu.settings.Settings;
 
 import javax.swing.*;
 import java.awt.*;
@@ -12,9 +10,7 @@ import java.awt.event.*;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 
-public class ManualCutterFrame extends JFrame implements MouseListener, MouseMotionListener, MouseWheelListener, KeyListener, Parametrized {
-    private static final Parameter SCROLL_SPEED = new Parameter(Parameter.Type.INT_TYPE, "UI.ManualCutterFrame.scroll_speed");
-    private static final Parameter SCROLL_INVERSION = new Parameter(Parameter.Type.BOOLEAN_TYPE, "UI.ManualCutterFrame.scroll_inversion");
+public class ManualCutterFrame extends JFrame implements MouseListener, MouseMotionListener, MouseWheelListener, KeyListener {
     private static final Color CUTTER_BOX_COLOR = Color.MAGENTA;
     private static final Color SLIDER_BAR_COLOR = Color.LIGHT_GRAY;
     private static final Color SLIDER_COLOR = new Color(Color.DARK_GRAY.getRed(), Color.DARK_GRAY.getGreen(), Color.DARK_GRAY.getBlue(), 190);
@@ -297,9 +293,9 @@ public class ManualCutterFrame extends JFrame implements MouseListener, MouseMot
                         try {
                             int y = MouseInfo.getPointerInfo().getLocation().y - c.getLocationOnScreen().y - viewportVerticalOffset;
                             if (y < 0) {
-                                scroll(SCROLL_SPEED.getInt() * (SCROLL_INVERSION.getBoolean() ? 1 : -1));
+                                scroll((Settings.Settings_MasterScrollSpeed.getValue() + Settings.ManualCutterFrame_ScrollSpeed.getValue()) * (Settings.ManualCutterFrame_ScrollInversion.getValue() ? 1 : -1));
                             } else if (y >= viewportHeight - 1) {
-                                scroll(SCROLL_SPEED.getInt() * (SCROLL_INVERSION.getBoolean() ? -1 : 1));
+                                scroll((Settings.Settings_MasterScrollSpeed.getValue() + Settings.ManualCutterFrame_ScrollSpeed.getValue()) * (Settings.ManualCutterFrame_ScrollInversion.getValue() ? -1 : 1));
                             }
                             updateDraggedBoxPos();
                             c.repaint();
@@ -551,17 +547,13 @@ public class ManualCutterFrame extends JFrame implements MouseListener, MouseMot
         }).start();
     }
 
-    public static Parameters getParameters() {
-        return new Parameters("UI.ManualCutterFrame", SCROLL_SPEED, SCROLL_INVERSION);
-    }
-
     @Override
     public void mouseWheelMoved(MouseWheelEvent e) {
         new Thread(() -> {
             if (ctrlPressed || altPressed) {
                 zoom(-2 * e.getWheelRotation());
             } else {
-                scroll(e.getWheelRotation() * SCROLL_SPEED.getInt() * (SCROLL_INVERSION.getBoolean() ? 1 : -1));
+                scroll(e.getWheelRotation() * (Settings.Settings_MasterScrollSpeed.getValue() + Settings.ManualCutterFrame_ScrollSpeed.getValue()) * (Settings.ManualCutterFrame_ScrollInversion.getValue() ? 1 : -1));
             }
             mouseMoved(e);
             c.repaint();
