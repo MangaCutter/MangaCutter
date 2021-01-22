@@ -293,9 +293,9 @@ public class ManualCutterFrame extends JFrame implements MouseListener, MouseMot
                         try {
                             int y = MouseInfo.getPointerInfo().getLocation().y - c.getLocationOnScreen().y - viewportVerticalOffset;
                             if (y < 0) {
-                                scroll((Settings.Settings_MasterScrollSpeed.getValue() + Settings.ManualCutterFrame_ScrollSpeed.getValue()) * (Settings.ManualCutterFrame_ScrollInversion.getValue() ? 1 : -1));
+                                scroll((Settings.ViewManager_MasterScrollSpeed.getValue() + Settings.ManualCutterFrame_ScrollSpeed.getValue()) * (Settings.ManualCutterFrame_ScrollInversion.getValue() ? 1 : -1));
                             } else if (y >= viewportHeight - 1) {
-                                scroll((Settings.Settings_MasterScrollSpeed.getValue() + Settings.ManualCutterFrame_ScrollSpeed.getValue()) * (Settings.ManualCutterFrame_ScrollInversion.getValue() ? -1 : 1));
+                                scroll((Settings.ViewManager_MasterScrollSpeed.getValue() + Settings.ManualCutterFrame_ScrollSpeed.getValue()) * (Settings.ManualCutterFrame_ScrollInversion.getValue() ? -1 : 1));
                             }
                             updateDraggedBoxPos();
                             c.repaint();
@@ -553,7 +553,7 @@ public class ManualCutterFrame extends JFrame implements MouseListener, MouseMot
             if (ctrlPressed || altPressed) {
                 zoom(-2 * e.getWheelRotation());
             } else {
-                scroll(e.getWheelRotation() * (Settings.Settings_MasterScrollSpeed.getValue() + Settings.ManualCutterFrame_ScrollSpeed.getValue()) * (Settings.ManualCutterFrame_ScrollInversion.getValue() ? 1 : -1));
+                scroll(e.getWheelRotation() * (Settings.ViewManager_MasterScrollSpeed.getValue() + Settings.ManualCutterFrame_ScrollSpeed.getValue()) * (Settings.ManualCutterFrame_ScrollInversion.getValue() ? 1 : -1));
             }
             mouseMoved(e);
             c.repaint();

@@ -6,7 +6,7 @@ public class StringSetting extends Setting<String> {
     }
 
     @Override
-    public String getSerializedValue() {
-        return value;
+    public void putInStorage() {
+        Settings.preferences.put(name, value);
     }
 }

@@ -6,7 +6,7 @@ public class BooleanSetting extends Setting<Boolean> {
     }
 
     @Override
-    public String getSerializedValue() {
-        return String.valueOf(value);
+    public void putInStorage() {
+        Settings.preferences.putBoolean(name, value);
     }
 }

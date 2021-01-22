@@ -81,7 +81,7 @@ public class RequestFrame extends JFrame implements ImageListener {
         selectAllVisibleButton.setText(L.get("UI.RequestFrame.select_all_visible_button"));
         cancelButton.setText(L.get("UI.RequestFrame.cancel_button"));
         reloadButton.setText(L.get("UI.RequestFrame.reload_button"));
-        imagePreviewScrollPane.getVerticalScrollBar().setUnitIncrement(Settings.Settings_MasterScrollSpeed.getValue());
+        imagePreviewScrollPane.getVerticalScrollBar().setUnitIncrement(Settings.ViewManager_MasterScrollSpeed.getValue());
         sortModeButton.setIcon(IconManager.getSortIcon());
         for (SortMode mode : SortMode.values()) {
             JMenuItem item = new JMenuItem(L.get("UI.RequestFrame.SortMode." + mode.name()));

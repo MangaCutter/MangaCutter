@@ -6,6 +6,7 @@ import javax.swing.*;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import java.awt.*;
+import java.awt.event.ItemEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.util.HashMap;
@@ -25,7 +26,7 @@ public class SettingsFrame extends JFrame {
         root.setLayout(new BoxLayout(root, BoxLayout.Y_AXIS));
         JPanel viewportRoot = new JPanel();
         JScrollPane scrollPane = new JScrollPane(viewportRoot);
-        scrollPane.getVerticalScrollBar().setUnitIncrement(Settings.Settings_MasterScrollSpeed.getValue());
+        scrollPane.getVerticalScrollBar().setUnitIncrement(Settings.ViewManager_MasterScrollSpeed.getValue());
         viewportRoot.setLayout(new BoxLayout(viewportRoot, BoxLayout.PAGE_AXIS));
         List<Setting> allParameters = Settings.getAllSettings();
         JPanel panel = new JPanel();
@@ -101,6 +102,17 @@ public class SettingsFrame extends JFrame {
                     }
                 });
                 right.add(stringField);
+            } else if (setting instanceof ListSetting) {
+                JComboBox<String> comboboxField = new JComboBox<>(((ListSetting) setting).getVariants());
+                comboboxField.setSelectedItem(setting.getValue());
+                comboboxField.addItemListener(e -> {
+                    if (e.getStateChange() == ItemEvent.SELECTED) {
+                        scheduledChanges.put(setting, e.getItem());
+                        applyButton.setEnabled(true);
+                    }
+                });
+                comboboxField.setRenderer(((ListSetting) setting).getRenderer());
+                right.add(comboboxField);
             }
             p.add(left, BorderLayout.WEST);
             p.add(right, BorderLayout.EAST);
@@ -161,6 +173,8 @@ public class SettingsFrame extends JFrame {
             } else if (parameter instanceof BooleanSetting) {
                 parameter.setValue(o);
             } else if (parameter instanceof StringSetting) {
+                parameter.setValue(o);
+            } else if (parameter instanceof ListSetting) {
                 parameter.setValue(o);
             }
         });

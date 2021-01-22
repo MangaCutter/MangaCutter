@@ -6,7 +6,7 @@ public class IntSetting extends Setting<Integer> {
     }
 
     @Override
-    public String getSerializedValue() {
-        return String.valueOf(value);
+    public void putInStorage() {
+        Settings.preferences.putInt(name, value);
     }
 }

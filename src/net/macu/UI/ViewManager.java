@@ -1,6 +1,5 @@
 package net.macu.UI;
 
-import com.bulenkov.darcula.DarculaLaf;
 import net.macu.core.FileFilterImpl;
 import net.macu.settings.L;
 import net.macu.settings.Settings;
@@ -18,6 +17,7 @@ public class ViewManager {
     private static JFileChooser singleFileChooser;
     private static JFileChooser dirChooser;
     private final MainView mainView;
+    public static final String[] SUPPORTED_THEMES = new String[]{"FlatDarkLaf", "FlatLightLaf"};
 
     public ViewManager(MainView mainView) {
         this.mainView = mainView;
@@ -155,8 +155,8 @@ public class ViewManager {
         if (image != null) {
             JFrame f = new JFrame(L.get("UI.ViewManager.preview_frame_title"));
             JScrollPane pane = new JScrollPane(new JLabel(new ImageIcon(image)));
-            pane.getVerticalScrollBar().setUnitIncrement(Settings.Settings_MasterScrollSpeed.getValue());
-            pane.getHorizontalScrollBar().setUnitIncrement(Settings.Settings_MasterScrollSpeed.getValue());
+            pane.getVerticalScrollBar().setUnitIncrement(Settings.ViewManager_MasterScrollSpeed.getValue());
+            pane.getHorizontalScrollBar().setUnitIncrement(Settings.ViewManager_MasterScrollSpeed.getValue());
             f.add(pane);
             f.setIconImage(IconManager.getBrandIcon());
             f.setLocationRelativeTo(parent);
@@ -174,8 +174,14 @@ public class ViewManager {
 
     public static void setLookAndFeel() {
         try {
-            UIManager.setLookAndFeel(new DarculaLaf());
+            UIManager.setLookAndFeel("com.formdev.flatlaf." + Settings.ViewManager_LookAndFeel.getValue());
         } catch (UnsupportedLookAndFeelException e) {
+            e.printStackTrace();
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        } catch (InstantiationException e) {
+            e.printStackTrace();
+        } catch (ClassNotFoundException e) {
             e.printStackTrace();
         }
     }

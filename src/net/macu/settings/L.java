@@ -7,7 +7,7 @@ import java.util.Arrays;
 import java.util.Properties;
 
 public class L {
-    private static final String[] SUPPORTED_LANGUAGES = new String[]{
+    public static final String[] SUPPORTED_LANGUAGES = new String[]{
             "en", "ru"
     };
     private static final String DEFAULT_LABEL_VALUE = "not_yet_implemented";

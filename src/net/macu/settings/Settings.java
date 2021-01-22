@@ -17,13 +17,14 @@ public class Settings {
     public static final IntSetting ImageColorStream_BufferHeight = new IntSetting("cutter.pasta.ImageColorStream.buffer_height");
     public static final IntSetting PastaCutter_MinHeight = new IntSetting("cutter.pasta.PastaCutter.min_height");
     public static final IntSetting PastaCutter_BordersWidth = new IntSetting("cutter.pasta.PastaCutter.borders_width");
-    public static final StringSetting L_Lang = new StringSetting("settings.L.LANG");
-    public static final IntSetting Settings_MasterScrollSpeed = new IntSetting("settings.Settings.master_scroll_speed");
+    public static final ListSetting L_Lang = new ListSetting("settings.L.LANG", L.SUPPORTED_LANGUAGES, true);
+    public static final IntSetting ViewManager_MasterScrollSpeed = new IntSetting("UI.ViewManager.master_scroll_speed");
+    public static final ListSetting ViewManager_LookAndFeel = new ListSetting("UI.ViewManager.laf", ViewManager.SUPPORTED_THEMES, true);
     private static final ArrayList<Setting> allSettings = new ArrayList<>();
-    private static Preferences preferences;
+    static Preferences preferences;
     private static Properties defaults;
 
-    public static void collectParameters() {
+    public static void loadSettings() {
         if (preferences != null) return;
         preferences = Preferences.userNodeForPackage(Settings.class);
         defaults = new Properties();
@@ -53,7 +54,8 @@ public class Settings {
         allSettings.add(PastaCutter_MinHeight);
         allSettings.add(PastaCutter_BordersWidth);
         allSettings.add(L_Lang);
-        allSettings.add(Settings_MasterScrollSpeed);
+        allSettings.add(ViewManager_MasterScrollSpeed);
+        allSettings.add(ViewManager_LookAndFeel);
         allSettings.sort(Comparator.comparing(Setting::getName));
         allSettings.forEach(setting -> {
             if (setting instanceof StringSetting)
@@ -62,6 +64,8 @@ public class Settings {
                 setting.setValue(preferences.getInt(setting.getName(), Integer.MAX_VALUE));
             else if (setting instanceof BooleanSetting)
                 setting.setValue(preferences.getBoolean(setting.getName(), false));
+            else if (setting instanceof ListSetting)
+                setting.setValue(preferences.get(setting.getName(), ""));
         });
     }
 

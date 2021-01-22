@@ -1,7 +1,7 @@
 package net.macu.settings;
 
 public abstract class Setting<T> {
-    private final String name;
+    protected final String name;
     protected T value = null;
 
     public Setting() {
@@ -22,7 +22,8 @@ public abstract class Setting<T> {
 
     public void setValue(T newValue) {
         value = newValue;
+        putInStorage();
     }
 
-    public abstract String getSerializedValue();
+    public abstract void putInStorage();
 }
