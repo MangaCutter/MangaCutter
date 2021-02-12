@@ -99,7 +99,6 @@ public class CertificateAuthority {
 
     public static void loadRootCA() {
         if (Settings.CertificateAuthority_RootCA.getValue() == null || Settings.CertificateAuthority_RootCA.getValue().isEmpty()) {
-            ViewManager.showMessageDialog(L.get("browser.proxy.cert.CertificateAuthority.openGenerateCertFrame.saved_certificate_is_empty"), null);
             return;
         }
         try {

@@ -44,7 +44,7 @@ public class MainView extends JFrame {
                 new Thread(() -> {
                     jobManager.cancel();
                     if (!prepared) {
-                        if (ViewManager.showConfirmDialog(L.get("UI.MainView.confirm_exit"), viewManager.getView())) {
+                        if (!BrowserPlugin.getPlugin().hasActiveRequests() || ViewManager.showConfirmDialog(L.get("UI.MainView.confirm_exit"), viewManager.getView())) {
                             System.exit(0);
                         }
                     } else {

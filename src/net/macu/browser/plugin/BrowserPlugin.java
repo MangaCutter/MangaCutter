@@ -88,4 +88,8 @@ public class BrowserPlugin {
     public boolean isConnected() {
         return webSocketServer.isConnected();
     }
+
+    public boolean hasActiveRequests() {
+        return !activeRequests.isEmpty();
+    }
 }

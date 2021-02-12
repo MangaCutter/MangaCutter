@@ -43,13 +43,13 @@ public class Main {
             JOptionPane.showMessageDialog(null, "Error: " + sw.toString());
         });
 
-        ViewManager.setLookAndFeel();
-
         reflections = new Reflections("net.macu");
 
-        Settings.collectParameters();
+        Settings.loadSettings();
         L.loadLanguageData();
         IconManager.loadIcons();
+
+        ViewManager.setLookAndFeel();
 
         Security.addProvider(new BouncyCastleProvider());
         CertificateAuthority.loadRootCA();
@@ -66,7 +66,8 @@ public class Main {
 
         new MainView();
 
-        BrowserPlugin.getPlugin().start();
+        if (CertificateAuthority.getRootCA() != null)
+            BrowserPlugin.getPlugin().start();
     }
 
     private static <T> List<T> getInstances(Set<Class<? extends T>> classSet) {
@@ -100,6 +101,6 @@ public class Main {
     }
 
     public static String getVersion() {
-        return "v5.0.1";
+        return "v5.1.1";
     }
 }
