@@ -5,6 +5,7 @@ import com.intellij.uiDesigner.core.GridLayoutManager;
 import com.intellij.uiDesigner.core.Spacer;
 import net.macu.browser.plugin.BrowserPlugin;
 import net.macu.browser.proxy.cert.CertificateAuthority;
+import net.macu.core.IOManager;
 import net.macu.core.JobManager;
 import net.macu.core.Main;
 import net.macu.service.ServiceManager;
@@ -67,6 +68,7 @@ public class MainView extends JFrame {
         }
         if (!prepared) {
             JMenuBar bar = new JMenuBar();
+
             JMenu fileMenu = new JMenu(L.get("UI.ViewManager.help_menu"));
             JMenuItem settingsMenu = new JMenuItem(L.get("UI.ViewManager.settings_menu"));
             settingsMenu.addActionListener(e -> new Thread(() -> SettingsFrame.openFrame()).start());
@@ -76,12 +78,23 @@ public class MainView extends JFrame {
                     ViewManager.showMessageDialog(L.get("UI.ViewManager.supported_services_list",
                             ServiceManager.getSupportedServicesList()), this)).start());
             fileMenu.add(supportedServicesItem);
+
+            JMenuItem checkUpdateItem = new JMenuItem(L.get("UI.ViewManager.check_updates"));
+            checkUpdateItem.addActionListener((e) -> new Thread(() -> {
+                IOManager.checkUpdates();
+                ViewManager.showMessageDialog(L.get("UI.ViewManager.up_to_date"), this);
+            }).start());
+            fileMenu.add(checkUpdateItem);
+
             JMenuItem aboutItem = new JMenuItem(L.get("UI.ViewManager.about_menu"));
             aboutItem.addActionListener(actionEvent -> new Thread(() -> ViewManager.showMessageDialog(
                     L.get("UI.ViewManager.about_text", Main.getVersion()), this)).start());
             fileMenu.add(aboutItem);
+
             bar.add(fileMenu);
+
             JMenu pluginMenu = new JMenu(L.get("UI.ViewManager.plugin_menu"));
+
             JMenuItem generateCertificateItem =
                     new JMenuItem(L.get("UI.ViewManager.generate_certificate_menu"));
             generateCertificateItem.addActionListener(e -> new Thread(CertificateAuthority::openGenerateCertFrame).start());
@@ -93,11 +106,14 @@ public class MainView extends JFrame {
                                     L.get("UI.ViewManager.plugin_connection_true") :
                                     L.get("UI.ViewManager.plugin_connection_false")), this)).start());
             pluginMenu.add(pluginConnectionItem);
+
             JMenuItem exportCertificateItem = new JMenuItem(L.get("UI.ViewManager.certificate_export_menu"));
             exportCertificateItem.addActionListener(e ->
                     new Thread(CertificateAuthority::openExportCertificateFrame).start());
             pluginMenu.add(exportCertificateItem);
+
             bar.add(pluginMenu);
+
             setJMenuBar(bar);
         }
 

@@ -12,6 +12,7 @@ import java.awt.event.WindowEvent;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.util.Arrays;
 
 public class ViewManager {
     private static JFileChooser singleFileChooser;
@@ -24,6 +25,11 @@ public class ViewManager {
     }
 
     public static void showMessageDialog(String s, Component parent) {
+        //in case then I forgot to process event in separate thread
+        if (Thread.currentThread().getName().startsWith("AWT-EventQueue")) {
+            JOptionPane.showMessageDialog(parent, Arrays.toString(Thread.currentThread().getStackTrace()));
+            return;
+        }
         Object locker = new Object();
         if (!s.startsWith("<html>")) {
             s = "<html>" + s.replaceAll("\n", "<br>") + "</html>";
@@ -74,6 +80,11 @@ public class ViewManager {
     }
 
     public static boolean showConfirmDialog(String s, Component parent) {
+        //in case then I forgot to process event in separate thread
+        if (Thread.currentThread().getName().startsWith("AWT-EventQueue")) {
+            JOptionPane.showMessageDialog(parent, Arrays.toString(Thread.currentThread().getStackTrace()));
+            return false;
+        }
         Object locker = new Object();
         if (!s.startsWith("<html>")) {
             s = "<html>" + s.replaceAll("\n", "<br>") + "</html>";
