@@ -57,7 +57,7 @@ public class IOManager {
         }
     }
 
-    public static void checkUpdates() {
+    public static boolean checkUpdates() {
         CloseableHttpClient cs = HttpClients.custom()
                 .setDefaultRequestConfig(RequestConfig.custom().setRedirectsEnabled(false).build()).build();
         try {
@@ -66,12 +66,11 @@ public class IOManager {
             String tag = location.substring(location.lastIndexOf("/") + 1);
             if (!tag.equals(Main.getVersion())) {
                 String jarUrl = RELEASE_REPOSITORY + DOWNLOAD_SUFFIX + "/" + tag + "/" + JAR_SUFFIX;
-                if (sendRawRequest(jarUrl).getContentLength() != 0) {
-                    if (ViewManager.showConfirmDialog(
-                            L.get("core.IOManager.checkUpdates.new_ver", jarUrl, jarUrl), null)) {
-                        SelfUpdater.selfUpdate(jarUrl);
-                    }
+                if (ViewManager.showConfirmDialog(
+                        L.get("core.IOManager.checkUpdates.new_ver", jarUrl, jarUrl), null)) {
+                    SelfUpdater.selfUpdate(jarUrl);
                 }
+                return false;
             }
         } catch (IOException | URISyntaxException e) {
             e.printStackTrace();
@@ -81,5 +80,6 @@ public class IOManager {
         } catch (IOException e) {
             e.printStackTrace();
         }
+        return true;
     }
 }

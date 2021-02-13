@@ -83,8 +83,8 @@ public class MainView {
 
             JMenuItem checkUpdateItem = new JMenuItem(L.get("UI.ViewManager.check_updates"));
             checkUpdateItem.addActionListener((e) -> new Thread(() -> {
-                IOManager.checkUpdates();
-                ViewManager.showMessageDialog(L.get("UI.ViewManager.up_to_date"), frame);
+                if (IOManager.checkUpdates())
+                    ViewManager.showMessageDialog(L.get("UI.ViewManager.up_to_date"), frame);
             }).start());
             fileMenu.add(checkUpdateItem);
 
