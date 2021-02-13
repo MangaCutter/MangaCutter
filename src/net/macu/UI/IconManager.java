@@ -1,5 +1,6 @@
 package net.macu.UI;
 
+import net.macu.core.TranscoderImpl;
 import org.apache.batik.anim.dom.SAXSVGDocumentFactory;
 import org.apache.batik.transcoder.TranscoderException;
 import org.apache.batik.transcoder.TranscoderInput;

@@ -1,4 +1,4 @@
-package net.macu.UI;
+package net.macu.core;
 
 import org.apache.batik.transcoder.TranscoderOutput;
 import org.apache.batik.transcoder.image.ImageTranscoder;
