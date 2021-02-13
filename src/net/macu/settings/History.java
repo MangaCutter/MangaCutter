@@ -31,24 +31,30 @@ public class History {
         frame.addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosed(WindowEvent e) {
-                try {
-                    Settings.preferences.flush();
-                } catch (BackingStoreException backingStoreException) {
-                    backingStoreException.printStackTrace();
-                }
+                new Thread(() -> {
+                    try {
+                        Settings.preferences.flush();
+                    } catch (BackingStoreException backingStoreException) {
+                        backingStoreException.printStackTrace();
+                    }
+                }).start();
             }
         });
         frame.addComponentListener(new ComponentAdapter() {
             @Override
             public void componentResized(ComponentEvent e) {
-                Settings.preferences.putInt(FRAME_WIDTH_PERFIX + id, frame.getWidth());
-                Settings.preferences.putInt(FRAME_HEIGHT_PERFIX + id, frame.getHeight());
+                new Thread(() -> {
+                    Settings.preferences.putInt(FRAME_WIDTH_PERFIX + id, frame.getWidth());
+                    Settings.preferences.putInt(FRAME_HEIGHT_PERFIX + id, frame.getHeight());
+                }).start();
             }
 
             @Override
             public void componentMoved(ComponentEvent e) {
-                Settings.preferences.putInt(FRAME_POS_X_PERFIX + id, frame.getX());
-                Settings.preferences.putInt(FRAME_POS_Y_PERFIX + id, frame.getY());
+                new Thread(() -> {
+                    Settings.preferences.putInt(FRAME_POS_X_PERFIX + id, frame.getX());
+                    Settings.preferences.putInt(FRAME_POS_Y_PERFIX + id, frame.getY());
+                }).start();
             }
         });
         return frame;
