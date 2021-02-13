@@ -1,6 +1,7 @@
 package net.macu.core;
 
 import net.macu.UI.IconManager;
+import net.macu.settings.History;
 import net.macu.settings.L;
 import org.apache.http.HttpEntity;
 
@@ -18,11 +19,11 @@ public class SelfUpdater {
         final boolean[] interrupt = {false};
         HttpEntity entity = IOManager.sendRawRequest(url);
         InputStream in = entity.getContent();
-        JFrame f = new JFrame(L.get("core.SelfUpdater.frame_title"));
+        JFrame f = History.createJFrameFromHistory("core.SelfUpdater.frame_title", 100, 100);
+        f.setTitle(L.get("core.SelfUpdater.frame_title"));
         f.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
         f.setIconImage(IconManager.getBrandIcon());
         f.setResizable(false);
-        f.setLocationRelativeTo(null);
         f.addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {

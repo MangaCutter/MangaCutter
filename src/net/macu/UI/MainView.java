@@ -9,6 +9,7 @@ import net.macu.core.IOManager;
 import net.macu.core.JobManager;
 import net.macu.core.Main;
 import net.macu.service.ServiceManager;
+import net.macu.settings.History;
 import net.macu.settings.L;
 
 import javax.swing.*;
@@ -19,7 +20,7 @@ import java.awt.event.WindowEvent;
 import java.awt.image.BufferedImage;
 import java.util.Iterator;
 
-public class MainView extends JFrame {
+public class MainView {
     private JTextField urlTextField;
     private JButton startButton;
     private JButton cancelButton;
@@ -32,29 +33,30 @@ public class MainView extends JFrame {
     private final ViewManager viewManager;
     private JPanel selectableFormPanel;
     private BufferedImage[] fragments;
+    private final JFrame frame;
 
     private MainView(boolean prepared) {
-        super(L.get("UI.ViewManager.main_frame_title"));
-        setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
-        setLocationRelativeTo(null);
-        setResizable(false);
-        setIconImage(IconManager.getBrandIcon());
-        addWindowListener(new WindowAdapter() {
+        frame = History.createJFrameFromHistory("UI.ViewManager.main_frame_title", 0, 0);
+        frame.setTitle(L.get("UI.ViewManager.main_frame_title"));
+        frame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+        frame.setResizable(false);
+        frame.setIconImage(IconManager.getBrandIcon());
+        frame.addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
                 new Thread(() -> {
                     jobManager.cancel();
                     if (!prepared) {
-                        if (!BrowserPlugin.getPlugin().hasActiveRequests() || ViewManager.showConfirmDialog(L.get("UI.MainView.confirm_exit"), viewManager.getView())) {
+                        if (!BrowserPlugin.getPlugin().hasActiveRequests() || ViewManager.showConfirmDialog(L.get("UI.MainView.confirm_exit"), frame)) {
                             System.exit(0);
                         }
                     } else {
-                        dispose();
+                        frame.dispose();
                     }
                 }).start();
             }
         });
-        setContentPane($$$getRootComponent$$$());
+        frame.setContentPane($$$getRootComponent$$$());
         urlLabel.setText(L.get("UI.MainView.url_label"));
         cancelButton.setText(L.get("UI.MainView.cancel_button"));
         startButton.setText(L.get("UI.MainView.start_button"));
@@ -76,19 +78,19 @@ public class MainView extends JFrame {
             JMenuItem supportedServicesItem = new JMenuItem(L.get("UI.ViewManager.supported_services_menu"));
             supportedServicesItem.addActionListener(actionEvent -> new Thread(() ->
                     ViewManager.showMessageDialog(L.get("UI.ViewManager.supported_services_list",
-                            ServiceManager.getSupportedServicesList()), this)).start());
+                            ServiceManager.getSupportedServicesList()), frame)).start());
             fileMenu.add(supportedServicesItem);
 
             JMenuItem checkUpdateItem = new JMenuItem(L.get("UI.ViewManager.check_updates"));
             checkUpdateItem.addActionListener((e) -> new Thread(() -> {
                 IOManager.checkUpdates();
-                ViewManager.showMessageDialog(L.get("UI.ViewManager.up_to_date"), this);
+                ViewManager.showMessageDialog(L.get("UI.ViewManager.up_to_date"), frame);
             }).start());
             fileMenu.add(checkUpdateItem);
 
             JMenuItem aboutItem = new JMenuItem(L.get("UI.ViewManager.about_menu"));
             aboutItem.addActionListener(actionEvent -> new Thread(() -> ViewManager.showMessageDialog(
-                    L.get("UI.ViewManager.about_text", Main.getVersion()), this)).start());
+                    L.get("UI.ViewManager.about_text", Main.getVersion()), frame)).start());
             fileMenu.add(aboutItem);
 
             bar.add(fileMenu);
@@ -104,7 +106,7 @@ public class MainView extends JFrame {
                     ViewManager.showMessageDialog(L.get("UI.ViewManager.plugin_connection",
                             BrowserPlugin.getPlugin().isConnected() ?
                                     L.get("UI.ViewManager.plugin_connection_true") :
-                                    L.get("UI.ViewManager.plugin_connection_false")), this)).start());
+                                    L.get("UI.ViewManager.plugin_connection_false")), frame)).start());
             pluginMenu.add(pluginConnectionItem);
 
             JMenuItem exportCertificateItem = new JMenuItem(L.get("UI.ViewManager.certificate_export_menu"));
@@ -114,7 +116,7 @@ public class MainView extends JFrame {
 
             bar.add(pluginMenu);
 
-            setJMenuBar(bar);
+            frame.setJMenuBar(bar);
         }
 
         cancelButton.addActionListener(e -> {
@@ -133,13 +135,13 @@ public class MainView extends JFrame {
                 if (validateInput()) {
                     if (prepared) {
                         if (jobManager.runJob(fragments, currentForm.getConfiguredPipeline(), viewManager)) {
-                            ViewManager.showMessageDialog(L.get("UI.MainView.complete_message"), this);
-                            dispose();
+                            ViewManager.showMessageDialog(L.get("UI.MainView.complete_message"), frame);
+                            frame.dispose();
                             return;
                         }
                     } else {
                         if (jobManager.runJob(urlTextField.getText(), currentForm.getConfiguredPipeline(), viewManager)) {
-                            ViewManager.showMessageDialog(L.get("UI.MainView.complete_message"), this);
+                            ViewManager.showMessageDialog(L.get("UI.MainView.complete_message"), frame);
                         }
                     }
                 }
@@ -154,13 +156,13 @@ public class MainView extends JFrame {
                 currentForm = (Form) Main.getForms().toArray()[pathSelector.getSelectedIndex()];
                 selectableFormPanel.removeAll();
                 selectableFormPanel.add(currentForm.getRootComponent());
-                pack();
+                frame.pack();
             }
         });
 
         pathSelector.setSelectedIndex(0);
 
-        setVisible(true);
+        frame.setVisible(true);
     }
 
     public MainView() {
@@ -175,7 +177,7 @@ public class MainView extends JFrame {
 
     public boolean validateInput() {
         if (urlTextField.getText().isEmpty()) {
-            ViewManager.showMessageDialog(L.get("UI.MainView.validateInput.empty_url"), this);
+            ViewManager.showMessageDialog(L.get("UI.MainView.validateInput.empty_url"), frame);
             return false;
         }
         return currentForm.validateInput();
@@ -303,4 +305,7 @@ public class MainView extends JFrame {
         return mainPanel;
     }
 
+    public JFrame getFrame() {
+        return frame;
+    }
 }

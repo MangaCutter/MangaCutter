@@ -1,6 +1,7 @@
 package net.macu.UI;
 
 import net.macu.cutter.pasta.Frame;
+import net.macu.settings.History;
 import net.macu.settings.L;
 import net.macu.settings.Settings;
 
@@ -10,7 +11,7 @@ import java.awt.event.*;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 
-public class ManualCutterFrame extends JFrame implements MouseListener, MouseMotionListener, MouseWheelListener, KeyListener {
+public class ManualCutterFrame implements MouseListener, MouseMotionListener, MouseWheelListener, KeyListener {
     private static final Color CUTTER_BOX_COLOR = Color.MAGENTA;
     private static final Color SLIDER_BAR_COLOR = Color.LIGHT_GRAY;
     private static final Color SLIDER_COLOR = new Color(Color.DARK_GRAY.getRed(), Color.DARK_GRAY.getGreen(), Color.DARK_GRAY.getBlue(), 190);
@@ -70,9 +71,11 @@ public class ManualCutterFrame extends JFrame implements MouseListener, MouseMot
     private boolean hasMarkedForRemove = false;
     private Drag dragging = Drag.NOTHING;
     private BufferedImage[] result;
+    private final JFrame frame;
 
     public ManualCutterFrame(BufferedImage[] images) {
-        super(L.get("UI.ManualCutterFrame.frame_title"));
+        frame = History.createJFrameFromHistory("UI.ManualCutterFrame.frame_title", 600, 600);
+        frame.setTitle(L.get("UI.ManualCutterFrame.frame_title"));
         fragments = images;
         for (BufferedImage fragment : fragments) {
             srcWidth = Math.max(srcWidth, fragment.getWidth());
@@ -260,20 +263,18 @@ public class ManualCutterFrame extends JFrame implements MouseListener, MouseMot
                 g = buffer.createGraphics();
             }
         });
-        add(c);
+        frame.add(c);
         buffer = new BufferedImage(600, 600, BufferedImage.TYPE_INT_RGB);
         g = buffer.createGraphics();
-        setSize(600, 600);
-        setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
-        setIconImage(IconManager.getBrandIcon());
-        ManualCutterFrame mcf = this;
-        addWindowListener(new WindowAdapter() {
+        frame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+        frame.setIconImage(IconManager.getBrandIcon());
+        frame.addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
                 new Thread(() -> {
-                    if (ViewManager.showConfirmDialog(L.get("UI.ManualCutterFrame.cancel"), mcf)) {
+                    if (ViewManager.showConfirmDialog(L.get("UI.ManualCutterFrame.cancel"), frame)) {
                         result = null;
-                        dispose();
+                        frame.dispose();
                         synchronized (locker) {
                             locker.notifyAll();
                         }
@@ -282,13 +283,13 @@ public class ManualCutterFrame extends JFrame implements MouseListener, MouseMot
             }
         });
         Thread scrollThread = new Thread(() -> {
-            while (isVisible()) {
+            while (frame.isVisible()) {
                 try {
                     Thread.sleep(20);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
-                if (isVisible()) {
+                if (frame.isVisible()) {
                     if (dragging == Drag.CUT_BOX) {
                         try {
                             int y = MouseInfo.getPointerInfo().getLocation().y - c.getLocationOnScreen().y - viewportVerticalOffset;
@@ -308,7 +309,7 @@ public class ManualCutterFrame extends JFrame implements MouseListener, MouseMot
         });
         scrollThread.setDaemon(true);
         scrollThread.start();
-        setVisible(true);
+        frame.setVisible(true);
     }
 
     public Object getLocker() {
@@ -327,7 +328,7 @@ public class ManualCutterFrame extends JFrame implements MouseListener, MouseMot
     }
 
     public void cancel() {
-        dispose();
+        frame.dispose();
         result = null;
         synchronized (locker) {
             locker.notifyAll();
@@ -388,10 +389,10 @@ public class ManualCutterFrame extends JFrame implements MouseListener, MouseMot
                             if (onImagePos - toSRCCoordinates(CUTTER_BOX_HEIGHT / 2) <= cutLines.get(i) &&
                                     cutLines.get(i) <= onImagePos + toSRCCoordinates(CUTTER_BOX_HEIGHT / 2)) {
                                 if ((pressedButton & ADD_SELECTED) != 0 && posY >= 0) {
-                                    setCursor(new Cursor(Cursor.N_RESIZE_CURSOR));
+                                    frame.setCursor(new Cursor(Cursor.N_RESIZE_CURSOR));
                                 } else {
                                     hasMarkedForRemove = true;
-                                    setCursor(new Cursor(Cursor.HAND_CURSOR));
+                                    frame.setCursor(new Cursor(Cursor.HAND_CURSOR));
                                     c.repaint();
                                 }
                                 return;
@@ -405,7 +406,7 @@ public class ManualCutterFrame extends JFrame implements MouseListener, MouseMot
                     hasMarkedForRemove = false;
                     c.repaint();
                 } else {
-                    setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
+                    frame.setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
                 }
             }
         }).start();
@@ -420,7 +421,7 @@ public class ManualCutterFrame extends JFrame implements MouseListener, MouseMot
                     c.repaint();
                     break;
                 case CUT_BOX:
-                    setCursor(new Cursor(Cursor.N_RESIZE_CURSOR));
+                    frame.setCursor(new Cursor(Cursor.N_RESIZE_CURSOR));
                     updateDraggedBoxPos();
                     c.repaint();
                     break;
@@ -724,7 +725,7 @@ public class ManualCutterFrame extends JFrame implements MouseListener, MouseMot
     }
 
     private void confirm() {
-        if (ViewManager.showConfirmDialog(L.get("UI.ManualCutterFrame.accept"), this)) {
+        if (ViewManager.showConfirmDialog(L.get("UI.ManualCutterFrame.accept"), frame)) {
             for (int i = 0; i < cutLines.size() - 1; i++) {
                 if (cutLines.get(i) == cutLines.get(i + 1)) {
                     cutLines.remove(i);
@@ -735,7 +736,7 @@ public class ManualCutterFrame extends JFrame implements MouseListener, MouseMot
             for (int i = 0; i < cutLines.size() - 1; i++) {
                 result[i] = new Frame(fragments, cutLines.get(i), cutLines.get(i + 1) - ((i == cutLines.size() - 1) ? 0 : 1)).createImage();
             }
-            dispose();
+            frame.dispose();
             synchronized (locker) {
                 locker.notifyAll();
             }

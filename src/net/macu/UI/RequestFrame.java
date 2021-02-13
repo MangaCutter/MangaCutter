@@ -6,6 +6,7 @@ import com.intellij.uiDesigner.core.Spacer;
 import net.macu.browser.plugin.BrowserPlugin;
 import net.macu.browser.proxy.CapturedImageProcessor;
 import net.macu.browser.proxy.ImageListener;
+import net.macu.settings.History;
 import net.macu.settings.L;
 import net.macu.settings.Settings;
 
@@ -20,7 +21,7 @@ import java.util.Comparator;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
-public class RequestFrame extends JFrame implements ImageListener {
+public class RequestFrame implements ImageListener {
     //todo add reload counter
     private static final Color SELECTED_PENDING_BACKGROUND = new Color(175, 82, 0);
     private static final Color DESELECTED_PENDING_BACKGROUND = new Color(125, 59, 0);
@@ -33,7 +34,7 @@ public class RequestFrame extends JFrame implements ImageListener {
     private final ArrayList<Thumbnail> visible = new ArrayList<>();
     private final ArrayList<String> least = new ArrayList<>();
     private final CapturedImageProcessor processor;
-    //    private final JFrame frame;
+    private final JFrame frame;
     private final BrowserPlugin plugin;
     private final String tabId;
     private JButton forceCompleteButton;
@@ -55,21 +56,19 @@ public class RequestFrame extends JFrame implements ImageListener {
     private boolean downloadingCompleted = false;
 
     public RequestFrame(ArrayList<String> captureList, CapturedImageProcessor processor, BrowserPlugin plugin, String tabId, String url) {
-        super(L.get("UI.RequestFrame.frame_title", url));
+        frame = History.createJFrameFromHistory("UI.RequestFrame.frame_title", 700, 500);
+        frame.setTitle(L.get("UI.RequestFrame.frame_title", url));
         $$$setupUI$$$();
-        setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
-        setLocationRelativeTo(null);
-        setIconImage(IconManager.getBrandIcon());
-        setResizable(true);
-        addWindowListener(new WindowAdapter() {
+        frame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+        frame.setIconImage(IconManager.getBrandIcon());
+        frame.setResizable(true);
+        frame.addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
                 cancel();
             }
         });
-        setContentPane($$$getRootComponent$$$());
-        pack();
-        setSize(700, Math.min(Math.max(400, getHeight()), 500));
+        frame.setContentPane($$$getRootComponent$$$());
         WaitIcon = IconManager.getSpinnerIcon(THUMBNAIL_WIDTH, THUMBNAIL_HEIGHT);
         this.plugin = plugin;
         this.tabId = tabId;
@@ -133,7 +132,7 @@ public class RequestFrame extends JFrame implements ImageListener {
         });
         this.processor = processor;
         processor.addImageListener(this);
-        setVisible(true);
+        frame.setVisible(true);
     }
 
     public void reload(ArrayList<String> urls, String tabUrl) {
@@ -156,7 +155,7 @@ public class RequestFrame extends JFrame implements ImageListener {
         applyFilter();
         SwingUtilities.updateComponentTreeUI(imagesPanel);
         url = tabUrl;
-        setTitle(L.get("UI.RequestFrame.frame_title", url));
+        frame.setTitle(L.get("UI.RequestFrame.frame_title", url));
     }
 
     @Override
@@ -174,14 +173,14 @@ public class RequestFrame extends JFrame implements ImageListener {
     }
 
     public void onCancelRequest() {
-        ViewManager.showMessageDialog(L.get("UI.RequestFrame.onCancel.message"), this);
+        ViewManager.showMessageDialog(L.get("UI.RequestFrame.onCancel.message"), frame);
         if (!downloadingCompleted)
             processor.removeImageListener(this);
-        dispose();
+        frame.dispose();
     }
 
     public void onTooManyAttempts() {
-        ViewManager.showMessageDialog(L.get("browser.plugin.BrowserPlugin.onMessage.too_many_attempts"), this);
+        ViewManager.showMessageDialog(L.get("browser.plugin.BrowserPlugin.onMessage.too_many_attempts"), frame);
         onLoadingComplete();
     }
 
@@ -294,7 +293,7 @@ public class RequestFrame extends JFrame implements ImageListener {
             plugin.onRequestCancel(tabId);
             processor.removeImageListener(this);
         }
-        dispose();
+        frame.dispose();
         downloadingCompleted = true;
     }
 
@@ -307,7 +306,7 @@ public class RequestFrame extends JFrame implements ImageListener {
             }
         }
         new MainView(ready.toArray(new BufferedImage[0]), url);
-        dispose();
+        frame.dispose();
     }
 
     /**

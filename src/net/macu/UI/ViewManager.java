@@ -1,6 +1,7 @@
 package net.macu.UI;
 
 import net.macu.core.FileFilterImpl;
+import net.macu.settings.History;
 import net.macu.settings.L;
 import net.macu.settings.Settings;
 
@@ -15,8 +16,8 @@ import java.net.URISyntaxException;
 import java.util.Arrays;
 
 public class ViewManager {
-    private static JFileChooser singleFileChooser;
-    private static JFileChooser dirChooser;
+    private static IconifiedFileChooser singleFileChooser;
+    private static IconifiedFileChooser dirChooser;
     private final MainView mainView;
     public static final String[] SUPPORTED_THEMES = new String[]{"FlatDarkLaf", "FlatLightLaf"};
 
@@ -53,9 +54,9 @@ public class ViewManager {
         });
         editorPane1.setBackground(pane.getBackground());
         pane.selectInitialValue();
-        JFrame f = new JFrame(L.get("UI.ViewManager.message_dialog_title"));
+        JFrame f = History.createJFrameFromHistory("UI.ViewManager.message_dialog_title", 100, 100);
+        f.setTitle(L.get("UI.ViewManager.message_dialog_title"));
         f.setIconImage(IconManager.getBrandIcon());
-        f.setLocationRelativeTo(parent);
         f.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
         f.setResizable(false);
         f.addWindowListener(new WindowAdapter() {
@@ -109,9 +110,9 @@ public class ViewManager {
         });
         editorPane1.setBackground(pane.getBackground());
         pane.selectInitialValue();
-        JFrame f = new JFrame(L.get("UI.ViewManager.confirm_dialog_title"));
+        JFrame f = History.createJFrameFromHistory("UI.ViewManager.confirm_dialog_title", 100, 100);
+        f.setTitle(L.get("UI.ViewManager.confirm_dialog_title"));
         f.setIconImage(IconManager.getBrandIcon());
-        f.setLocationRelativeTo(parent);
         f.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
         f.setResizable(false);
         f.addWindowListener(new WindowAdapter() {
@@ -164,15 +165,14 @@ public class ViewManager {
 
     public static void showPreviewFrame(BufferedImage image, Component parent) {
         if (image != null) {
-            JFrame f = new JFrame(L.get("UI.ViewManager.preview_frame_title"));
+            JFrame f = History.createJFrameFromHistory("UI.ViewManager.preview_frame_title", 600, 600);
+            f.setTitle(L.get("UI.ViewManager.preview_frame_title"));
             JScrollPane pane = new JScrollPane(new JLabel(new ImageIcon(image)));
             pane.getVerticalScrollBar().setUnitIncrement(Settings.ViewManager_MasterScrollSpeed.getValue());
             pane.getHorizontalScrollBar().setUnitIncrement(Settings.ViewManager_MasterScrollSpeed.getValue());
             f.add(pane);
             f.setIconImage(IconManager.getBrandIcon());
-            f.setLocationRelativeTo(parent);
             f.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
-            f.setSize(600, 600);
             f.addWindowListener(new WindowAdapter() {
                 @Override
                 public void windowClosing(WindowEvent e) {
@@ -198,14 +198,16 @@ public class ViewManager {
     }
 
     public static void initFileChoosers() {
-        singleFileChooser = new IconifiedFileChooser(IconManager.getBrandIcon());
+        singleFileChooser = History.createIconifiedFileChooserFromHistory("UI.ViewManager.file_chooser_title");
+        singleFileChooser.setIcon(IconManager.getBrandIcon());
         singleFileChooser.setDialogTitle(L.get("UI.ViewManager.file_chooser_title"));
         singleFileChooser.setDialogType(JFileChooser.SAVE_DIALOG);
         singleFileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
         singleFileChooser.setAcceptAllFileFilterUsed(false);
         singleFileChooser.setMultiSelectionEnabled(false);
-        dirChooser = new IconifiedFileChooser(IconManager.getBrandIcon());
-        dirChooser.setDialogTitle(L.get("UI.ViewManager.file_chooser_title"));
+        dirChooser = History.createIconifiedFileChooserFromHistory("UI.ViewManager.dir_chooser_title");
+        dirChooser.setIcon(IconManager.getBrandIcon());
+        dirChooser.setDialogTitle(L.get("UI.ViewManager.dir_chooser_title"));
         dirChooser.setDialogType(JFileChooser.SAVE_DIALOG);
         dirChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
         dirChooser.setAcceptAllFileFilterUsed(false);
@@ -224,7 +226,7 @@ public class ViewManager {
         mainView.resetProgress();
     }
 
-    public MainView getView() {
-        return mainView;
+    public JFrame getView() {
+        return mainView.getFrame();
     }
 }

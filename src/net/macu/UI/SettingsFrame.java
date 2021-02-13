@@ -12,14 +12,16 @@ import java.awt.event.WindowEvent;
 import java.util.HashMap;
 import java.util.List;
 
-public class SettingsFrame extends JFrame {
+public class SettingsFrame {
     private static SettingsFrame frame = null;
     private final JButton applyButton;
+    private final JFrame jframe;
 
     private final HashMap<Setting, Object> scheduledChanges = new HashMap<>();
 
     private SettingsFrame() {
-        super(L.get("UI.SettingsFrame.frame_title"));
+        jframe = History.createJFrameFromHistory("UI.SettingsFrame.frame_title", 540, 350);
+        jframe.setTitle(L.get("UI.SettingsFrame.frame_title"));
         applyButton = new JButton(L.get("UI.SettingsFrame.apply_button"));
         applyButton.setEnabled(false);
         JPanel root = new JPanel();
@@ -125,36 +127,33 @@ public class SettingsFrame extends JFrame {
         JButton cancelButton = new JButton(L.get("UI.SettingsFrame.cancel_button"));
         cancelButton.addActionListener(e -> {
             discardScheduledSettings();
-            setVisible(false);
+            jframe.setVisible(false);
         });
         JButton okButton = new JButton(L.get("UI.SettingsFrame.ok_button"));
         okButton.addActionListener(e -> {
             applyScheduledSettings();
-            setVisible(false);
+            jframe.setVisible(false);
         });
         p.add(okButton);
         p.add(cancelButton);
         p.add(applyButton);
         root.add(scrollPane);
         root.add(p);
-        setIconImage(IconManager.getBrandIcon());
-        setContentPane(root);
-        addWindowListener(new WindowAdapter() {
+        jframe.setIconImage(IconManager.getBrandIcon());
+        jframe.setContentPane(root);
+        jframe.addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
                 discardScheduledSettings();
-                setVisible(false);
+                jframe.setVisible(false);
             }
         });
-        setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
-        setLocationRelativeTo(null);
-        pack();
-        setSize(new Dimension(Math.max(getWidth(), 540), Math.min(getHeight(), 350)));
+        jframe.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
     }
 
     public static void openFrame() {
         if (frame == null) frame = new SettingsFrame();
-        frame.setVisible(true);
+        frame.jframe.setVisible(true);
     }
 
     private void discardScheduledSettings() {
