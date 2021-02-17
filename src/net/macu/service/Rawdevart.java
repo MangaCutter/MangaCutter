@@ -20,8 +20,8 @@ public class Rawdevart implements Service {
             if (cancel) return null;
             return Jsoup.parse(sb).select("img.img-fluid.not-lazy").eachAttr("data-src");
         } catch (IOException e) {
-            ViewManager.showMessageDialog(L.get("service.Rawdevart.parsePage.io_exception", e.toString()),
-                    viewManager.getView());
+            ViewManager.showMessageDialog("service.Rawdevart.parsePage.io_exception",
+                    viewManager.getView(), e.toString());
             e.printStackTrace();
         }
         return null;

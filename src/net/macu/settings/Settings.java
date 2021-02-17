@@ -32,8 +32,7 @@ public class Settings {
             defaults.load(Settings.class.getResourceAsStream("defaultSettings.properties"));
         } catch (IOException e) {
             e.printStackTrace();
-            ViewManager.showMessageDialog(
-                    L.get("settings.Settings.collectParameters.get_defaults_exception", e.toString()), null);
+            ViewManager.showMessageDialog("settings.Settings.collectParameters.get_defaults_exception", null, e.toString());
         }
         defaults.stringPropertyNames().forEach(s -> {
             try {
@@ -42,8 +41,7 @@ public class Settings {
                 }
             } catch (BackingStoreException e) {
                 e.printStackTrace();
-                ViewManager.showMessageDialog(
-                        L.get("settings.Settings.collectParameters.put_defaults_exception", e.toString()), null);
+                ViewManager.showMessageDialog("settings.Settings.collectParameters.put_defaults_exception", null, e.toString());
             }
         });
         allSettings.add(ManualCutterFrame_ScrollSpeed);
@@ -71,5 +69,9 @@ public class Settings {
 
     public static List<Setting> getAllSettings() {
         return allSettings;
+    }
+
+    public static void restoreDefaults() throws BackingStoreException {
+        preferences.removeNode();
     }
 }

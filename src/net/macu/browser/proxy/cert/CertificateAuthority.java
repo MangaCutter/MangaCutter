@@ -1,7 +1,6 @@
 package net.macu.browser.proxy.cert;
 
 import net.macu.UI.ViewManager;
-import net.macu.settings.L;
 import net.macu.settings.Settings;
 import org.bouncycastle.asn1.DERSequence;
 import org.bouncycastle.asn1.pkcs.ContentInfo;
@@ -104,11 +103,11 @@ public class CertificateAuthority {
         try {
             rootCA = readPKCS12File(Base64.decode(Settings.CertificateAuthority_RootCA.getValue()));
         } catch (NullPointerException e) {
-            ViewManager.showMessageDialog(L.get("browser.proxy.cert.CertificateAuthority.openGenerateCertFrame.saved_certificate_is_empty"), null);
+            ViewManager.showMessageDialog("browser.proxy.cert.CertificateAuthority.openGenerateCertFrame.saved_certificate_is_empty", null);
             return;
         } catch (Exception e) {
             e.printStackTrace();
-            ViewManager.showMessageDialog(L.get("browser.proxy.cert.CertificateAuthority.openGenerateCertFrame.certificate_loading_failed", e.toString()), null);
+            ViewManager.showMessageDialog("browser.proxy.cert.CertificateAuthority.openGenerateCertFrame.certificate_loading_failed", null, e.toString());
         }
     }
 
@@ -126,9 +125,9 @@ public class CertificateAuthority {
                 out.flush();
                 Settings.CertificateAuthority_RootCA.setValue(newRoot.getKeyPairKeystoreFileBase64Encoded("alias"));
                 rootCA = newRoot;
-                ViewManager.showMessageDialog(L.get("browser.proxy.cert.CertificateAuthority.openGenerateCertFrame.certificate_generated", newRoot.getSHA256Fingerprint()), null);
+                ViewManager.showMessageDialog("browser.proxy.cert.CertificateAuthority.openGenerateCertFrame.certificate_generated", null, newRoot.getSHA256Fingerprint());
             } catch (Exception e) {
-                ViewManager.showMessageDialog(L.get("browser.proxy.cert.CertificateAuthority.openGenerateCertFrame.certificate_generation_failed", e.toString()), null);
+                ViewManager.showMessageDialog("browser.proxy.cert.CertificateAuthority.openGenerateCertFrame.certificate_generation_failed", null, e.toString());
                 e.printStackTrace();
             }
         }
@@ -144,10 +143,10 @@ public class CertificateAuthority {
                     out.flush();
                 } catch (IOException | CertificateEncodingException e) {
                     e.printStackTrace();
-                    ViewManager.showMessageDialog(L.get("browser.proxy.cert.CertificateAuthority.openExportCertificateFrame.certificate_export_failed"), null);
+                    ViewManager.showMessageDialog("browser.proxy.cert.CertificateAuthority.openExportCertificateFrame.certificate_export_failed", null);
                 }
             } else {
-                ViewManager.showMessageDialog(L.get("browser.proxy.cert.CertificateAuthority.openExportCertificateFrame.certificate_does_not_exist"), null);
+                ViewManager.showMessageDialog("browser.proxy.cert.CertificateAuthority.openExportCertificateFrame.certificate_does_not_exist", null);
             }
         }
     }

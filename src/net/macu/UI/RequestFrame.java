@@ -173,14 +173,14 @@ public class RequestFrame implements ImageListener {
     }
 
     public void onCancelRequest() {
-        ViewManager.showMessageDialog(L.get("UI.RequestFrame.onCancel.message"), frame);
+        ViewManager.showMessageDialog("UI.RequestFrame.onCancel.message", frame);
         if (!downloadingCompleted)
             processor.removeImageListener(this);
         frame.dispose();
     }
 
     public void onTooManyAttempts() {
-        ViewManager.showMessageDialog(L.get("browser.plugin.BrowserPlugin.onMessage.too_many_attempts"), frame);
+        ViewManager.showMessageDialog("browser.plugin.BrowserPlugin.onMessage.too_many_attempts", frame);
         onLoadingComplete();
     }
 

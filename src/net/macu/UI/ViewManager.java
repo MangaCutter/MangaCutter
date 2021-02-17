@@ -25,12 +25,25 @@ public class ViewManager {
         this.mainView = mainView;
     }
 
-    public static void showMessageDialog(String s, Component parent) {
-        //in case then I forgot to process event in separate thread
+    public static void showMessageDialog(String id, Component parent, Object... args) {
+        if (History.userAllowedToShowNotification(id)) {
+            showMessageDialog(parent, L.get(id, args), id, false);
+        } else {
+            System.out.println("Skipped dialog " + id);
+        }
+    }
+
+    public static void showMessageDialogForced(String id, Component parent, Object... args) {
+        showMessageDialog(parent, L.get(id, args), id, true);
+    }
+
+    private static void showMessageDialog(Component parent, String s, String id, boolean forced) {
+        //in case if I forgot to process event in separate thread
         if (Thread.currentThread().getName().startsWith("AWT-EventQueue")) {
             JOptionPane.showMessageDialog(parent, Arrays.toString(Thread.currentThread().getStackTrace()));
             return;
         }
+
         Object locker = new Object();
         if (!s.startsWith("<html>")) {
             s = "<html>" + s.replaceAll("\n", "<br>") + "</html>";
@@ -46,7 +59,18 @@ public class ViewManager {
             }
         });
         editorPane1.setEditable(false);
-        JOptionPane pane = new JOptionPane(editorPane1, JOptionPane.INFORMATION_MESSAGE, JOptionPane.DEFAULT_OPTION, null, null, null);
+        JPanel root = new JPanel();
+        root.setLayout(new BoxLayout(root, BoxLayout.Y_AXIS));
+        JCheckBox dontShowAgainCheckBox = null;
+        if (!forced) {
+            root.add(editorPane1);
+            JPanel cPanel = new JPanel();
+            cPanel.setLayout(new FlowLayout(FlowLayout.CENTER));
+            dontShowAgainCheckBox = new JCheckBox(L.get("UI.ViewManager.showMessageDialog.dont_show_again"), false);
+            cPanel.add(dontShowAgainCheckBox);
+            root.add(cPanel);
+        } else root.add(editorPane1);
+        JOptionPane pane = new JOptionPane(root, JOptionPane.INFORMATION_MESSAGE, JOptionPane.DEFAULT_OPTION, null, null, null);
         pane.addPropertyChangeListener(evt -> {
             synchronized (locker) {
                 locker.notify();
@@ -78,14 +102,31 @@ public class ViewManager {
             }
         }
         f.dispose();
+        if (!forced && dontShowAgainCheckBox.isSelected()) {
+            History.disallowToShowNotification(id);
+        }
     }
 
-    public static boolean showConfirmDialog(String s, Component parent) {
-        //in case then I forgot to process event in separate thread
+    public static boolean showConfirmDialog(String id, Component parent, Object... args) {
+        if (History.userAllowedToShowNotification(id)) {
+            return showConfirmDialog(parent, L.get(id, args), id, false);
+        } else {
+            System.out.println("Skipped dialog " + id + " " + History.getSavedAnswer(id));
+            return History.getSavedAnswer(id);
+        }
+    }
+
+    public static boolean showConfirmDialogForced(String id, Component parent, Object... args) {
+        return showConfirmDialog(parent, L.get(id, args), id, true);
+    }
+
+    private static boolean showConfirmDialog(Component parent, String s, String id, boolean forced) {
+        //in case if I forgot to process event in separate thread
         if (Thread.currentThread().getName().startsWith("AWT-EventQueue")) {
             JOptionPane.showMessageDialog(parent, Arrays.toString(Thread.currentThread().getStackTrace()));
             return false;
         }
+
         Object locker = new Object();
         if (!s.startsWith("<html>")) {
             s = "<html>" + s.replaceAll("\n", "<br>") + "</html>";
@@ -102,7 +143,18 @@ public class ViewManager {
             }
         });
         editorPane1.setEditable(false);
-        JOptionPane pane = new JOptionPane(editorPane1, JOptionPane.QUESTION_MESSAGE, JOptionPane.YES_NO_OPTION, null, null, null);
+        JPanel root = new JPanel();
+        root.setLayout(new BoxLayout(root, BoxLayout.Y_AXIS));
+        JCheckBox dontShowAgainCheckBox = null;
+        if (!forced) {
+            root.add(editorPane1);
+            JPanel cPanel = new JPanel();
+            cPanel.setLayout(new FlowLayout(FlowLayout.CENTER));
+            dontShowAgainCheckBox = new JCheckBox(L.get("UI.ViewManager.showConfirmDialog.dont_show_again"), false);
+            cPanel.add(dontShowAgainCheckBox);
+            root.add(cPanel);
+        } else root.add(editorPane1);
+        JOptionPane pane = new JOptionPane(root, JOptionPane.QUESTION_MESSAGE, JOptionPane.YES_NO_OPTION, null, null, null);
         pane.addPropertyChangeListener(evt -> {
             synchronized (locker) {
                 locker.notify();
@@ -136,11 +188,19 @@ public class ViewManager {
         f.dispose();
 
         Object selectedValue = pane.getValue();
-        if (selectedValue == null)
-            return false;
-        if (selectedValue instanceof Integer)
-            return (Integer) selectedValue == JOptionPane.OK_OPTION;
-        return false;
+        boolean answer;
+        if (selectedValue == null) {
+            answer = false;
+        } else if (selectedValue instanceof Integer) {
+            answer = (Integer) selectedValue == JOptionPane.OK_OPTION;
+        } else {
+            answer = false;
+        }
+        if (!forced && dontShowAgainCheckBox.isSelected()) {
+            History.disallowToShowNotification(id);
+            History.saveAnswer(id, answer);
+        }
+        return answer;
     }
 
     public static String requestChooseSingleFile(String extension, Component parent) {

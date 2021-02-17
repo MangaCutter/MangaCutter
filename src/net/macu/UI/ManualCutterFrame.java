@@ -272,7 +272,7 @@ public class ManualCutterFrame implements MouseListener, MouseMotionListener, Mo
             @Override
             public void windowClosing(WindowEvent e) {
                 new Thread(() -> {
-                    if (ViewManager.showConfirmDialog(L.get("UI.ManualCutterFrame.cancel"), frame)) {
+                    if (ViewManager.showConfirmDialog("UI.ManualCutterFrame.cancel", frame)) {
                         result = null;
                         frame.dispose();
                         synchronized (locker) {
@@ -725,7 +725,7 @@ public class ManualCutterFrame implements MouseListener, MouseMotionListener, Mo
     }
 
     private void confirm() {
-        if (ViewManager.showConfirmDialog(L.get("UI.ManualCutterFrame.accept"), frame)) {
+        if (ViewManager.showConfirmDialog("UI.ManualCutterFrame.accept", frame)) {
             for (int i = 0; i < cutLines.size() - 1; i++) {
                 if (cutLines.get(i) == cutLines.get(i + 1)) {
                     cutLines.remove(i);

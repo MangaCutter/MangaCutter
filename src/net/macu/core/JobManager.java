@@ -7,7 +7,6 @@ import net.macu.downloader.Downloader;
 import net.macu.downloader.SimpleDownloader;
 import net.macu.service.Service;
 import net.macu.service.ServiceManager;
-import net.macu.settings.L;
 
 import java.awt.image.BufferedImage;
 import java.net.URI;
@@ -58,7 +57,7 @@ public class JobManager {
         else
             service = null;
         if (service == null) {
-            ViewManager.showMessageDialog(L.get("core.JobManager.runJob.unsupported_service"), viewManager.getView());
+            ViewManager.showMessageDialog("core.JobManager.runJob.unsupported_service", viewManager.getView());
             return false;
         }
 

@@ -21,7 +21,7 @@ public class SingleScanSaver implements ScanSaver {
         try {
             ImageIO.write(images[0], "PNG", out);
         } catch (IOException e) {
-            ViewManager.showMessageDialog(L.get("disc.SingleScanSaver.cant_save", e.toString()), viewManager.getView());
+            ViewManager.showMessageDialog("disc.SingleScanSaver.cant_save", viewManager.getView(), e.toString());
             e.printStackTrace();
         }
     }

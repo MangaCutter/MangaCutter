@@ -60,7 +60,7 @@ public class Main {
         services = Collections.unmodifiableList(getInstances(servicesSet));
 
         IOManager.initClient();
-        IOManager.checkUpdates();
+        IOManager.checkUpdates(false);
 
         ViewManager.initFileChoosers();
 

@@ -22,23 +22,23 @@ public class MultiScanSaver implements ScanSaver {
         File directory = new File(path);
         try {
             if (directory.exists() && directory.isFile()) {
-                ViewManager.showMessageDialog(L.get("disc.MultiScanSaver.file_exists", path), viewManager.getView());
+                ViewManager.showMessageDialog("disc.MultiScanSaver.file_exists", viewManager.getView(), path);
                 return;
             }
             if (!directory.exists()) {
                 if (!directory.mkdirs()) {
-                    ViewManager.showMessageDialog(L.get("disc.MultiScanSaver.cant_create", path), viewManager.getView());
+                    ViewManager.showMessageDialog("disc.MultiScanSaver.cant_create", viewManager.getView(), path);
                 }
             }
         } catch (SecurityException e) {
-            ViewManager.showMessageDialog(L.get("disc.MultiScanSaver.cant_open", path, e.toString()), viewManager.getView());
+            ViewManager.showMessageDialog("disc.MultiScanSaver.cant_open", viewManager.getView(), path, e.toString());
             e.printStackTrace();
         }
         for (int i = 0; i < images.length; i++) {
             try {
                 File f = new File(directory, String.format("%03d", (i + 1)) + ".png");
                 if (f.exists()) {
-                    if (!ViewManager.showConfirmDialog(L.get("disc.MultiScanSaver.confirm_rewrite", f.getName()), viewManager.getView())) {
+                    if (!ViewManager.showConfirmDialog("disc.MultiScanSaver.confirm_rewrite", viewManager.getView(), f.getName())) {
                         continue;
                     }
                 }
@@ -50,7 +50,7 @@ public class MultiScanSaver implements ScanSaver {
                 viewManager.incrementProgress(L.get("disk.MultiScanSaver.progress", i + 1, images.length));
                 if (cancel) return;
             } catch (IOException e) {
-                ViewManager.showMessageDialog(L.get("disc.MultiScanSaver.cant_save", e.toString()), viewManager.getView());
+                ViewManager.showMessageDialog("disc.MultiScanSaver.cant_save", viewManager.getView(), e.toString());
                 e.printStackTrace();
             }
         }

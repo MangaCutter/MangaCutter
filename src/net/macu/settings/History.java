@@ -12,19 +12,21 @@ import java.io.File;
 import java.util.prefs.BackingStoreException;
 
 public class History {
-    private static final String FRAME_POS_X_PERFIX = "history_frame_pos_x_";
-    private static final String FRAME_POS_Y_PERFIX = "history_frame_pos_y_";
-    private static final String FRAME_WIDTH_PERFIX = "history_frame_width_";
-    private static final String FRAME_HEIGHT_PERFIX = "history_frame_height_";
+    private static final String FRAME_POS_X_PREFIX = "history_frame_pos_x_";
+    private static final String FRAME_POS_Y_PREFIX = "history_frame_pos_y_";
+    private static final String FRAME_WIDTH_PREFIX = "history_frame_width_";
+    private static final String FRAME_HEIGHT_PREFIX = "history_frame_height_";
     private static final String FILE_CHOOSER_SELECTED_FILE_PREFIX = "history_file_chooser_selected_file_";
+    private static final String USER_ALLOWED_TO_SHOW_PREFIX = "user_allowed_to_show_";
+    private static final String SAVED_ANSWER_PREFIX = "saved_answer_";
 
     public static JFrame createJFrameFromHistory(String id, int defaultWidth, int defaultHeight) {
         Rectangle defaultBounds = GraphicsEnvironment.getLocalGraphicsEnvironment()
                 .getDefaultScreenDevice().getDefaultConfiguration().getBounds();
-        int width = Settings.preferences.getInt(FRAME_WIDTH_PERFIX + id, defaultWidth);
-        int height = Settings.preferences.getInt(FRAME_HEIGHT_PERFIX + id, defaultHeight);
-        int posX = Settings.preferences.getInt(FRAME_POS_X_PERFIX + id, (defaultBounds.x + defaultBounds.width - width) / 2);
-        int posY = Settings.preferences.getInt(FRAME_POS_Y_PERFIX + id, (defaultBounds.y + defaultBounds.height - height) / 2);
+        int width = Settings.preferences.getInt(FRAME_WIDTH_PREFIX + id, defaultWidth);
+        int height = Settings.preferences.getInt(FRAME_HEIGHT_PREFIX + id, defaultHeight);
+        int posX = Settings.preferences.getInt(FRAME_POS_X_PREFIX + id, (defaultBounds.x + defaultBounds.width - width) / 2);
+        int posY = Settings.preferences.getInt(FRAME_POS_Y_PREFIX + id, (defaultBounds.y + defaultBounds.height - height) / 2);
         JFrame frame = new JFrame();
         frame.setSize(width, height);
         frame.setLocation(posX, posY);
@@ -44,16 +46,16 @@ public class History {
             @Override
             public void componentResized(ComponentEvent e) {
                 new Thread(() -> {
-                    Settings.preferences.putInt(FRAME_WIDTH_PERFIX + id, frame.getWidth());
-                    Settings.preferences.putInt(FRAME_HEIGHT_PERFIX + id, frame.getHeight());
+                    Settings.preferences.putInt(FRAME_WIDTH_PREFIX + id, frame.getWidth());
+                    Settings.preferences.putInt(FRAME_HEIGHT_PREFIX + id, frame.getHeight());
                 }).start();
             }
 
             @Override
             public void componentMoved(ComponentEvent e) {
                 new Thread(() -> {
-                    Settings.preferences.putInt(FRAME_POS_X_PERFIX + id, frame.getX());
-                    Settings.preferences.putInt(FRAME_POS_Y_PERFIX + id, frame.getY());
+                    Settings.preferences.putInt(FRAME_POS_X_PREFIX + id, frame.getX());
+                    Settings.preferences.putInt(FRAME_POS_Y_PREFIX + id, frame.getY());
                 }).start();
             }
         });
@@ -79,5 +81,60 @@ public class History {
             fileChooser.setCurrentDirectory(selected);
         }
         return fileChooser;
+    }
+
+    public static boolean userAllowedToShowNotification(String id) {
+        return Settings.preferences.getBoolean(USER_ALLOWED_TO_SHOW_PREFIX + id, true);
+    }
+
+    public static void disallowToShowNotification(String id) {
+        Settings.preferences.putBoolean(USER_ALLOWED_TO_SHOW_PREFIX + id, false);
+        try {
+            Settings.preferences.flush();
+        } catch (BackingStoreException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static void allowToShowNotification(String id) {
+        Settings.preferences.putBoolean(USER_ALLOWED_TO_SHOW_PREFIX + id, true);
+        try {
+            Settings.preferences.flush();
+        } catch (BackingStoreException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static boolean getSavedAnswer(String id) {
+        return Settings.preferences.getBoolean(SAVED_ANSWER_PREFIX + id, false);
+    }
+
+    public static void saveAnswer(String id, boolean answer) {
+        Settings.preferences.putBoolean(SAVED_ANSWER_PREFIX + id, answer);
+        try {
+            Settings.preferences.flush();
+        } catch (BackingStoreException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static void clearHistory() {
+        try {
+            String[] keys = Settings.preferences.keys();
+            for (String key : keys) {
+                if (key.startsWith(FRAME_POS_X_PREFIX) ||
+                        key.startsWith(FRAME_POS_Y_PREFIX) ||
+                        key.startsWith(FRAME_WIDTH_PREFIX) ||
+                        key.startsWith(FRAME_HEIGHT_PREFIX) ||
+                        key.startsWith(FILE_CHOOSER_SELECTED_FILE_PREFIX) ||
+                        key.startsWith(USER_ALLOWED_TO_SHOW_PREFIX) ||
+                        key.startsWith(SAVED_ANSWER_PREFIX)) {
+                    Settings.preferences.remove(key);
+                }
+            }
+            Settings.preferences.flush();
+        } catch (BackingStoreException e) {
+            e.printStackTrace();
+        }
     }
 }

@@ -44,24 +44,24 @@ public class MultiPageForm implements Form {
     public boolean validateInput() {
         String path = filePathTextField.getText();
         if (path.isEmpty()) {
-            ViewManager.showMessageDialog(L.get("UI.MultiPageForm.validateInput.empty_path"), null);
+            ViewManager.showMessageDialog("UI.MultiPageForm.validateInput.empty_path", null);
             return false;
         }
         if (perfectHeightTextField.getText().isEmpty()) {
-            ViewManager.showMessageDialog(L.get("UI.MultiPageForm.validateInput.empty_height"), null);
+            ViewManager.showMessageDialog("UI.MultiPageForm.validateInput.empty_height", null);
             return false;
         }
         try {
             if (Integer.parseInt(perfectHeightTextField.getText()) < 0) {
-                ViewManager.showMessageDialog(L.get("UI.MultiPageForm.validateInput.negative_height"), null);
+                ViewManager.showMessageDialog("UI.MultiPageForm.validateInput.negative_height", null);
                 return false;
             }
         } catch (NumberFormatException e) {
-            ViewManager.showMessageDialog(L.get("UI.MultiPageForm.validateInput.nan_height", perfectHeightTextField.getText()), null);
+            ViewManager.showMessageDialog("UI.MultiPageForm.validateInput.nan_height", null, perfectHeightTextField.getText());
             return false;
         }
         if (saveGradientCheckBox.isSelected() && toleranceSlider.getValue() > 0) {
-            ViewManager.showMessageDialog(L.get("UI.MultiPageForm.validateInput.conflicted_parameters"), null);
+            ViewManager.showMessageDialog("UI.MultiPageForm.validateInput.conflicted_parameters", null);
             return false;
         }
         return true;

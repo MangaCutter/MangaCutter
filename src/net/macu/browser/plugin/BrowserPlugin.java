@@ -4,7 +4,6 @@ import net.macu.UI.RequestFrame;
 import net.macu.UI.ViewManager;
 import net.macu.browser.proxy.CapturedImageProcessor;
 import net.macu.browser.proxy.server.HTTPProxy;
-import net.macu.settings.L;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -36,7 +35,7 @@ public class BrowserPlugin {
 
     void onMessage(String message) {
         if (message.startsWith("alert ")) {
-            ViewManager.showMessageDialog(L.get(message.substring(6)), null);
+            ViewManager.showMessageDialog(message.substring(6), null);
         } else if (message.startsWith("su ")) {
             try {
                 JSONObject packet = (JSONObject) new JSONParser().parse(message.substring(message.indexOf(" ") + 1));

@@ -20,7 +20,7 @@ public class SimpleDownloader implements Downloader {
                 fragments[i] = IOManager.downloadImage(paths.get(i));
                 viewManager.incrementProgress(L.get("downloader.SimpleDownloader.downloadFragments.progress", i + 1, paths.size()));
             } catch (Exception e) {
-                ViewManager.showMessageDialog(L.get("downloader.SimpleDownloader.downloadFragments.exception", e.toString()), viewManager.getView());
+                ViewManager.showMessageDialog("downloader.SimpleDownloader.downloadFragments.exception", viewManager.getView(), e.toString());
                 e.printStackTrace();
                 return null;
             }

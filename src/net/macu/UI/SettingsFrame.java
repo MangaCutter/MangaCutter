@@ -1,5 +1,6 @@
 package net.macu.UI;
 
+import net.macu.core.SelfUpdater;
 import net.macu.settings.*;
 
 import javax.swing.*;
@@ -11,6 +12,7 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.util.HashMap;
 import java.util.List;
+import java.util.prefs.BackingStoreException;
 
 public class SettingsFrame {
     private static SettingsFrame frame = null;
@@ -122,7 +124,20 @@ public class SettingsFrame {
         }
         viewportRoot.add(panel);
         JPanel p = new JPanel();
-        p.setLayout(new FlowLayout(FlowLayout.RIGHT, 5, 5));
+        p.setLayout(new BorderLayout());
+        p.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
+        JButton defaultsButton = new JButton(L.get("UI.SettingsFrame.defaults_button"));
+        defaultsButton.addActionListener(e -> {
+            try {
+                Settings.restoreDefaults();
+                SelfUpdater.restart();
+            } catch (BackingStoreException backingStoreException) {
+                backingStoreException.printStackTrace();
+            }
+        });
+        p.add(defaultsButton, BorderLayout.WEST);
+        JPanel rightBottomPanel = new JPanel();
+        rightBottomPanel.setLayout(new FlowLayout(FlowLayout.RIGHT, 5, 0));
         applyButton.addActionListener(e -> applyScheduledSettings());
         JButton cancelButton = new JButton(L.get("UI.SettingsFrame.cancel_button"));
         cancelButton.addActionListener(e -> {
@@ -134,9 +149,10 @@ public class SettingsFrame {
             applyScheduledSettings();
             jframe.setVisible(false);
         });
-        p.add(okButton);
-        p.add(cancelButton);
-        p.add(applyButton);
+        rightBottomPanel.add(okButton);
+        rightBottomPanel.add(cancelButton);
+        rightBottomPanel.add(applyButton);
+        p.add(rightBottomPanel, BorderLayout.EAST);
         root.add(scrollPane);
         root.add(p);
         jframe.setIconImage(IconManager.getBrandIcon());

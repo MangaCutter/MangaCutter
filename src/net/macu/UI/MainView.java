@@ -47,7 +47,7 @@ public class MainView {
                 new Thread(() -> {
                     jobManager.cancel();
                     if (!prepared) {
-                        if (!BrowserPlugin.getPlugin().hasActiveRequests() || ViewManager.showConfirmDialog(L.get("UI.MainView.confirm_exit"), frame)) {
+                        if (!BrowserPlugin.getPlugin().hasActiveRequests() || ViewManager.showConfirmDialog("UI.MainView.confirm_exit", frame)) {
                             System.exit(0);
                         }
                     } else {
@@ -73,24 +73,23 @@ public class MainView {
 
             JMenu fileMenu = new JMenu(L.get("UI.ViewManager.help_menu"));
             JMenuItem settingsMenu = new JMenuItem(L.get("UI.ViewManager.settings_menu"));
-            settingsMenu.addActionListener(e -> new Thread(() -> SettingsFrame.openFrame()).start());
+            settingsMenu.addActionListener(e -> new Thread(SettingsFrame::openFrame).start());
             fileMenu.add(settingsMenu);
             JMenuItem supportedServicesItem = new JMenuItem(L.get("UI.ViewManager.supported_services_menu"));
             supportedServicesItem.addActionListener(actionEvent -> new Thread(() ->
-                    ViewManager.showMessageDialog(L.get("UI.ViewManager.supported_services_list",
-                            ServiceManager.getSupportedServicesList()), frame)).start());
+                    ViewManager.showMessageDialogForced("UI.ViewManager.supported_services_list", frame,
+                            ServiceManager.getSupportedServicesList())).start());
             fileMenu.add(supportedServicesItem);
 
             JMenuItem checkUpdateItem = new JMenuItem(L.get("UI.ViewManager.check_updates"));
             checkUpdateItem.addActionListener((e) -> new Thread(() -> {
-                if (IOManager.checkUpdates())
-                    ViewManager.showMessageDialog(L.get("UI.ViewManager.up_to_date"), frame);
+                if (IOManager.checkUpdates(true))
+                    ViewManager.showMessageDialogForced("UI.ViewManager.up_to_date", frame);
             }).start());
             fileMenu.add(checkUpdateItem);
 
             JMenuItem aboutItem = new JMenuItem(L.get("UI.ViewManager.about_menu"));
-            aboutItem.addActionListener(actionEvent -> new Thread(() -> ViewManager.showMessageDialog(
-                    L.get("UI.ViewManager.about_text", Main.getVersion()), frame)).start());
+            aboutItem.addActionListener(actionEvent -> new Thread(() -> ViewManager.showMessageDialogForced("UI.ViewManager.about_text", frame, Main.getVersion())).start());
             fileMenu.add(aboutItem);
 
             bar.add(fileMenu);
@@ -103,10 +102,10 @@ public class MainView {
             pluginMenu.add(generateCertificateItem);
             JMenuItem pluginConnectionItem = new JMenuItem(L.get("UI.ViewManager.plugin_connection_menu"));
             pluginConnectionItem.addActionListener(e -> new Thread(() ->
-                    ViewManager.showMessageDialog(L.get("UI.ViewManager.plugin_connection",
+                    ViewManager.showMessageDialogForced("UI.ViewManager.plugin_connection", frame,
                             BrowserPlugin.getPlugin().isConnected() ?
                                     L.get("UI.ViewManager.plugin_connection_true") :
-                                    L.get("UI.ViewManager.plugin_connection_false")), frame)).start());
+                                    L.get("UI.ViewManager.plugin_connection_false"))).start());
             pluginMenu.add(pluginConnectionItem);
 
             JMenuItem exportCertificateItem = new JMenuItem(L.get("UI.ViewManager.certificate_export_menu"));
@@ -135,13 +134,13 @@ public class MainView {
                 if (validateInput()) {
                     if (prepared) {
                         if (jobManager.runJob(fragments, currentForm.getConfiguredPipeline(), viewManager)) {
-                            ViewManager.showMessageDialog(L.get("UI.MainView.complete_message"), frame);
+                            ViewManager.showMessageDialog("UI.MainView.complete_message", frame);
                             frame.dispose();
                             return;
                         }
                     } else {
                         if (jobManager.runJob(urlTextField.getText(), currentForm.getConfiguredPipeline(), viewManager)) {
-                            ViewManager.showMessageDialog(L.get("UI.MainView.complete_message"), frame);
+                            ViewManager.showMessageDialog("UI.MainView.complete_message", frame);
                         }
                     }
                 }
@@ -177,7 +176,7 @@ public class MainView {
 
     public boolean validateInput() {
         if (urlTextField.getText().isEmpty()) {
-            ViewManager.showMessageDialog(L.get("UI.MainView.validateInput.empty_url"), frame);
+            ViewManager.showMessageDialog("UI.MainView.validateInput.empty_url", frame);
             return false;
         }
         return currentForm.validateInput();

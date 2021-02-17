@@ -30,7 +30,7 @@ public class AsIsPageForm implements Form {
     public boolean validateInput() {
         String path = filePathTextField.getText();
         if (path.isEmpty()) {
-            ViewManager.showMessageDialog(L.get("UI.AsIsPageForm.validateInput.empty_path"), null);
+            ViewManager.showMessageDialog("UI.AsIsPageForm.validateInput.empty_path", null);
             return false;
         }
         return true;

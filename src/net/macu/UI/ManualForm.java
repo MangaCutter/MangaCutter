@@ -29,7 +29,7 @@ public class ManualForm implements Form {
     public boolean validateInput() {
         String path = filePathTextField.getText();
         if (path.isEmpty()) {
-            ViewManager.showMessageDialog(L.get("UI.ManualForm.validateInput.empty_path"), null);
+            ViewManager.showMessageDialog("UI.ManualForm.validateInput.empty_path", null);
             return false;
         }
         return true;

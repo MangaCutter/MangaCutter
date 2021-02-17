@@ -71,4 +71,20 @@ public class SelfUpdater {
                 File.separator + "java", "-jar", thisJar.getAbsolutePath()).start();
         System.exit(0);
     }
+
+    public static void restart() {
+        File thisJar = null;
+        try {
+            thisJar = new File(SelfUpdater.class.getProtectionDomain().getCodeSource().getLocation().toURI());
+        } catch (URISyntaxException e) {
+            e.printStackTrace();
+        }
+        try {
+            new ProcessBuilder(System.getProperty("java.home") + File.separator + "bin" +
+                    File.separator + "java", "-jar", thisJar.getAbsolutePath()).start();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        System.exit(0);
+    }
 }

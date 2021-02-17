@@ -27,12 +27,12 @@ public class Daum implements Service {
             data.forEach(o -> list[((int) ((long) ((JSONObject) o).get("imageOrder"))) - 1] = (String) ((JSONObject) o).get("url"));
             return Arrays.asList(list);
         } catch (ParseException e) {
-            ViewManager.showMessageDialog(L.get("service.Daum.parsePage.parse_exception", e.toString()),
-                    viewManager.getView());
+            ViewManager.showMessageDialog("service.Daum.parsePage.parse_exception",
+                    viewManager.getView(), e.toString());
             e.printStackTrace();
         } catch (IOException e) {
-            ViewManager.showMessageDialog(L.get("service.Daum.parsePage.io_exception", e.toString()),
-                    viewManager.getView());
+            ViewManager.showMessageDialog("service.Daum.parsePage.io_exception",
+                    viewManager.getView(), e.toString());
             e.printStackTrace();
         }
         return null;

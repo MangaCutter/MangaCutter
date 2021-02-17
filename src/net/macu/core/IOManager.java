@@ -1,7 +1,6 @@
 package net.macu.core;
 
 import net.macu.UI.ViewManager;
-import net.macu.settings.L;
 import net.macu.settings.Settings;
 import org.apache.http.HttpEntity;
 import org.apache.http.client.config.RequestConfig;
@@ -57,7 +56,7 @@ public class IOManager {
         }
     }
 
-    public static boolean checkUpdates() {
+    public static boolean checkUpdates(boolean forced) {
         CloseableHttpClient cs = HttpClients.custom()
                 .setDefaultRequestConfig(RequestConfig.custom().setRedirectsEnabled(false).build()).build();
         try {
@@ -66,8 +65,8 @@ public class IOManager {
             String tag = location.substring(location.lastIndexOf("/") + 1);
             if (!tag.equals(Main.getVersion())) {
                 String jarUrl = RELEASE_REPOSITORY + DOWNLOAD_SUFFIX + "/" + tag + "/" + JAR_SUFFIX;
-                if (ViewManager.showConfirmDialog(
-                        L.get("core.IOManager.checkUpdates.new_ver", jarUrl, jarUrl), null)) {
+                if ((!forced ? ViewManager.showConfirmDialog("core.IOManager.checkUpdates.new_ver", null, jarUrl, jarUrl) :
+                        ViewManager.showConfirmDialogForced("core.IOManager.checkUpdates.new_ver", null, jarUrl, jarUrl))) {
                     SelfUpdater.selfUpdate(jarUrl);
                 }
                 return false;

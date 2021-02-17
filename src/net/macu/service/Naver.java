@@ -20,7 +20,7 @@ public class Naver implements Service {
             if (cancel) return null;
             return Jsoup.parse(sb).selectFirst("div.wt_viewer").select("img").eachAttr("src");
         } catch (IOException e) {
-            ViewManager.showMessageDialog(L.get("service.Naver.parsePage.io_exception", e.toString()), viewManager.getView());
+            ViewManager.showMessageDialog("service.Naver.parsePage.io_exception", viewManager.getView(), e.toString());
             e.printStackTrace();
         }
         return null;
