@@ -19,6 +19,7 @@ public class History {
     private static final String FILE_CHOOSER_SELECTED_FILE_PREFIX = "history_file_chooser_selected_file_";
     private static final String USER_ALLOWED_TO_SHOW_PREFIX = "user_allowed_to_show_";
     private static final String SAVED_ANSWER_PREFIX = "saved_answer_";
+    private static final String USAGE_COUNT_PREFIX = "usage_count_";
 
     public static JFrame createJFrameFromHistory(String id, int defaultWidth, int defaultHeight) {
         Rectangle defaultBounds = GraphicsEnvironment.getLocalGraphicsEnvironment()
@@ -128,7 +129,8 @@ public class History {
                         key.startsWith(FRAME_HEIGHT_PREFIX) ||
                         key.startsWith(FILE_CHOOSER_SELECTED_FILE_PREFIX) ||
                         key.startsWith(USER_ALLOWED_TO_SHOW_PREFIX) ||
-                        key.startsWith(SAVED_ANSWER_PREFIX)) {
+                        key.startsWith(SAVED_ANSWER_PREFIX) ||
+                        key.startsWith(USAGE_COUNT_PREFIX)) {
                     Settings.preferences.remove(key);
                 }
             }
@@ -136,5 +138,13 @@ public class History {
         } catch (BackingStoreException e) {
             e.printStackTrace();
         }
+    }
+
+    public static void incrementUsage(String key) {
+        Settings.preferences.putInt(USAGE_COUNT_PREFIX + key, Settings.preferences.getInt(USAGE_COUNT_PREFIX + key, 0) + 1);
+    }
+
+    public static int getUsage(String key) {
+        return Settings.preferences.getInt(USAGE_COUNT_PREFIX + key, 0);
     }
 }

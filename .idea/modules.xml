@@ -3,6 +3,7 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/MangaCutter.iml" filepath="$PROJECT_DIR$/MangaCutter.iml" />
+      <module fileurl="file://$PROJECT_DIR$/w3c-svg/w3c-svg.iml" filepath="$PROJECT_DIR$/w3c-svg/w3c-svg.iml" />
     </modules>
   </component>
 </project>

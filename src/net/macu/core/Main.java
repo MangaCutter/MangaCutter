@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
+import java.util.prefs.BackingStoreException;
 
 public class Main {
     private static List<Form> forms;
@@ -42,6 +43,13 @@ public class Main {
             e.printStackTrace(pw);
             JOptionPane.showMessageDialog(null, "Error: " + sw.toString());
         });
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            try {
+                Settings.flush();
+            } catch (BackingStoreException e) {
+                e.printStackTrace();
+            }
+        }));
 
         reflections = new Reflections("net.macu");
 

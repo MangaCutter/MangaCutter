@@ -1,5 +1,7 @@
 package net.macu.settings;
 
+import java.util.prefs.BackingStoreException;
+
 public abstract class Setting<T> {
     protected final String name;
     protected T value = null;
@@ -20,9 +22,14 @@ public abstract class Setting<T> {
         return value;
     }
 
-    public void setValue(T newValue) {
+    public final void setValue(T newValue) {
         value = newValue;
         putInStorage();
+        try {
+            Settings.flush();
+        } catch (BackingStoreException e) {
+            e.printStackTrace();
+        }
     }
 
     public abstract void putInStorage();

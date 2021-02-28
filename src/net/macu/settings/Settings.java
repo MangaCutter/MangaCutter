@@ -67,6 +67,10 @@ public class Settings {
         });
     }
 
+    public static void flush() throws BackingStoreException {
+        preferences.flush();
+    }
+
     public static List<Setting> getAllSettings() {
         return allSettings;
     }

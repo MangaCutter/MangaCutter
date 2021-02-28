@@ -170,4 +170,5 @@ public class MultiPageForm implements Form {
     public JComponent $$$getRootComponent$$$() {
         return form;
     }
+
 }

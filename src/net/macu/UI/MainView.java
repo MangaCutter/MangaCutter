@@ -18,6 +18,8 @@ import java.awt.event.ItemEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.image.BufferedImage;
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.Iterator;
 
 public class MainView {
@@ -64,7 +66,9 @@ public class MainView {
 
         viewManager = new ViewManager(this);
 
-        Iterator<Form> forms = Main.getForms().iterator();
+        ArrayList<Form> local = new ArrayList<>(Main.getForms());
+        local.sort(Comparator.comparing((form) -> -History.getUsage(form.getClass().getName())));
+        Iterator<Form> forms = local.iterator();
         for (int i = 0; forms.hasNext(); i++) {
             pathSelector.insertItemAt(forms.next().getDescription(), i);
         }
@@ -131,6 +135,7 @@ public class MainView {
             Thread t = new Thread(() -> {
                 startButton.setEnabled(false);
                 cancelButton.setEnabled(true);
+                History.incrementUsage(local.get(pathSelector.getSelectedIndex()).getClass().getName());
                 if (validateInput()) {
                     if (prepared) {
                         if (jobManager.runJob(fragments, currentForm.getConfiguredPipeline(), viewManager)) {
@@ -152,7 +157,7 @@ public class MainView {
         });
         pathSelector.addItemListener(e -> {
             if (e.getStateChange() == ItemEvent.SELECTED) {
-                currentForm = (Form) Main.getForms().toArray()[pathSelector.getSelectedIndex()];
+                currentForm = local.get(pathSelector.getSelectedIndex());
                 selectableFormPanel.removeAll();
                 selectableFormPanel.add(currentForm.getRootComponent());
                 frame.pack();
