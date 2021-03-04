@@ -1,7 +1,7 @@
 package net.macu.browser.proxy;
 
 import net.macu.browser.proxy.server.HTTPSPipe;
-import net.macu.util.UnblockableBufferedReader;
+import net.macu.util.RawDataReader;
 
 import javax.imageio.ImageIO;
 import javax.net.SocketFactory;
@@ -22,11 +22,11 @@ public class Handler extends Thread {
     protected final InputStream browserInputStream;
     private final boolean secure;
     protected Socket targetSocket;
-    protected UnblockableBufferedReader browserReader;
+    protected RawDataReader browserReader;
     protected PrintWriter browserWriter;
     protected final OutputStream browserOutputStream;
     private final CapturedImageProcessor capturedImages;
-    protected UnblockableBufferedReader targetReader;
+    protected RawDataReader targetReader;
     protected PrintWriter targetWriter;
     private OutputStream targetStream;
     private String protocolVersion = "HTTP/1.1";
@@ -49,6 +49,28 @@ public class Handler extends Thread {
         setName("Handler-" + (Counter));
         Counter++;
         this.secure = secure;
+    }
+
+    private static byte[] readFixedSizeBody(int contentLength, RawDataReader bodyStream) throws IOException {
+        byte[] body = new byte[contentLength];
+        for (int filled = 0; filled < contentLength; ) {
+            filled += bodyStream.read(body, filled, contentLength - filled);
+        }
+        return body;
+    }
+
+    private static Socket createSocket(String host, int port, boolean secure) throws IOException {
+        if (secure) {
+            if (sslSocketFactory == null)
+                sslSocketFactory = (SSLSocketFactory) SSLSocketFactory.getDefault();
+            SSLSocket socket = (SSLSocket) sslSocketFactory.createSocket(host, port);
+            socket.startHandshake();
+            return socket;
+        } else {
+            if (socketFactory == null)
+                socketFactory = SocketFactory.getDefault();
+            return socketFactory.createSocket(host, port);
+        }
     }
 
     protected int handle() throws Exception {
@@ -87,7 +109,8 @@ public class Handler extends Thread {
         String targetHost = "";
         int targetPort = secure ? 443 : 80;
         int requestContentLength = 0;
-        String requestEncoding = "identity";
+        String requestTransferEncoding = "identity";
+        String requestContentEncoding = "";
         ArrayList<Header> requestHeaders = new ArrayList<>();
         String buffer;
         while ((buffer = browserReader.readLine(false)) != null && !buffer.isEmpty()) {
@@ -130,22 +153,42 @@ public class Handler extends Thread {
                 }
             }
             if (h.headerName.equals("Transfer-Encoding")) {
-                requestEncoding = h.headerData;
+                requestTransferEncoding = h.headerData;
                 h.headerData = "identity";
+            }
+            if (h.headerName.equals("Content-Encoding")) {
+                requestContentEncoding = h.headerData;
+                continue;
             }
             requestHeaders.add(h);
         }
         byte[] requestBody;
 
         //read request body
-        if (requestEncoding.equals("chunked")) {
-            requestBody = readChunkedBody(browserReader);
-        } else if (requestEncoding.equals("identity")) {
-            requestBody = readFixedSizeBody(requestContentLength, browserReader);
-        } else {
-            throw new UnsupportedOperationException("Unsupported encoding type: " + requestEncoding);
+        switch (requestTransferEncoding) {
+            case "chunked":
+                requestBody = EncodingAlgorithms.reassembleChunked(browserReader);
+                break;
+            case "identity":
+            case "":
+                requestBody = readFixedSizeBody(requestContentLength, browserReader);
+                break;
+            default:
+                throw new UnsupportedOperationException("Unsupported transfer encoding type: " + requestTransferEncoding);
         }
-        requestHeaders.add(new Header("Accept-Encoding", "identity"));
+        switch (requestContentEncoding) {
+            case "deflate":
+                requestBody = EncodingAlgorithms.decompressDeflate(new RawDataReader(new ByteArrayInputStream(requestBody)));
+                break;
+            case "gzip":
+                requestBody = EncodingAlgorithms.decompressGZIP(new RawDataReader(new ByteArrayInputStream(requestBody)));
+                break;
+            case "":
+                break;
+            default:
+                throw new UnsupportedOperationException("Unsupported content encoding type: " + requestContentEncoding);
+        }
+        requestHeaders.add(new Header("Accept-Encoding", "gzip, deflate"));
         requestHeaders.add(new Header("Content-Length", String.valueOf(requestBody.length)));
         if (requestMethod.equals("CONNECT")) {
             HTTPSPipe.pipe(browserReader, browserOutputStream, targetHost, capturedImages);
@@ -161,7 +204,7 @@ public class Handler extends Thread {
             targetSocket = createSocket(targetHost, targetPort, secure);
             targetStream = targetSocket.getOutputStream();
             targetWriter = new PrintWriter(new BufferedWriter(new OutputStreamWriter(targetStream)));
-            targetReader = new UnblockableBufferedReader(targetSocket.getInputStream());
+            targetReader = new RawDataReader(targetSocket.getInputStream());
             String targetAddress = targetSocket.getRemoteSocketAddress().toString();
             targetPort = Integer.parseInt(targetAddress.substring(targetAddress.lastIndexOf(":") + 1));
         }
@@ -175,7 +218,8 @@ public class Handler extends Thread {
         String responseDescription = responseLine.substring(responseLine.indexOf(" ") + 1);
         ArrayList<Header> responseHeaders = new ArrayList<>();
         int responseContentLength = 0;
-        String responseEncoding = "identity";
+        String responseTransferEncoding = "identity";
+        String responseContentEncoding = "";
         while ((buffer = targetReader.readLine(false)) != null && !buffer.isEmpty()) {
             Header h = new Header(buffer);
             if (h.headerName.equals("Content-Length")) {
@@ -186,28 +230,49 @@ public class Handler extends Thread {
                 keepAlive = h.headerData.equals("keep-alive");
             }
             if (h.headerName.equals("Transfer-Encoding")) {
-                responseEncoding = h.headerData;
+                responseTransferEncoding = h.headerData;
                 h.headerData = "identity";
+            }
+            if (h.headerName.equals("Content-Encoding")) {
+                responseContentEncoding = h.headerData;
+                continue;
             }
             responseHeaders.add(h);
         }
-        byte[] responseBody;
-        if (responseEncoding.equals("chunked")) {
-            responseBody = readChunkedBody(targetReader);
-        } else if (responseEncoding.equals("identity")) {
-            responseBody = readFixedSizeBody(responseContentLength, targetReader);
-        } else {
-            sendErrorStatusMessage(400, "Bad Request");
-            return BREAK_EXIT_CODE;
+        byte[] responseBody = new byte[0];
+        switch (responseTransferEncoding) {
+            case "chunked":
+                responseBody = EncodingAlgorithms.reassembleChunked(targetReader);
+                break;
+            case "identity":
+            case "":
+                responseBody = readFixedSizeBody(responseContentLength, targetReader);
+                break;
+            default:
+                sendErrorStatusMessage(400, "Bad Request");
+                throw new UnsupportedOperationException("Unsupported transfer encoding type: " + responseTransferEncoding);
+        }
+        switch (responseContentEncoding) {
+            case "deflate":
+                responseBody = EncodingAlgorithms.decompressDeflate(new RawDataReader(new ByteArrayInputStream(responseBody)));
+                break;
+            case "gzip":
+                responseBody = EncodingAlgorithms.decompressGZIP(new RawDataReader(new ByteArrayInputStream(responseBody)));
+                break;
+            case "":
+                break;
+            default:
+                sendErrorStatusMessage(400, "Bad Request");
+                throw new UnsupportedOperationException("Unsupported content encoding type: " + responseContentEncoding);
         }
         responseHeaders.add(new Header("Content-Length", String.valueOf(responseBody.length)));
         sendMessage(responseMethod + " " + responseCode + " " + responseDescription, responseHeaders, responseBody, browserWriter, browserOutputStream);
         try {
             BufferedImage interceptedImage = ImageIO.read(new ByteArrayInputStream(responseBody));
             if (interceptedImage != null) {
-                if (isURLValid(requestUrl))
+                if (isURLValid(requestUrl)) {
                     capturedImages.putImage(requestUrl, interceptedImage);//todo change image signature
-                else if (isURLValid("http" + (secure ? "s" : "") + "://" + targetHost + requestUrl)) {
+                } else if (isURLValid("http" + (secure ? "s" : "") + "://" + targetHost + requestUrl)) {
                     capturedImages.putImage("http" + (secure ? "s" : "") + "://" + targetHost + requestUrl, interceptedImage);
                 }
             }
@@ -218,47 +283,6 @@ public class Handler extends Thread {
         lastTargetHost = targetHost;
         keepAliveLastTime = System.currentTimeMillis();
         return OK_EXIT_CODE;
-    }
-
-    private static Socket createSocket(String host, int port, boolean secure) throws IOException {
-        if (secure) {
-            if (sslSocketFactory == null)
-                sslSocketFactory = (SSLSocketFactory) SSLSocketFactory.getDefault();
-            SSLSocket socket = (SSLSocket) sslSocketFactory.createSocket(host, port);
-            socket.startHandshake();
-            return socket;
-        } else {
-            if (socketFactory == null)
-                socketFactory = SocketFactory.getDefault();
-            return socketFactory.createSocket(host, port);
-        }
-    }
-
-    private static byte[] readFixedSizeBody(int contentLength, UnblockableBufferedReader bodyStream) throws IOException {
-        byte[] body = new byte[contentLength];
-        for (int filled = 0; filled < contentLength; ) {
-            filled += bodyStream.read(body, filled, contentLength - filled);
-        }
-        return body;
-    }
-
-    private static byte[] readChunkedBody(UnblockableBufferedReader bodyStream) throws IOException {
-        String buffer;
-        ByteArrayOutputStream body = new ByteArrayOutputStream();
-        while ((buffer = bodyStream.readLine(false)) != null && !buffer.isEmpty()) {
-            int size = Integer.parseInt(buffer, 16);
-            if (size == 0) {
-                bodyStream.readLine(true);
-                break;
-            }
-            byte[] chunk = new byte[size];
-            for (int filled = 0; filled < size; ) {
-                filled += bodyStream.read(chunk, filled, size - filled);
-            }
-            body.write(chunk);
-            bodyStream.readLine(true);
-        }
-        return body.toByteArray();
     }
 
     private static void sendMessage(String firstLine, List<Header> headers, byte[] body, PrintWriter writer, OutputStream rawOutput) throws IOException {
@@ -284,7 +308,7 @@ public class Handler extends Thread {
     @Override
     public void run() {
         try {
-            browserReader = new UnblockableBufferedReader(browserInputStream);
+            browserReader = new RawDataReader(browserInputStream);
             browserWriter = new PrintWriter(new BufferedWriter(new OutputStreamWriter(browserOutputStream)));
             handle_cycle:
             do {

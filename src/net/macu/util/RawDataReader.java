@@ -36,7 +36,7 @@ import java.nio.charset.StandardCharsets;
  * @since JDK1.1
  */
 
-public class UnblockableBufferedReader extends InputStream {
+public class RawDataReader extends InputStream {
 
     private static final int INVALIDATED = -2;
     private static final int UNMARKED = -1;
@@ -56,6 +56,8 @@ public class UnblockableBufferedReader extends InputStream {
     private int nChars, nextChar;
     private int markedChar = UNMARKED;
     private int readAheadLimit = 0; /* Valid only when markedChar > 0 */
+    private byte[] backBuf = null;
+    private int pos = 0;
 
     /**
      * Creates a buffering character-input stream that uses an input buffer of
@@ -65,7 +67,7 @@ public class UnblockableBufferedReader extends InputStream {
      * @param sz Input-buffer size
      * @throws IllegalArgumentException If {@code sz <= 0}
      */
-    public UnblockableBufferedReader(InputStream in, int sz) throws IOException {
+    public RawDataReader(InputStream in, int sz) throws IOException {
         if (sz <= 0)
             throw new IllegalArgumentException("Buffer size <= 0");
         this.in = in;
@@ -81,7 +83,7 @@ public class UnblockableBufferedReader extends InputStream {
      *
      * @param in A Reader
      */
-    public UnblockableBufferedReader(InputStream in) throws IOException {
+    public RawDataReader(InputStream in) throws IOException {
         this(in, defaultCharBufferSize);
     }
 
@@ -283,7 +285,12 @@ public class UnblockableBufferedReader extends InputStream {
             } else if (len == 0) {
                 return 0;
             }
-
+            if (backBuf != null && backBuf.length != off) {
+                int copyLength = Math.min(backBuf.length - off, len);
+                System.arraycopy(backBuf, this.pos, cbuf, off, copyLength);
+                this.pos += copyLength;
+                return copyLength + read(cbuf, off + copyLength, len - copyLength);
+            }
             int n = read1(cbuf, off, len);
             if (n <= 0) return n;
             while ((n < len) && in.available() != 0) {
@@ -312,7 +319,8 @@ public class UnblockableBufferedReader extends InputStream {
     @Override
     public int read() throws IOException {
         byte[] arr = new byte[1];
-        if (read(arr) == 1) return arr[0];
+        if (read(arr) == 1)
+            return arr[0] & 0b11111111;
         else return -1;
     }
 
@@ -323,5 +331,20 @@ public class UnblockableBufferedReader extends InputStream {
     public int available() throws IOException {
         int available = in.available();
         return available != 0 ? available + nChars - nextChar : nChars - nextChar;
+    }
+
+    public void returnBack(byte[] arr, int off, int len) {
+        synchronized (lock) {
+            if (backBuf == null) {
+                backBuf = new byte[len];
+                System.arraycopy(arr, off, backBuf, 0, len);
+            } else {
+                int tmpLen = backBuf.length - pos;
+                byte[] tmp = backBuf;
+                backBuf = new byte[tmpLen + len];
+                System.arraycopy(tmp, pos, backBuf, 0, tmpLen);
+                System.arraycopy(arr, off, backBuf, tmpLen, len);
+            }
+        }
     }
 }
