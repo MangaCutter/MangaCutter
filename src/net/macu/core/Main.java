@@ -34,6 +34,7 @@ public class Main {
     }
 
     public static void main(String[] args) {
+        //preparations for main() execution
         System.setProperty(org.slf4j.impl.SimpleLogger.DEFAULT_LOG_LEVEL_KEY, "Info");
 
         Thread.setDefaultUncaughtExceptionHandler((t, e) -> {
@@ -51,6 +52,8 @@ public class Main {
             }
         }));
 
+        System.loadLibrary("webp-imageio");
+
         reflections = new Reflections("net.macu");
 
         Settings.loadSettings();
@@ -67,10 +70,12 @@ public class Main {
         Set<Class<? extends Service>> servicesSet = reflections.getSubTypesOf(Service.class);
         services = Collections.unmodifiableList(getInstances(servicesSet));
 
+        ViewManager.initFileChoosers();
+
+        //real main() start here
+
         IOManager.initClient();
         IOManager.checkUpdates(false);
-
-        ViewManager.initFileChoosers();
 
         new MainView();
 
