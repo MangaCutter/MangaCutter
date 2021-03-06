@@ -34,6 +34,7 @@ public class MainView {
     private Form currentForm;
     private final ViewManager viewManager;
     private JPanel selectableFormPanel;
+    private JButton clearButton;
     private BufferedImage[] fragments;
     private final JFrame frame;
 
@@ -42,7 +43,7 @@ public class MainView {
         frame.setTitle(L.get("UI.ViewManager.main_frame_title"));
         frame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
         frame.setResizable(false);
-        frame.setIconImage(IconManager.getBrandIcon());
+        frame.setIconImage(IconManager.getBrandImage());
         frame.addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
@@ -62,6 +63,7 @@ public class MainView {
         urlLabel.setText(L.get("UI.MainView.url_label"));
         cancelButton.setText(L.get("UI.MainView.cancel_button"));
         startButton.setText(L.get("UI.MainView.start_button"));
+        clearButton.setIcon(IconManager.getClearIcon());
         if (prepared) urlTextField.setEnabled(false);
 
         viewManager = new ViewManager(this);
@@ -155,6 +157,10 @@ public class MainView {
             });
             t.start();
         });
+        clearButton.addActionListener(e -> new Thread(() -> {
+            urlTextField.setText("");
+            urlTextField.requestFocusInWindow();
+        }).start());
         pathSelector.addItemListener(e -> {
             if (e.getStateChange() == ItemEvent.SELECTED) {
                 currentForm = local.get(pathSelector.getSelectedIndex());
@@ -224,7 +230,7 @@ public class MainView {
         mainPanel = new JPanel();
         mainPanel.setLayout(new GridBagLayout());
         final JPanel panel1 = new JPanel();
-        panel1.setLayout(new GridLayoutManager(1, 2, new Insets(10, 10, 3, 10), -1, -1));
+        panel1.setLayout(new GridLayoutManager(1, 3, new Insets(10, 10, 3, 10), -1, -1));
         GridBagConstraints gbc;
         gbc = new GridBagConstraints();
         gbc.gridx = 0;
@@ -238,6 +244,8 @@ public class MainView {
         panel1.add(urlLabel, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         urlTextField = new JTextField();
         panel1.add(urlTextField, new GridConstraints(0, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_FIXED, null, new Dimension(150, -1), null, 0, false));
+        clearButton = new JButton();
+        panel1.add(clearButton, new GridConstraints(0, 2, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         final JPanel panel2 = new JPanel();
         panel2.setLayout(new GridBagLayout());
         gbc = new GridBagConstraints();

@@ -267,7 +267,7 @@ public class ManualCutterFrame implements MouseListener, MouseMotionListener, Mo
         buffer = new BufferedImage(600, 600, BufferedImage.TYPE_INT_RGB);
         g = buffer.createGraphics();
         frame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
-        frame.setIconImage(IconManager.getBrandIcon());
+        frame.setIconImage(IconManager.getBrandImage());
         frame.addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {

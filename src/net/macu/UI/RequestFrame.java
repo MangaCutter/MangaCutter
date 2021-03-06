@@ -60,7 +60,7 @@ public class RequestFrame implements ImageListener {
         frame.setTitle(L.get("UI.RequestFrame.frame_title", url));
         $$$setupUI$$$();
         frame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
-        frame.setIconImage(IconManager.getBrandIcon());
+        frame.setIconImage(IconManager.getBrandImage());
         frame.setResizable(true);
         frame.addWindowListener(new WindowAdapter() {
             @Override

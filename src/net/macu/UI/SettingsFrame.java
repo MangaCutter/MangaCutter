@@ -155,7 +155,7 @@ public class SettingsFrame {
         p.add(rightBottomPanel, BorderLayout.EAST);
         root.add(scrollPane);
         root.add(p);
-        jframe.setIconImage(IconManager.getBrandIcon());
+        jframe.setIconImage(IconManager.getBrandImage());
         jframe.setContentPane(root);
         jframe.addWindowListener(new WindowAdapter() {
             @Override

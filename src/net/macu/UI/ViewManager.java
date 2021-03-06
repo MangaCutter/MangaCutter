@@ -80,7 +80,7 @@ public class ViewManager {
         pane.selectInitialValue();
         JFrame f = History.createJFrameFromHistory("UI.ViewManager.message_dialog_title", 100, 100);
         f.setTitle(L.get("UI.ViewManager.message_dialog_title"));
-        f.setIconImage(IconManager.getBrandIcon());
+        f.setIconImage(IconManager.getBrandImage());
         f.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
         f.setResizable(false);
         f.addWindowListener(new WindowAdapter() {
@@ -164,7 +164,7 @@ public class ViewManager {
         pane.selectInitialValue();
         JFrame f = History.createJFrameFromHistory("UI.ViewManager.confirm_dialog_title", 100, 100);
         f.setTitle(L.get("UI.ViewManager.confirm_dialog_title"));
-        f.setIconImage(IconManager.getBrandIcon());
+        f.setIconImage(IconManager.getBrandImage());
         f.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
         f.setResizable(false);
         f.addWindowListener(new WindowAdapter() {
@@ -231,7 +231,7 @@ public class ViewManager {
             pane.getVerticalScrollBar().setUnitIncrement(Settings.ViewManager_MasterScrollSpeed.getValue());
             pane.getHorizontalScrollBar().setUnitIncrement(Settings.ViewManager_MasterScrollSpeed.getValue());
             f.add(pane);
-            f.setIconImage(IconManager.getBrandIcon());
+            f.setIconImage(IconManager.getBrandImage());
             f.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
             f.addWindowListener(new WindowAdapter() {
                 @Override
@@ -259,14 +259,14 @@ public class ViewManager {
 
     public static void initFileChoosers() {
         singleFileChooser = History.createIconifiedFileChooserFromHistory("UI.ViewManager.file_chooser_title");
-        singleFileChooser.setIcon(IconManager.getBrandIcon());
+        singleFileChooser.setIcon(IconManager.getBrandImage());
         singleFileChooser.setDialogTitle(L.get("UI.ViewManager.file_chooser_title"));
         singleFileChooser.setDialogType(JFileChooser.SAVE_DIALOG);
         singleFileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
         singleFileChooser.setAcceptAllFileFilterUsed(false);
         singleFileChooser.setMultiSelectionEnabled(false);
         dirChooser = History.createIconifiedFileChooserFromHistory("UI.ViewManager.dir_chooser_title");
-        dirChooser.setIcon(IconManager.getBrandIcon());
+        dirChooser.setIcon(IconManager.getBrandImage());
         dirChooser.setDialogTitle(L.get("UI.ViewManager.dir_chooser_title"));
         dirChooser.setDialogType(JFileChooser.SAVE_DIALOG);
         dirChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);

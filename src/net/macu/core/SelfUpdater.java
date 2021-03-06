@@ -22,7 +22,7 @@ public class SelfUpdater {
         JFrame f = History.createJFrameFromHistory("core.SelfUpdater.frame_title", 100, 100);
         f.setTitle(L.get("core.SelfUpdater.frame_title"));
         f.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
-        f.setIconImage(IconManager.getBrandIcon());
+        f.setIconImage(IconManager.getBrandImage());
         f.setResizable(false);
         f.addWindowListener(new WindowAdapter() {
             @Override
