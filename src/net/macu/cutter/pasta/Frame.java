@@ -4,15 +4,22 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 
 public class Frame {
-    int fromIndex = -1;
-    int fromY = -1;
-    int toIndex = -1;
-    int toY = -1;
-    int height = 0;
-    BufferedImage[] fragments;
+    private final BufferedImage[] fragments;
+    private int fromIndex = -1;
+    private int fromY = -1;
+    private int toIndex = -1;
+    private int toY = -1;
+    private int height = 0;
 
-    public Frame(BufferedImage[] fragments) {
+    private Frame(BufferedImage[] fragments) {
         this.fragments = fragments;
+    }
+
+    public static Frame create(BufferedImage[] fragments, int firstFragment, int YOffset) {
+        Frame f = new Frame(fragments);
+        f.fromIndex = firstFragment;
+        f.fromY = YOffset;
+        return f;
     }
 
     public Frame(BufferedImage[] fragments, int start, int end) {
@@ -39,7 +46,7 @@ public class Frame {
         }
     }
 
-    public void fixHeight() {
+    private void fixHeight() {
         if (fromIndex == toIndex) {
             height = toY - fromY + 1;
         } else {
@@ -125,8 +132,60 @@ public class Frame {
         }
     }
 
+    /*private void markAsBorder(Point p, BufferedImage image) {
+        image.setRGB(p.x, p.y - fromY, Color.BLACK.getRGB());
+    }
+
+    private void markAsBabble(Point p, BufferedImage image) {
+        image.setRGB(p.x, p.y - fromY, Color.WHITE.getRGB());
+    }
+
+    private boolean isLeftABorder(Point p) {
+        if (p.x != 0) {
+            if()
+        } else return true;
+    }
+
+    public void fillArea(Point begin, Color c) {
+        BufferedImage img = new BufferedImage(fragments[0].getWidth(), height, BufferedImage.TYPE_BYTE_GRAY);
+        ArrayList<Point> searchList = new ArrayList<>();
+        searchList.add(begin);
+        markAsBabble(begin, img);
+        while (!searchList.isEmpty()) {
+
+        }
+    }*/
+
     @Override
     public String toString() {
         return "[(" + fromIndex + "," + fromY + "),(" + toIndex + "," + toY + ")," + height + "]";
+    }
+
+    public void extendToEnd() {
+        toIndex = fragments.length - 1;
+        toY = fragments[toIndex].getHeight() - 1;
+        fixHeight();
+    }
+
+    public int getHeight() {
+        return height;
+    }
+
+    public void extendToEndOfFragment(int i) {
+        toIndex = i;
+        toY = fragments[i].getHeight() - 1;
+        fixHeight();
+    }
+
+    public void copyEndFrom(Frame frame) {
+        toIndex = frame.toIndex;
+        toY = frame.toY;
+        fixHeight();
+    }
+
+    public void setEnd(int lastFragment, int YOffset) {
+        toIndex = lastFragment;
+        toY = YOffset;
+        fixHeight();
     }
 }

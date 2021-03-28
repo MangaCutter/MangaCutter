@@ -36,9 +36,7 @@ public class PastaCutter implements Cutter {
         viewManager.startProgress(fragments.length, L.get("cutter.pasta.PastaCutter.recognizeFrames.progress", 0, fragments.length));
         ArrayList<Frame> frameInfo = new ArrayList<>();
         boolean scanlineOnWhite = true;
-        current = new Frame(fragments);
-        current.fromY = 0;
-        current.fromIndex = 0;
+        current = Frame.create(fragments, 0, 0);
         ImageColorStream ics = new ImageColorStream(fragments[0]);
         for (int x = Settings.PastaCutter_BordersWidth.getValue(); x < fragments[0].getWidth() - Settings.PastaCutter_BordersWidth.getValue(); x++) {
             if (!ics.equalsColorsWithEpsilon(0, fragments[0].getWidth() / 2, x, tolerance)) {
@@ -81,17 +79,12 @@ public class PastaCutter implements Cutter {
                 }
                 if (!scanlineOnWhite) {
                     if (y == 0) {
-                        current.toIndex = i - 1;
-                        current.toY = fragments[current.toIndex].getHeight() - 1;
+                        current.extendToEndOfFragment(i - 1);
                     } else {
-                        current.toIndex = i;
-                        current.toY = y - 1;
+                        current.setEnd(i, y - 1);
                     }
-                    current.fixHeight();
                     frameInfo.add(current);
-                    current = new Frame(fragments);
-                    current.fromIndex = i;
-                    current.fromY = y;
+                    current = Frame.create(fragments, i, y);
                     scanlineOnWhite = true;
                 }
             }
@@ -101,23 +94,19 @@ public class PastaCutter implements Cutter {
         if (scanlineOnWhite) {
             if (frameInfo.size() != 0) {
                 Frame f = frameInfo.get(frameInfo.size() - 1);
-                f.toIndex = fragments.length - 1;
-                f.toY = fragments[f.toIndex].getHeight() - 1;
+                f.extendToEnd();
                 frameInfo.set(frameInfo.size() - 1, f);
             }
         } else {
-            current.toIndex = fragments.length - 1;
-            current.toY = fragments[current.toIndex].getHeight() - 1;
+            current.extendToEnd();
             frameInfo.add(frameInfo.size() - 1, current);
         }
         return frameInfo;
     }
 
     private void newFrameStart(ArrayList<Frame> frameInfo, int i, int y) {
-        current.toY = y;
-        current.toIndex = i;
-        current.fixHeight();
-        if (current.height <= Settings.PastaCutter_MinHeight.getValue()) {
+        current.setEnd(i, y);
+        if (current.getHeight() <= Settings.PastaCutter_MinHeight.getValue()) {
             Frame prev = current;
             if (frameInfo.size() != 0) {
                 prev = frameInfo.remove(frameInfo.size() - 1);
@@ -126,9 +115,7 @@ public class PastaCutter implements Cutter {
         } else if (frameInfo.size() != 0) {
             Frame f = frameInfo.get(frameInfo.size() - 1);
             Frame frame = current.getTopHalf();
-            f.toIndex = frame.toIndex;
-            f.toY = frame.toY;
-            f.fixHeight();
+            f.copyEndFrom(frame);
             frameInfo.set(frameInfo.size() - 1, f);
             current = current.getBottomHalf();
         }
@@ -142,23 +129,21 @@ public class PastaCutter implements Cutter {
         int prevEnd = -1;
         for (int i = 0; i < frames.size(); i++) {
             if (cancel) return null;
-            if (curHeight + frames.get(i).height < perfectHeight && i != frames.size() - 1) {
-                curHeight += frames.get(i).height;
-                viewManager.startProgress(frames.size(), L.get("cutter.pasta.PastaCutter.drawFrames.progress", (i + 1), frames.size()));
+            if (curHeight + frames.get(i).getHeight() < perfectHeight && i != frames.size() - 1) {
+                curHeight += frames.get(i).getHeight();
+                viewManager.incrementProgress(L.get("cutter.pasta.PastaCutter.drawFrames.progress", (i + 1), frames.size()));
             } else {
                 Frame from = frames.get(prevEnd + 1);
                 Frame to;
-                if (curHeight > 0 && perfectHeight - curHeight <= frames.get(i).height + curHeight - perfectHeight) {
+                if (curHeight > 0 && perfectHeight - curHeight <= frames.get(i).getHeight() + curHeight - perfectHeight) {
                     i--;
                 } else {
-                    viewManager.startProgress(frames.size(), L.get("cutter.pasta.PastaCutter.drawFrames.progress", (i + 1), frames.size()));
+                    viewManager.incrementProgress(L.get("cutter.pasta.PastaCutter.drawFrames.progress", (i + 1), frames.size()));
                 }
                 to = frames.get(i);
                 prevEnd = i;
                 curHeight = 0;
-                from.toY = to.toY;
-                from.toIndex = to.toIndex;
-                from.fixHeight();
+                from.copyEndFrom(to);
                 arr.add(from.createImage());
             }
         }
