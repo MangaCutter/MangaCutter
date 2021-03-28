@@ -1,6 +1,5 @@
 package net.macu.UI;
 
-import net.macu.core.FileFilterImpl;
 import net.macu.settings.History;
 import net.macu.settings.L;
 import net.macu.settings.Settings;

@@ -1,4 +1,4 @@
-package net.macu.core;
+package net.macu.UI;
 
 import net.macu.settings.L;
 
@@ -19,6 +19,6 @@ public class FileFilterImpl extends FileFilter {
 
     @Override
     public String getDescription() {
-        return L.get("core.FileFilterImpl.file_format_description", ext.toUpperCase());
+        return L.get("UI.FileFilterImpl.file_format_description", ext.toUpperCase());
     }
 }

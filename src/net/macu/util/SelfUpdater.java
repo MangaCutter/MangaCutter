@@ -1,6 +1,7 @@
-package net.macu.core;
+package net.macu.util;
 
 import net.macu.UI.IconManager;
+import net.macu.core.IOManager;
 import net.macu.settings.History;
 import net.macu.settings.L;
 import org.apache.http.HttpEntity;

@@ -1,7 +1,7 @@
 package net.macu.UI;
 
-import net.macu.core.SelfUpdater;
 import net.macu.settings.*;
+import net.macu.util.SelfUpdater;
 
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;

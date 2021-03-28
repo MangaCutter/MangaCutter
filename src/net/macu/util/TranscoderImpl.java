@@ -1,4 +1,4 @@
-package net.macu.core;
+package net.macu.util;
 
 import net.macu.UI.IconManager;
 import org.apache.batik.transcoder.TranscoderException;
