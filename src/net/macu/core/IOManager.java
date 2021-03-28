@@ -2,10 +2,12 @@ package net.macu.core;
 
 import net.macu.UI.ViewManager;
 import net.macu.settings.Settings;
+import net.macu.util.SelfUpdater;
 import org.apache.http.HttpEntity;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.client.LaxRedirectStrategy;
@@ -38,8 +40,16 @@ public class IOManager {
         return sb.toString();
     }
 
+    public static HttpEntity sendRawRequest(HttpUriRequest rawRequest) throws IOException {
+        return client.execute(rawRequest).getEntity();
+    }
+
     public static HttpEntity sendRawRequest(String uri) throws IOException {
-        return client.execute(new HttpGet(uri)).getEntity();
+        return sendRawRequest(new HttpGet(uri));
+    }
+
+    public static BufferedImage downloadImage(HttpUriRequest rawRequest) throws IOException {
+        return ImageIO.read(sendRawRequest(rawRequest).getContent());
     }
 
     public static BufferedImage downloadImage(String uri) throws IOException {
