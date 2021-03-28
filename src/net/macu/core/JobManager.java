@@ -7,6 +7,7 @@ import net.macu.downloader.Downloader;
 import net.macu.downloader.SimpleDownloader;
 import net.macu.service.Service;
 import net.macu.service.ServiceManager;
+import org.apache.http.client.methods.HttpUriRequest;
 
 import java.awt.image.BufferedImage;
 import java.net.URI;
@@ -62,7 +63,7 @@ public class JobManager {
         }
 
         state = State.PARSING;
-        List<String> fragmentPathList = service.parsePage(url, viewManager);
+        List<HttpUriRequest> fragmentPathList = service.parsePage(url, viewManager);
         if (cancel) {
             return false;
         }

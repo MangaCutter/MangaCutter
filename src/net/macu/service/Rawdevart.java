@@ -3,22 +3,30 @@ package net.macu.service;
 import net.macu.UI.ViewManager;
 import net.macu.core.IOManager;
 import net.macu.settings.L;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpUriRequest;
 import org.jsoup.Jsoup;
 
 import java.io.IOException;
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.List;
 
 public class Rawdevart implements Service {
     private boolean cancel = false;
 
     @Override
-    public List<String> parsePage(String uri, ViewManager viewManager) {
+    public List<HttpUriRequest> parsePage(String uri, ViewManager viewManager) {
         viewManager.startProgress(1, L.get("service.Rawdevart.parsePage.progress"));
         try {
             String sb = IOManager.sendRequest(uri);
             if (cancel) return null;
-            return Jsoup.parse(sb).select("img.img-fluid.not-lazy").eachAttr("data-src");
+            List<String> paths = Jsoup.parse(sb).select("img.img-fluid.not-lazy").eachAttr("data-src");
+            ArrayList<HttpUriRequest> requests = new ArrayList<>(paths.size());
+            for (int i = 0; i < paths.size(); i++) {
+                requests.add(new HttpGet(paths.get(i)));
+            }
+            return requests;
         } catch (IOException e) {
             ViewManager.showMessageDialog("service.Rawdevart.parsePage.io_exception",
                     viewManager.getView(), e.toString());

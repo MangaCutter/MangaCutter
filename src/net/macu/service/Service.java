@@ -1,6 +1,7 @@
 package net.macu.service;
 
 import net.macu.UI.ViewManager;
+import org.apache.http.client.methods.HttpUriRequest;
 
 import java.util.List;
 
@@ -11,7 +12,7 @@ public interface Service {
      * @param uri         link to manga chapter of this service
      * @param viewManager
      */
-    List<String> parsePage(String uri, ViewManager viewManager);
+    List<HttpUriRequest> parsePage(String uri, ViewManager viewManager);
 
     /**
      * Whether the given uri is belongs to this service

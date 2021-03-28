@@ -3,13 +3,14 @@ package net.macu.service;
 import net.macu.UI.ViewManager;
 import net.macu.core.IOManager;
 import net.macu.settings.L;
+import net.macu.util.JSEngine;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpUriRequest;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
-import org.mozilla.javascript.Context;
 import org.mozilla.javascript.EvaluatorException;
-import org.mozilla.javascript.Scriptable;
 
 import java.io.IOException;
 import java.net.URI;
@@ -20,7 +21,7 @@ public class AcQq implements Service {
     private boolean cancel = false;
 
     @Override
-    public List<String> parsePage(String uri, ViewManager viewManager) {
+    public List<HttpUriRequest> parsePage(String uri, ViewManager viewManager) {
         viewManager.startProgress(1, L.get("service.AcQq.parsePage.progress"));
         try {
             String jsonData = "";
@@ -37,8 +38,6 @@ public class AcQq implements Service {
                 if (keyEval.contains("document")) {
                     continue;
                 }
-                Context context = Context.enter();
-                Scriptable s = context.initSafeStandardObjects();
                 String encryptedData = parts[3].substring(parts[3].indexOf('\'') + 1, parts[3].lastIndexOf('\''));
                 String code = "window = {\"nonce\":\"\",\"DATA\":\"\"};\n" +
                         keyEval + "\n" +
@@ -70,21 +69,16 @@ public class AcQq implements Service {
                         "T = T.join('');\n" +
                         "B.decode(T)";
                 try {
-                    jsonData = (String) context.evaluateString(s, code, "<cmd>", 1, null);
+                    jsonData = (String) JSEngine.evaluate(code);
                     break;
                 } catch (EvaluatorException ignored) {
-                } finally {
-                    Context.exit();
                 }
             }
             try {
                 JSONArray json = (JSONArray) new JSONParser().parse(jsonData.substring(jsonData.indexOf("["), jsonData.indexOf("]") + 1));
-                ArrayList<String> list = new ArrayList<>();
-                json.forEach(o -> {
-                    JSONObject data = (JSONObject) o;
-                    list.add((String) data.get("url"));
-                });
-                return list;
+                ArrayList<HttpUriRequest> requests = new ArrayList<>();
+                json.forEach(o -> requests.add(new HttpGet((String) ((JSONObject) o).get("url"))));
+                return requests;
             } catch (ParseException e) {
                 e.printStackTrace();
                 ViewManager.showMessageDialog("service.AcQq.parsePage.parse_exception",
