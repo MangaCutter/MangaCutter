@@ -34,9 +34,11 @@ public class MultiScanSaver implements ScanSaver {
             ViewManager.showMessageDialog("disc.MultiScanSaver.cant_open", viewManager.getView(), path, e.toString());
             e.printStackTrace();
         }
+        int filenameSize = Math.max(String.valueOf(images.length).length(), 3);
+        String format = "%0" + filenameSize + "d";
         for (int i = 0; i < images.length; i++) {
             try {
-                File f = new File(directory, String.format("%03d", (i + 1)) + ".png");
+                File f = new File(directory, String.format(format, (i + 1)) + ".png");
                 if (f.exists()) {
                     if (!ViewManager.showConfirmDialog("disc.MultiScanSaver.confirm_rewrite", viewManager.getView(), f.getName())) {
                         continue;
