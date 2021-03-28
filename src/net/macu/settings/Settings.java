@@ -19,7 +19,9 @@ public class Settings {
     public static final IntSetting PastaCutter_BordersWidth = new IntSetting("cutter.pasta.PastaCutter.borders_width");
     public static final ListSetting L_Lang = new ListSetting("settings.L.LANG", L.SUPPORTED_LANGUAGES, true);
     public static final IntSetting ViewManager_MasterScrollSpeed = new IntSetting("UI.ViewManager.master_scroll_speed");
+    public static final IntSetting Handler_PoolSize = new IntSetting("browser.proxy.Handler.pool_size");
     public static final ListSetting ViewManager_LookAndFeel = new ListSetting("UI.ViewManager.laf", ViewManager.SUPPORTED_THEMES, true);
+    //public static final IntSetting ManualCutterFrame_SmartSelectionThreshold = new IntSetting("UI.ManualCutterFrame.smart_selection_threshold");
     private static final ArrayList<Setting> allSettings = new ArrayList<>();
     static Preferences preferences;
     private static Properties defaults;
@@ -54,6 +56,7 @@ public class Settings {
         allSettings.add(L_Lang);
         allSettings.add(ViewManager_MasterScrollSpeed);
         allSettings.add(ViewManager_LookAndFeel);
+        allSettings.add(Handler_PoolSize);
         allSettings.sort(Comparator.comparing(Setting::getName));
         allSettings.forEach(setting -> {
             if (setting instanceof StringSetting)

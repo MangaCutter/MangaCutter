@@ -1,6 +1,7 @@
 package net.macu.browser.proxy;
 
 import net.macu.browser.proxy.server.HTTPSPipe;
+import net.macu.settings.Settings;
 import net.macu.util.RawDataReader;
 
 import javax.imageio.ImageIO;
@@ -14,10 +15,13 @@ import java.net.Socket;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
-public class Handler extends Thread {
+public class Handler implements Runnable {
     private static SocketFactory socketFactory = null;
     private static SSLSocketFactory sslSocketFactory = null;
+    private static ExecutorService pool = null;
     private static int Counter = 0;
     protected final InputStream browserInputStream;
     private final boolean secure;
@@ -45,10 +49,14 @@ public class Handler extends Thread {
         browserInputStream = in;
         browserOutputStream = out;
         this.capturedImages = capturedImages;
-        setDaemon(true);
-        setName("Handler-" + (Counter));
-        Counter++;
         this.secure = secure;
+    }
+
+    public void start() {
+        if (pool == null) {
+            pool = Executors.newFixedThreadPool(Settings.Handler_PoolSize.getValue());
+        }
+        pool.execute(this);
     }
 
     private static byte[] readFixedSizeBody(int contentLength, RawDataReader bodyStream) throws IOException {
@@ -307,6 +315,7 @@ public class Handler extends Thread {
 
     @Override
     public void run() {
+        Thread.currentThread().setName("Handler-" + (Counter++));
         try {
             browserReader = new RawDataReader(browserInputStream);
             browserWriter = new PrintWriter(new BufferedWriter(new OutputStreamWriter(browserOutputStream)));
