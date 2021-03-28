@@ -75,6 +75,7 @@ public class MainView {
             pathSelector.insertItemAt(forms.next().getDescription(), i);
         }
         if (!prepared) {
+            //todo extract menu construction to method
             JMenuBar bar = new JMenuBar();
 
             JMenu fileMenu = new JMenu(L.get("UI.ViewManager.help_menu"));
@@ -122,6 +123,15 @@ public class MainView {
             bar.add(pluginMenu);
 
             frame.setJMenuBar(bar);
+
+            clearButton.addActionListener(e -> new Thread(() -> {
+                urlTextField.setText("");
+                urlTextField.requestFocusInWindow();
+            }).start());
+
+            //todo add drop listener for urlTextField
+        } else {
+            clearButton.setEnabled(false);
         }
 
         cancelButton.addActionListener(e -> {
@@ -157,10 +167,6 @@ public class MainView {
             });
             t.start();
         });
-        clearButton.addActionListener(e -> new Thread(() -> {
-            urlTextField.setText("");
-            urlTextField.requestFocusInWindow();
-        }).start());
         pathSelector.addItemListener(e -> {
             if (e.getStateChange() == ItemEvent.SELECTED) {
                 currentForm = local.get(pathSelector.getSelectedIndex());
