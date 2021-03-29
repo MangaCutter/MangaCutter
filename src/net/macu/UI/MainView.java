@@ -75,54 +75,7 @@ public class MainView {
             pathSelector.insertItemAt(forms.next().getDescription(), i);
         }
         if (!prepared) {
-            //todo extract menu construction to method
-            JMenuBar bar = new JMenuBar();
-
-            JMenu fileMenu = new JMenu(L.get("UI.ViewManager.help_menu"));
-            JMenuItem settingsMenu = new JMenuItem(L.get("UI.ViewManager.settings_menu"));
-            settingsMenu.addActionListener(e -> new Thread(SettingsFrame::openFrame).start());
-            fileMenu.add(settingsMenu);
-            JMenuItem supportedServicesItem = new JMenuItem(L.get("UI.ViewManager.supported_services_menu"));
-            supportedServicesItem.addActionListener(actionEvent -> new Thread(() ->
-                    ViewManager.showMessageDialogForced("UI.ViewManager.supported_services_list", frame,
-                            ServiceManager.getSupportedServicesList())).start());
-            fileMenu.add(supportedServicesItem);
-
-            JMenuItem checkUpdateItem = new JMenuItem(L.get("UI.ViewManager.check_updates"));
-            checkUpdateItem.addActionListener((e) -> new Thread(() -> {
-                if (IOManager.checkUpdates(true))
-                    ViewManager.showMessageDialogForced("UI.ViewManager.up_to_date", frame);
-            }).start());
-            fileMenu.add(checkUpdateItem);
-
-            JMenuItem aboutItem = new JMenuItem(L.get("UI.ViewManager.about_menu"));
-            aboutItem.addActionListener(actionEvent -> new Thread(() -> ViewManager.showMessageDialogForced("UI.ViewManager.about_text", frame, Main.getVersion())).start());
-            fileMenu.add(aboutItem);
-
-            bar.add(fileMenu);
-
-            JMenu pluginMenu = new JMenu(L.get("UI.ViewManager.plugin_menu"));
-
-            JMenuItem generateCertificateItem =
-                    new JMenuItem(L.get("UI.ViewManager.generate_certificate_menu"));
-            generateCertificateItem.addActionListener(e -> new Thread(CertificateAuthority::openGenerateCertFrame).start());
-            pluginMenu.add(generateCertificateItem);
-            JMenuItem pluginConnectionItem = new JMenuItem(L.get("UI.ViewManager.plugin_connection_menu"));
-            pluginConnectionItem.addActionListener(e -> new Thread(() ->
-                    ViewManager.showMessageDialogForced("UI.ViewManager.plugin_connection", frame,
-                            BrowserPlugin.getPlugin().isConnected() ?
-                                    L.get("UI.ViewManager.plugin_connection_true") :
-                                    L.get("UI.ViewManager.plugin_connection_false"))).start());
-            pluginMenu.add(pluginConnectionItem);
-
-            JMenuItem exportCertificateItem = new JMenuItem(L.get("UI.ViewManager.certificate_export_menu"));
-            exportCertificateItem.addActionListener(e ->
-                    new Thread(CertificateAuthority::openExportCertificateFrame).start());
-            pluginMenu.add(exportCertificateItem);
-
-            bar.add(pluginMenu);
-
-            frame.setJMenuBar(bar);
+            setupMenuBar();
 
             clearButton.addActionListener(e -> new Thread(() -> {
                 urlTextField.setText("");
@@ -179,6 +132,56 @@ public class MainView {
         pathSelector.setSelectedIndex(0);
 
         frame.setVisible(true);
+    }
+
+    private void setupMenuBar() {
+        JMenuBar bar = new JMenuBar();
+
+        JMenu fileMenu = new JMenu(L.get("UI.ViewManager.help_menu"));
+        JMenuItem settingsMenu = new JMenuItem(L.get("UI.ViewManager.settings_menu"));
+        settingsMenu.addActionListener(e -> new Thread(SettingsFrame::openFrame).start());
+        fileMenu.add(settingsMenu);
+        JMenuItem supportedServicesItem = new JMenuItem(L.get("UI.ViewManager.supported_services_menu"));
+        supportedServicesItem.addActionListener(actionEvent -> new Thread(() ->
+                ViewManager.showMessageDialogForced("UI.ViewManager.supported_services_list", frame,
+                        ServiceManager.getSupportedServicesList())).start());
+        fileMenu.add(supportedServicesItem);
+
+        JMenuItem checkUpdateItem = new JMenuItem(L.get("UI.ViewManager.check_updates"));
+        checkUpdateItem.addActionListener((e) -> new Thread(() -> {
+            if (IOManager.checkUpdates(true))
+                ViewManager.showMessageDialogForced("UI.ViewManager.up_to_date", frame);
+        }).start());
+        fileMenu.add(checkUpdateItem);
+
+        JMenuItem aboutItem = new JMenuItem(L.get("UI.ViewManager.about_menu"));
+        aboutItem.addActionListener(actionEvent -> new Thread(() -> ViewManager.showMessageDialogForced("UI.ViewManager.about_text", frame, Main.getVersion())).start());
+        fileMenu.add(aboutItem);
+
+        bar.add(fileMenu);
+
+        JMenu pluginMenu = new JMenu(L.get("UI.ViewManager.plugin_menu"));
+
+        JMenuItem generateCertificateItem =
+                new JMenuItem(L.get("UI.ViewManager.generate_certificate_menu"));
+        generateCertificateItem.addActionListener(e -> new Thread(CertificateAuthority::openGenerateCertFrame).start());
+        pluginMenu.add(generateCertificateItem);
+        JMenuItem pluginConnectionItem = new JMenuItem(L.get("UI.ViewManager.plugin_connection_menu"));
+        pluginConnectionItem.addActionListener(e -> new Thread(() ->
+                ViewManager.showMessageDialogForced("UI.ViewManager.plugin_connection", frame,
+                        BrowserPlugin.getPlugin().isConnected() ?
+                                L.get("UI.ViewManager.plugin_connection_true") :
+                                L.get("UI.ViewManager.plugin_connection_false"))).start());
+        pluginMenu.add(pluginConnectionItem);
+
+        JMenuItem exportCertificateItem = new JMenuItem(L.get("UI.ViewManager.certificate_export_menu"));
+        exportCertificateItem.addActionListener(e ->
+                new Thread(CertificateAuthority::openExportCertificateFrame).start());
+        pluginMenu.add(exportCertificateItem);
+
+        bar.add(pluginMenu);
+
+        frame.setJMenuBar(bar);
     }
 
     public MainView() {
