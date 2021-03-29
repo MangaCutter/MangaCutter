@@ -83,6 +83,7 @@ public class MainView {
             }).start());
 
             urlTextField.setTransferHandler(new FileTransferHandler(urlTextField));
+            urlTextField.setToolTipText(L.get("UI.MainView.urlTextField.tooltip"));
         } else {
             clearButton.setEnabled(false);
         }
