@@ -2,26 +2,26 @@ package net.macu.service;
 
 import net.macu.UI.ViewManager;
 import net.macu.core.IOManager;
+import net.macu.downloader.SimpleDownloader;
 import net.macu.settings.L;
 import net.macu.util.JSEngine;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.methods.HttpUriRequest;
-import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 import org.mozilla.javascript.EvaluatorException;
 
+import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class AcQq implements Service {
     private boolean cancel = false;
 
     @Override
-    public List<HttpUriRequest> parsePage(String uri, ViewManager viewManager) {
+    public BufferedImage[] parsePage(String uri, ViewManager viewManager) {
         viewManager.startProgress(1, L.get("service.AcQq.parsePage.progress"));
         try {
             String jsonData = "";
@@ -75,10 +75,8 @@ public class AcQq implements Service {
                 }
             }
             try {
-                JSONArray json = (JSONArray) new JSONParser().parse(jsonData.substring(jsonData.indexOf("["), jsonData.indexOf("]") + 1));
-                ArrayList<HttpUriRequest> requests = new ArrayList<>();
-                json.forEach(o -> requests.add(new HttpGet((String) ((JSONObject) o).get("url"))));
-                return requests;
+                ArrayList json = (ArrayList) new JSONParser().parse(jsonData.substring(jsonData.indexOf("["), jsonData.indexOf("]") + 1));
+                return SimpleDownloader.downloadFragments((List<String>) json.stream().map((o) -> ((JSONObject) o).get("url")).collect(Collectors.toList()), viewManager);
             } catch (ParseException e) {
                 e.printStackTrace();
                 ViewManager.showMessageDialog("service.AcQq.parsePage.parse_exception",
@@ -103,5 +101,6 @@ public class AcQq implements Service {
     @Override
     public void cancel() {
         cancel = true;
+        SimpleDownloader.cancel();
     }
 }

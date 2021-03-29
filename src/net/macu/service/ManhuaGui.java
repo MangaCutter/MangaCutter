@@ -6,22 +6,22 @@ import net.macu.settings.L;
 import net.macu.util.JSEngine;
 import net.macu.util.LZString;
 import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.methods.HttpUriRequest;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 import org.mozilla.javascript.EvaluatorException;
 
+import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.net.URI;
 import java.util.ArrayList;
-import java.util.List;
+import java.util.stream.Collectors;
 
 public class ManhuaGui implements Service {
     private boolean cancel = false;
 
     @Override
-    public List<HttpUriRequest> parsePage(String uri, ViewManager viewManager) {
+    public BufferedImage[] parsePage(String uri, ViewManager viewManager) {
         viewManager.startProgress(1, L.get("service.AcQq.parsePage.progress"));
         try {
             String jsonData = "";
@@ -60,13 +60,19 @@ public class ManhuaGui implements Service {
             keys.forEach((o, o2) -> suffix[0] += (o + "=" + o2 + "&"));
             if (!keys.isEmpty())
                 suffix[0] = suffix[0].substring(0, suffix[0].length() - 1);
-            ArrayList<HttpUriRequest> requests = new ArrayList<>();
-            for (int i = 0; i < files.size(); i++) {
-                HttpGet r = new HttpGet(path + files.get(i) + suffix[0]);
-                r.addHeader("Referer", "http://" + URI.create(uri).getHost() + "/");
-                requests.add(r);
-            }
-            return requests;
+            String referer = "http://" + URI.create(uri).getHost() + "/";
+            return files.stream().map(f -> {
+                try {
+                    HttpGet r = new HttpGet(path + f + suffix[0]);
+                    r.addHeader("Referer", referer);
+                    return IOManager.downloadImage(r);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    ViewManager.showMessageDialog("service.ManhuaGui.parsePage.io_exception",
+                            viewManager.getView(), e.toString());
+                }
+                return null;
+            }).collect(Collectors.toList()).toArray(new BufferedImage[0]);
         } catch (IOException e) {
             e.printStackTrace();
             ViewManager.showMessageDialog("service.ManhuaGui.parsePage.io_exception",

@@ -3,16 +3,14 @@ package net.macu.downloader;
 import net.macu.UI.ViewManager;
 import net.macu.core.IOManager;
 import net.macu.settings.L;
-import org.apache.http.client.methods.HttpUriRequest;
 
 import java.awt.image.BufferedImage;
 import java.util.List;
 
-public class SimpleDownloader implements Downloader {
-    private boolean cancel = false;
+public class SimpleDownloader {
+    private static boolean cancel = false;
 
-    @Override
-    public BufferedImage[] downloadFragments(List<HttpUriRequest> requests, ViewManager viewManager) {
+    public static BufferedImage[] downloadFragments(List<String> requests, ViewManager viewManager) {
         viewManager.startProgress(requests.size(), L.get("downloader.SimpleDownloader.downloadFragments.progress", 0, requests.size()));
         BufferedImage[] fragments = new BufferedImage[requests.size()];
         for (int i = 0; i < requests.size(); i++) {
@@ -29,8 +27,7 @@ public class SimpleDownloader implements Downloader {
         return fragments;
     }
 
-    @Override
-    public void cancel() {
+    public static void cancel() {
         cancel = true;
     }
 }

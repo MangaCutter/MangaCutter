@@ -1,9 +1,8 @@
 package net.macu.service;
 
 import net.macu.UI.ViewManager;
-import org.apache.http.client.methods.HttpUriRequest;
 
-import java.util.List;
+import java.awt.image.BufferedImage;
 
 public interface Service {
     /**
@@ -12,7 +11,7 @@ public interface Service {
      * @param uri         link to manga chapter of this service
      * @param viewManager
      */
-    List<HttpUriRequest> parsePage(String uri, ViewManager viewManager);
+    BufferedImage[] parsePage(String uri, ViewManager viewManager);
 
     /**
      * Whether the given uri is belongs to this service

@@ -2,31 +2,26 @@ package net.macu.service;
 
 import net.macu.UI.ViewManager;
 import net.macu.core.IOManager;
+import net.macu.downloader.SimpleDownloader;
 import net.macu.settings.L;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.methods.HttpUriRequest;
 import org.jsoup.Jsoup;
 
+import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.net.URI;
-import java.util.ArrayList;
-import java.util.List;
 
 public class Naver implements Service {
     private boolean cancel = false;
 
     @Override
-    public List<HttpUriRequest> parsePage(String uri, ViewManager viewManager) {
+    public BufferedImage[] parsePage(String uri, ViewManager viewManager) {
         viewManager.startProgress(1, L.get("service.Naver.parsePage.progress"));
         try {
             String sb = IOManager.sendRequest(uri);
             if (cancel) return null;
-            List<String> paths = Jsoup.parse(sb).selectFirst("div.wt_viewer").select("img").eachAttr("src");
-            ArrayList<HttpUriRequest> requests = new ArrayList<>(paths.size());
-            for (int i = 0; i < paths.size(); i++) {
-                requests.add(new HttpGet(paths.get(i)));
-            }
-            return requests;
+            return SimpleDownloader.downloadFragments(
+                    Jsoup.parse(sb).selectFirst("div.wt_viewer").select("img").eachAttr("src"),
+                    viewManager);
         } catch (IOException e) {
             ViewManager.showMessageDialog("service.Naver.parsePage.io_exception", viewManager.getView(), e.toString());
             e.printStackTrace();
@@ -45,5 +40,6 @@ public class Naver implements Service {
     @Override
     public void cancel() {
         cancel = true;
+        SimpleDownloader.cancel();
     }
 }
