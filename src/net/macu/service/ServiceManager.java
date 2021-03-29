@@ -6,8 +6,11 @@ public class ServiceManager {
     public static Service getService(String uri) {
         if (uri.isEmpty()) return null;
         for (Service s : Main.getServices()) {
-            if (s.accept(uri)) {
-                return s;
+            try {
+                if (s.accept(uri)) {
+                    return s;
+                }
+            } catch (Exception ignored) {
             }
         }
         return null;
