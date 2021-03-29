@@ -129,7 +129,7 @@ public class MainView {
                 urlTextField.requestFocusInWindow();
             }).start());
 
-            //todo add drop listener for urlTextField
+            urlTextField.setTransferHandler(new FileTransferHandler(urlTextField));
         } else {
             clearButton.setEnabled(false);
         }
