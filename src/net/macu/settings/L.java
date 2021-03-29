@@ -32,6 +32,7 @@ public class L {
     }
 
     public static String get(String labelName, Object... args) {
+        if (!langBundle.containsKey(labelName)) System.err.println("Key " + labelName + " not found");
         if (langBundle != null)
             return String.format(langBundle.getProperty(labelName, DEFAULT_LABEL_VALUE), args);
         else return DEFAULT_LABEL_VALUE;
