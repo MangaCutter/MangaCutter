@@ -18,8 +18,8 @@ public class LocalFiles implements Service {
 
     private static boolean isValidURI(String uri) {
         try {
-            URI.create(uri);
-            return true;
+            URI u = URI.create(uri);
+            return u.getScheme().equals("file");
         } catch (IllegalArgumentException e) {
             return false;
         }
