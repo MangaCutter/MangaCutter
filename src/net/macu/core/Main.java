@@ -114,7 +114,7 @@ public class Main {
     }
 
     public static String getVersion() {
-        return "v5.2.1";
+        return "v5.2.2";
     }
 
     //from com.luciad.imageio.webp.NativeLibraryUrls
