@@ -11,7 +11,6 @@ import java.net.URI;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class LocalFiles implements Service {
     private boolean cancel = false;
@@ -37,7 +36,7 @@ public class LocalFiles implements Service {
                 e.printStackTrace();
             }
             return null;
-        }).collect(Collectors.toList()).toArray(new BufferedImage[0]);
+        }).toArray(BufferedImage[]::new);
     }
 
     public boolean accept(String uri) {

@@ -15,7 +15,6 @@ import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.net.URI;
 import java.util.ArrayList;
-import java.util.stream.Collectors;
 
 public class ManhuaGui implements Service {
     private boolean cancel = false;
@@ -72,7 +71,7 @@ public class ManhuaGui implements Service {
                             viewManager.getView(), e.toString());
                 }
                 return null;
-            }).collect(Collectors.toList()).toArray(new BufferedImage[0]);
+            }).toArray(BufferedImage[]::new);
         } catch (IOException e) {
             e.printStackTrace();
             ViewManager.showMessageDialog("service.ManhuaGui.parsePage.io_exception",
