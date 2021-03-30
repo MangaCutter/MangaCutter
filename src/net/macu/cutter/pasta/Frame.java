@@ -24,7 +24,6 @@ public class Frame {
 
     public Frame(BufferedImage[] fragments, int start, int end) {
         this.fragments = fragments;
-        height = end - start + 1;
         fromIndex = toIndex = 0;
         fromY = start;
         toY = end;
@@ -44,6 +43,7 @@ public class Frame {
                 break;
             }
         }
+        fixHeight();
     }
 
     private void fixHeight() {
