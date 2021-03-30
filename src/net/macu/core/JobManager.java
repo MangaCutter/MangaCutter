@@ -70,7 +70,7 @@ public class JobManager {
 
         saver = pipeline.saver;
         state = State.DROPPING_TO_DISK;
-        pipeline.saver.saveToDisk(destImg, viewManager);
+        saver.saveToDisk(destImg, viewManager);
 
         state = State.NO_JOB;
         service = null;

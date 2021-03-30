@@ -38,6 +38,7 @@ public class MultiScanSaver implements ScanSaver {
         String format = "%0" + filenameSize + "d";
         for (int i = 0; i < images.length; i++) {
             try {
+                if (cancel) return;
                 File f = new File(directory, String.format(format, (i + 1)) + ".png");
                 if (f.exists()) {
                     if (!ViewManager.showConfirmDialog("disc.MultiScanSaver.confirm_rewrite", viewManager.getView(), f.getName())) {
@@ -50,7 +51,6 @@ public class MultiScanSaver implements ScanSaver {
                 System.gc();
 
                 viewManager.incrementProgress(L.get("disk.MultiScanSaver.progress", i + 1, images.length));
-                if (cancel) return;
             } catch (IOException e) {
                 ViewManager.showMessageDialog("disc.MultiScanSaver.cant_save", viewManager.getView(), e.toString());
                 e.printStackTrace();
