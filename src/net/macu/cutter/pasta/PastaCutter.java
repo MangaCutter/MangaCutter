@@ -99,7 +99,7 @@ public class PastaCutter implements Cutter {
             }
         } else {
             current.extendToEnd();
-            frameInfo.add(frameInfo.size() - 1, current);
+            frameInfo.add(current);
         }
         return frameInfo;
     }
