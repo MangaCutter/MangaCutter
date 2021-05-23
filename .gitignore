@@ -1,4 +1,4 @@
 # Project exclude paths
-/out/
-/src/net/macu/test/
+/target/
+/src/main/java/net/macu/test/
 /.idea/workspace.xml
