@@ -21,7 +21,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
-import java.util.prefs.BackingStoreException;
 
 public class Main {
     private static List<Form> forms;
@@ -34,53 +33,36 @@ public class Main {
     }
 
     public static void main(String[] args) {
-        //preparations for main() execution
-        System.setProperty(org.slf4j.impl.SimpleLogger.DEFAULT_LOG_LEVEL_KEY, "Info");
+        prepareContext();
+        IOManager.checkUpdates(false);
+        new MainView();
+        if (CertificateAuthority.getRootCA() != null)
+            BrowserPlugin.getPlugin().start();
+    }
 
+    private static void prepareContext() {
+        System.setProperty(org.slf4j.impl.SimpleLogger.DEFAULT_LOG_LEVEL_KEY, "Info");
         Thread.setDefaultUncaughtExceptionHandler((t, e) -> {
             e.printStackTrace();
             StringWriter sw = new StringWriter();
             PrintWriter pw = new PrintWriter(sw);
             e.printStackTrace(pw);
-            JOptionPane.showMessageDialog(null, "Error: " + sw.toString());
+            JOptionPane.showMessageDialog(null, "Error: " + sw);
         });
-        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            try {
-                Settings.flush();
-            } catch (BackingStoreException e) {
-                e.printStackTrace();
-            }
-        }));
-
         loadNativeFromJar();
-
         reflections = new Reflections("net.macu");
-
         Settings.loadSettings();
         L.loadLanguageData();
         IconManager.loadIcons();
-
         ViewManager.setLookAndFeel();
-
         Security.addProvider(new BouncyCastleProvider());
         CertificateAuthority.loadRootCA();
-
         Set<Class<? extends Form>> formsSet = reflections.getSubTypesOf(Form.class);
         forms = Collections.unmodifiableList(getInstances(formsSet));
         Set<Class<? extends Service>> servicesSet = reflections.getSubTypesOf(Service.class);
         services = Collections.unmodifiableList(getInstances(servicesSet));
-
         ViewManager.initFileChoosers();
-
-        //real main() start here
-
         IOManager.initClient();
-        IOManager.checkUpdates(false);
-
-        new MainView();
-
-        if (CertificateAuthority.getRootCA() != null)
-            BrowserPlugin.getPlugin().start();
     }
 
     private static <T> List<T> getInstances(Set<Class<? extends T>> classSet) {
@@ -114,7 +96,7 @@ public class Main {
     }
 
     public static String getVersion() {
-        return "v5.3.0";
+        return "v5.3.1";
     }
 
     //from com.luciad.imageio.webp.NativeLibraryUrls

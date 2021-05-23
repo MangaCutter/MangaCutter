@@ -2,20 +2,21 @@ package net.macu.core;
 
 import net.macu.UI.ViewManager;
 import net.macu.cutter.Cutter;
+import net.macu.disk.MultiScanSaver;
 import net.macu.disk.ScanSaver;
+import net.macu.disk.SingleScanSaver;
 import net.macu.service.Service;
 import net.macu.service.ServiceManager;
 
 import java.awt.image.BufferedImage;
 
 public class JobManager {
-    //todo add locker for job
-    private static Service service;
-    private static Cutter cutter;
-    private static ScanSaver saver;
-    private static boolean cancel = false;
+    private Service service;
+    private Cutter cutter;
+    private ScanSaver saver;
+    private boolean cancel = false;
 
-    public synchronized boolean runJob(String url, Pipeline pipeline, ViewManager viewManager) {
+    public boolean runJob(String url, Cutter cutter, boolean isReturnsSingleFile, String path, ViewManager viewManager) {
         cancel = false;
         if (url != null)
             service = ServiceManager.getService(url);
@@ -31,7 +32,7 @@ public class JobManager {
         if (cancel) {
             return false;
         }
-        return runJob(fragments, pipeline, viewManager);
+        return runJob(fragments, cutter, isReturnsSingleFile, path, viewManager);
     }
 
     private State state = State.NO_JOB;
@@ -59,22 +60,22 @@ public class JobManager {
         NO_JOB, PARSING, CUTTING, DROPPING_TO_DISK
     }
 
-    public synchronized boolean runJob(BufferedImage[] fragments, Pipeline pipeline, ViewManager viewManager) {
+    public boolean runJob(BufferedImage[] fragments, Cutter cutter, boolean isReturnsSingleFile, String path, ViewManager viewManager) {
         cancel = false;
         if (fragments == null) return false;
 
-        cutter = pipeline.cutter;
+        this.cutter = cutter;
         state = State.CUTTING;
-        BufferedImage[] destImg = pipeline.cutter.cutScans(fragments, viewManager);
+        BufferedImage[] destImg = this.cutter.cutScans(fragments, viewManager);
         if (destImg == null) return false;
 
-        saver = pipeline.saver;
+        saver = isReturnsSingleFile ? new SingleScanSaver(path) : new MultiScanSaver(path);
         state = State.DROPPING_TO_DISK;
         saver.saveToDisk(destImg, viewManager);
 
         state = State.NO_JOB;
         service = null;
-        cutter = null;
+        this.cutter = null;
         saver = null;
         System.gc();
 

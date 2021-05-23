@@ -204,11 +204,12 @@ public class ViewManager {
 
     public static String requestChooseSingleFile(String extension, Component parent) {
         String path = null;
+        extension = extension.toLowerCase();
         singleFileChooser.resetChoosableFileFilters();
         singleFileChooser.addChoosableFileFilter(new FileFilterImpl(extension));
         if (singleFileChooser.showDialog(parent, L.get("UI.ViewManager.single_file_approve_button")) == JFileChooser.APPROVE_OPTION) {
             path = singleFileChooser.getSelectedFile().getAbsolutePath();
-            if (!path.toLowerCase().endsWith("." + extension)) {
+            if (!path.toLowerCase().endsWith("." + extension.toLowerCase())) {
                 path += "." + extension;
             }
         }

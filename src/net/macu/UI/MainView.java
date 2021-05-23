@@ -14,6 +14,7 @@ import net.macu.settings.L;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
@@ -28,15 +29,19 @@ public class MainView {
     private JButton cancelButton;
     private JProgressBar progressBar;
     private JPanel mainPanel;
-    private JComboBox<String> pathSelector;
+    private final ActionListener filepathButtonDirSelectorListener;
     private final JobManager jobManager = new JobManager();
     private JLabel urlLabel;
-    private Form currentForm;
     private final ViewManager viewManager;
     private JPanel selectableFormPanel;
     private JButton clearButton;
+    private final ActionListener filepathButtonFileSelectorListener;
+    private JComboBox<Form> formSelector;
+    private JTextField filepathTextField;
     private BufferedImage[] fragments;
     private final JFrame frame;
+    private JButton filepathButton;
+    private JLabel filepathLabel;
 
     private MainView(boolean prepared) {
         frame = History.createJFrameFromHistory("UI.ViewManager.main_frame_title", 0, 0);
@@ -68,12 +73,19 @@ public class MainView {
 
         viewManager = new ViewManager(this);
 
+        formSelector.setRenderer(new DefaultListCellRenderer() {
+            @Override
+            public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
+                return super.getListCellRendererComponent(list, ((Form) value).getDescription(), index, isSelected, cellHasFocus);
+            }
+        });
         ArrayList<Form> local = new ArrayList<>(Main.getForms());
         local.sort(Comparator.comparing((form) -> -History.getUsage(form.getClass().getName())));
         Iterator<Form> forms = local.iterator();
         for (int i = 0; forms.hasNext(); i++) {
-            pathSelector.insertItemAt(forms.next().getDescription(), i);
+            formSelector.insertItemAt(forms.next(), i);
         }
+
         if (!prepared) {
             setupMenuBar();
 
@@ -101,16 +113,19 @@ public class MainView {
             Thread t = new Thread(() -> {
                 startButton.setEnabled(false);
                 cancelButton.setEnabled(true);
-                History.incrementUsage(local.get(pathSelector.getSelectedIndex()).getClass().getName());
+                History.incrementUsage(local.get(formSelector.getSelectedIndex()).getClass().getName());
                 if (validateInput()) {
+                    Form form = (Form) formSelector.getSelectedItem();
                     if (prepared) {
-                        if (jobManager.runJob(fragments, currentForm.getConfiguredPipeline(), viewManager)) {
+                        if (jobManager.runJob(fragments, form.createPreparedCutter(), form.isReturnsSingleFile(),
+                                filepathTextField.getText(), viewManager)) {
                             ViewManager.showMessageDialog("UI.MainView.complete_message", frame);
                             frame.dispose();
                             return;
                         }
                     } else {
-                        if (jobManager.runJob(urlTextField.getText(), currentForm.getConfiguredPipeline(), viewManager)) {
+                        if (jobManager.runJob(urlTextField.getText(), form.createPreparedCutter(),
+                                form.isReturnsSingleFile(), filepathTextField.getText(), viewManager)) {
                             ViewManager.showMessageDialog("UI.MainView.complete_message", frame);
                         }
                     }
@@ -121,16 +136,39 @@ public class MainView {
             });
             t.start();
         });
-        pathSelector.addItemListener(e -> {
+
+        filepathButtonFileSelectorListener = e -> {
+            String path = ViewManager.requestChooseSingleFile("PNG", frame);
+            if (path != null)
+                filepathTextField.setText(path);
+        };
+        filepathButtonDirSelectorListener = e -> {
+            String path = ViewManager.requestChooseDir(frame);
+            if (path != null)
+                filepathTextField.setText(path);
+        };
+
+        formSelector.addItemListener(e -> {
             if (e.getStateChange() == ItemEvent.SELECTED) {
-                currentForm = local.get(pathSelector.getSelectedIndex());
+                Form selectedForm = (Form) formSelector.getSelectedItem();
                 selectableFormPanel.removeAll();
-                selectableFormPanel.add(currentForm.getRootComponent());
+                selectableFormPanel.add(selectedForm.getRootComponent());
                 frame.pack();
+                for (ActionListener actionListener : filepathButton.getActionListeners()) {
+                    filepathButton.removeActionListener(actionListener);
+                }
+                filepathTextField.setText("");
+                if (selectedForm.isReturnsSingleFile()) {
+                    filepathLabel.setText(L.get("UI.MainView.filepath_save_as_label"));
+                    filepathButton.addActionListener(filepathButtonFileSelectorListener);
+                } else {
+                    filepathLabel.setText(L.get("UI.MainView.filepath_save_in_label"));
+                    filepathButton.addActionListener(filepathButtonDirSelectorListener);
+                }
             }
         });
 
-        pathSelector.setSelectedIndex(0);
+        formSelector.setSelectedIndex(0);
 
         frame.setVisible(true);
     }
@@ -200,7 +238,11 @@ public class MainView {
             ViewManager.showMessageDialog("UI.MainView.validateInput.empty_url", frame);
             return false;
         }
-        return currentForm.validateInput();
+        if (filepathTextField.getText().isEmpty()) {
+            ViewManager.showMessageDialog("UI.MainView.validateInput.empty_path", null);
+            return false;
+        }
+        return ((Form) formSelector.getSelectedItem()).validateInput();
     }
 
     public void startProgress(int max, String message) {
@@ -240,7 +282,7 @@ public class MainView {
         mainPanel = new JPanel();
         mainPanel.setLayout(new GridBagLayout());
         final JPanel panel1 = new JPanel();
-        panel1.setLayout(new GridLayoutManager(1, 3, new Insets(10, 10, 3, 10), -1, -1));
+        panel1.setLayout(new GridLayoutManager(1, 3, new Insets(0, 0, 0, 0), -1, -1));
         GridBagConstraints gbc;
         gbc = new GridBagConstraints();
         gbc.gridx = 0;
@@ -248,6 +290,7 @@ public class MainView {
         gbc.weightx = 1.0;
         gbc.weighty = 1.0;
         gbc.fill = GridBagConstraints.BOTH;
+        gbc.insets = new Insets(10, 10, 3, 10);
         mainPanel.add(panel1, gbc);
         urlLabel = new JLabel();
         urlLabel.setText("Link to chapter:");
@@ -264,8 +307,9 @@ public class MainView {
         gbc.weightx = 1.0;
         gbc.weighty = 1.0;
         gbc.fill = GridBagConstraints.BOTH;
+        gbc.insets = new Insets(3, 10, 3, 10);
         mainPanel.add(panel2, gbc);
-        pathSelector = new JComboBox();
+        formSelector = new JComboBox();
         gbc = new GridBagConstraints();
         gbc.gridx = 0;
         gbc.gridy = 0;
@@ -274,8 +318,7 @@ public class MainView {
         gbc.weighty = 1.0;
         gbc.anchor = GridBagConstraints.WEST;
         gbc.fill = GridBagConstraints.HORIZONTAL;
-        gbc.insets = new Insets(3, 10, 3, 10);
-        panel2.add(pathSelector, gbc);
+        panel2.add(formSelector, gbc);
         selectableFormPanel = new JPanel();
         selectableFormPanel.setLayout(new BorderLayout(0, 0));
         gbc = new GridBagConstraints();
@@ -284,16 +327,16 @@ public class MainView {
         gbc.weightx = 1.0;
         gbc.weighty = 1.0;
         gbc.fill = GridBagConstraints.BOTH;
-        gbc.insets = new Insets(3, 10, 3, 10);
         mainPanel.add(selectableFormPanel, gbc);
         final JPanel panel3 = new JPanel();
-        panel3.setLayout(new GridLayoutManager(1, 1, new Insets(3, 10, 3, 10), -1, -1));
+        panel3.setLayout(new GridLayoutManager(1, 1, new Insets(0, 0, 0, 0), -1, -1));
         gbc = new GridBagConstraints();
         gbc.gridx = 0;
-        gbc.gridy = 3;
+        gbc.gridy = 4;
         gbc.weightx = 1.0;
         gbc.weighty = 1.0;
         gbc.fill = GridBagConstraints.BOTH;
+        gbc.insets = new Insets(3, 10, 3, 10);
         mainPanel.add(panel3, gbc);
         progressBar = new JProgressBar();
         progressBar.setEnabled(false);
@@ -301,13 +344,14 @@ public class MainView {
         progressBar.setStringPainted(true);
         panel3.add(progressBar, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         final JPanel panel4 = new JPanel();
-        panel4.setLayout(new GridLayoutManager(1, 3, new Insets(3, 10, 10, 10), -1, -1));
+        panel4.setLayout(new GridLayoutManager(1, 3, new Insets(0, 0, 0, 0), -1, -1));
         gbc = new GridBagConstraints();
         gbc.gridx = 0;
-        gbc.gridy = 4;
+        gbc.gridy = 5;
         gbc.weightx = 1.0;
         gbc.weighty = 1.0;
         gbc.fill = GridBagConstraints.BOTH;
+        gbc.insets = new Insets(3, 10, 10, 10);
         mainPanel.add(panel4, gbc);
         startButton = new JButton();
         startButton.setText("Start");
@@ -318,6 +362,24 @@ public class MainView {
         panel4.add(cancelButton, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         final Spacer spacer1 = new Spacer();
         panel4.add(spacer1, new GridConstraints(0, 1, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, 1, null, null, null, 0, false));
+        final JPanel panel5 = new JPanel();
+        panel5.setLayout(new GridLayoutManager(1, 3, new Insets(0, 0, 0, 0), -1, -1));
+        gbc = new GridBagConstraints();
+        gbc.gridx = 0;
+        gbc.gridy = 3;
+        gbc.weightx = 1.0;
+        gbc.weighty = 1.0;
+        gbc.fill = GridBagConstraints.BOTH;
+        gbc.insets = new Insets(3, 10, 3, 10);
+        mainPanel.add(panel5, gbc);
+        filepathLabel = new JLabel();
+        filepathLabel.setText("Save in:");
+        panel5.add(filepathLabel, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        filepathTextField = new JTextField();
+        panel5.add(filepathTextField, new GridConstraints(0, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_FIXED, null, new Dimension(150, -1), null, 0, false));
+        filepathButton = new JButton();
+        filepathButton.setText("Browse");
+        panel5.add(filepathButton, new GridConstraints(0, 2, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
     }
 
     /**

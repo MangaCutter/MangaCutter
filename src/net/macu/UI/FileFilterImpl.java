@@ -9,7 +9,7 @@ public class FileFilterImpl extends FileFilter {
     private final String ext;
 
     public FileFilterImpl(String ext) {
-        this.ext = ext;
+        this.ext = ext.toLowerCase();
     }
 
     @Override

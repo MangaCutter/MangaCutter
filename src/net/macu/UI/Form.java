@@ -1,6 +1,6 @@
 package net.macu.UI;
 
-import net.macu.core.Pipeline;
+import net.macu.cutter.Cutter;
 
 import javax.swing.*;
 
@@ -11,7 +11,7 @@ public interface Form {
 
     String getDescription();
 
-    Pipeline getConfiguredPipeline();
+    Cutter createPreparedCutter();
 
-    //todo override toString
+    boolean isReturnsSingleFile();
 }
