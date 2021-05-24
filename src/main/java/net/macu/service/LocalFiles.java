@@ -8,6 +8,7 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
@@ -27,7 +28,11 @@ public class LocalFiles implements Service {
     @Override
     public BufferedImage[] parsePage(String uri, ViewManager viewManager) {
         viewManager.startProgress(1, L.get("service.LocalFiles.parsePage.progress"));
-        List<File> files = Arrays.asList(new File(URI.create(uri)).listFiles());
+        File selected = new File(URI.create(uri));
+        List<File> files;
+        if (selected.isDirectory())
+            files = Arrays.asList(selected.listFiles());
+        else files = new ArrayList<>(Arrays.asList(selected));
         files.sort(Comparator.comparing(File::getName));
         return files.stream().map(file -> {
             try {

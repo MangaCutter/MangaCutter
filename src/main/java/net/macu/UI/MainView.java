@@ -124,7 +124,7 @@ public class MainView {
                             return;
                         }
                     } else {
-                        if (jobManager.runJob(urlTextField.getText(), form.createPreparedCutter(),
+                        if (jobManager.runJob(urlTextField.getText().trim(), form.createPreparedCutter(),
                                 form.isReturnsSingleFile(), filepathTextField.getText(), viewManager)) {
                             ViewManager.showMessageDialog("UI.MainView.complete_message", frame);
                         }
