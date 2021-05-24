@@ -664,27 +664,10 @@ public class Loader extends ClassLoader {
             if (getClass().getName().equals(sClassName)) {
                 return Loader.class;
             }
-            // Step 1. Load by parent (usually system) class loader.
-            // Call findSystemClass() AFTER attempt to find in a JAR.
-            // If it called BEFORE it will load class-in-jar using
-            // SystemClassLoader and "infect" it with SystemClassLoader.
-            // The SystemClassLoader will be used to load all dependent
-            // classes. SystemClassLoader will fail to load a class from
-            // jar-in-jar and to load dll-in-jar.
-            try {
-                // No need to call findLoadedClass(sClassName) because it's called inside:
-                ClassLoader cl = getParent();
-                c = cl.loadClass(sClassName);
-                // System classloader does not define ProtectionDomain->CodeSource - null
-                logInfo(LogArea.CLASS, "Loaded %s by %s", sClassName, cl.getClass().getName());
-                return c;
-            } catch (ClassNotFoundException e) {
-            }
-            // Step 2. Load from JAR.
+            // Step 1. Load from JAR.
             if (isLaunchedFromJar()) {
                 try {
                     c = findJarClass(sClassName); // Do not simplify! See "finally"!
-                    return c;
                 } catch (JarClassLoaderException e) {
                     if (e.getCause() == null) {
                         logDebug(LogArea.CLASS, "Not found %s in JAR by %s: %s",
@@ -696,7 +679,33 @@ public class Loader extends ClassLoader {
                     // keep looking...
                 }
             }
+            // Step 2. Load by parent (usually system) class loader.
+            // Call findSystemClass() AFTER attempt to find in a JAR.
+            // If it called BEFORE it will load class-in-jar using
+            // SystemClassLoader and "infect" it with SystemClassLoader.
+            // The SystemClassLoader will be used to load all dependent
+            // classes. SystemClassLoader will fail to load a class from
+            // jar-in-jar and to load dll-in-jar.
+            try {
+                // No need to call findLoadedClass(sClassName) because it's called inside:
+                ClassLoader cl = getParent();
+                Class cla = cl.loadClass(sClassName);
+
+                // System classloader does not define ProtectionDomain->CodeSource - null
+                logInfo(LogArea.CLASS, "Loaded %s by %s", sClassName, cl.getClass().getName());
+                if (cla != null && c != null) return c;
+                else if (cla != null) return cla;
+                else if (c != null) return c;
+            } catch (ClassNotFoundException e) {
+                if (c != null) return c;
+            }
             // What else?
+            try {
+                Class cl = findSystemClass(sClassName);
+                if (cl != null)
+                    return cl;
+            } catch (ClassNotFoundException ignored) {
+            }
             throw new ClassNotFoundException("Failure to load: " + sClassName);
         } finally {
             if (c != null && bResolve) {
