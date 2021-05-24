@@ -1,5 +1,7 @@
 # MangaCutter
 
+[![Java CI with Maven](https://github.com/MangaCutter/MangaCutter/actions/workflows/maven.yml/badge.svg?branch=master)](https://github.com/MangaCutter/MangaCutter/actions/workflows/maven.yml)
+
 Application for downloading and manipulating with manga scans. Easy way to cut scans automatically fast and accurate.
 
 Guides will be added soon.
