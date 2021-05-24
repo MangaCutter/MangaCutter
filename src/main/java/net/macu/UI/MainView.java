@@ -68,6 +68,7 @@ public class MainView {
         urlLabel.setText(L.get("UI.MainView.url_label"));
         cancelButton.setText(L.get("UI.MainView.cancel_button"));
         startButton.setText(L.get("UI.MainView.start_button"));
+        filepathButton.setText(L.get("UI.MainView.filepath_button"));
         clearButton.setIcon(IconManager.getClearIcon());
         if (prepared) urlTextField.setEnabled(false);
 
