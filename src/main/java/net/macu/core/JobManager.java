@@ -7,6 +7,7 @@ import net.macu.disk.ScanSaver;
 import net.macu.disk.SingleScanSaver;
 import net.macu.service.Service;
 import net.macu.service.ServiceManager;
+import net.macu.writer.ImgWriter;
 
 import java.awt.image.BufferedImage;
 
@@ -16,7 +17,8 @@ public class JobManager {
     private ScanSaver saver;
     private boolean cancel = false;
 
-    public boolean runJob(String url, Cutter cutter, boolean isReturnsSingleFile, String path, ViewManager viewManager) {
+    public boolean runJob(String url, Cutter cutter, boolean isReturnsSingleFile, String path, ImgWriter imgWriter,
+                          ViewManager viewManager) {
         cancel = false;
         if (url != null)
             service = ServiceManager.getService(url);
@@ -32,7 +34,7 @@ public class JobManager {
         if (cancel) {
             return false;
         }
-        return runJob(fragments, cutter, isReturnsSingleFile, path, viewManager);
+        return runJob(fragments, cutter, isReturnsSingleFile, path, imgWriter, viewManager);
     }
 
     private State state = State.NO_JOB;
@@ -60,7 +62,8 @@ public class JobManager {
         NO_JOB, PARSING, CUTTING, DROPPING_TO_DISK
     }
 
-    public boolean runJob(BufferedImage[] fragments, Cutter cutter, boolean isReturnsSingleFile, String path, ViewManager viewManager) {
+    public boolean runJob(BufferedImage[] fragments, Cutter cutter, boolean isReturnsSingleFile, String path,
+                          ImgWriter imgWriter, ViewManager viewManager) {
         cancel = false;
         if (fragments == null) return false;
 
@@ -71,7 +74,7 @@ public class JobManager {
 
         saver = isReturnsSingleFile ? new SingleScanSaver(path) : new MultiScanSaver(path);
         state = State.DROPPING_TO_DISK;
-        saver.saveToDisk(destImg, viewManager);
+        saver.saveToDisk(destImg, imgWriter, viewManager);
 
         state = State.NO_JOB;
         service = null;

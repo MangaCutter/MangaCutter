@@ -11,6 +11,7 @@ import net.macu.core.Main;
 import net.macu.service.ServiceManager;
 import net.macu.settings.History;
 import net.macu.settings.L;
+import net.macu.writer.ImgWriter;
 
 import javax.swing.*;
 import java.awt.*;
@@ -42,6 +43,8 @@ public class MainView {
     private final JFrame frame;
     private JButton filepathButton;
     private JLabel filepathLabel;
+    private JLabel imageFormatLabel;
+    private JComboBox<ImgWriter> imageFormatComboBox;
 
     private MainView(boolean prepared) {
         frame = History.createJFrameFromHistory("UI.ViewManager.main_frame_title", 0, 0);
@@ -70,21 +73,23 @@ public class MainView {
         startButton.setText(L.get("UI.MainView.start_button"));
         filepathButton.setText(L.get("UI.MainView.filepath_button"));
         clearButton.setIcon(IconManager.getClearIcon());
+        imageFormatLabel.setText(L.get("UI.MainView.imageformat_label"));
+
         if (prepared) urlTextField.setEnabled(false);
 
         viewManager = new ViewManager(this);
 
-        formSelector.setRenderer(new DefaultListCellRenderer() {
-            @Override
-            public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
-                return super.getListCellRendererComponent(list, ((Form) value).getDescription(), index, isSelected, cellHasFocus);
-            }
-        });
-        ArrayList<Form> local = new ArrayList<>(Main.getForms());
-        local.sort(Comparator.comparing((form) -> -History.getUsage(form.getClass().getName())));
-        Iterator<Form> forms = local.iterator();
+        ArrayList<Form> localForms = new ArrayList<>(Main.getForms());
+        localForms.sort(Comparator.comparing((form) -> -History.getUsage(form.getClass().getName())));
+        Iterator<Form> forms = localForms.iterator();
         for (int i = 0; forms.hasNext(); i++) {
             formSelector.insertItemAt(forms.next(), i);
+        }
+        ArrayList<ImgWriter> localImgWriters = new ArrayList<>(Main.getImgWriters());
+        localImgWriters.sort(Comparator.comparing((imgWriter) -> -History.getUsage(imgWriter.getClass().getName())));
+        Iterator<ImgWriter> writers = localImgWriters.iterator();
+        for (int i = 0; writers.hasNext(); i++) {
+            imageFormatComboBox.insertItemAt(writers.next(), i);
         }
 
         if (!prepared) {
@@ -114,19 +119,22 @@ public class MainView {
             Thread t = new Thread(() -> {
                 startButton.setEnabled(false);
                 cancelButton.setEnabled(true);
-                History.incrementUsage(local.get(formSelector.getSelectedIndex()).getClass().getName());
+                History.incrementUsage(localForms.get(formSelector.getSelectedIndex()).getClass().getName());
+                History.incrementUsage(localImgWriters.get(imageFormatComboBox.getSelectedIndex()).getClass().getName());
                 if (validateInput()) {
                     Form form = (Form) formSelector.getSelectedItem();
                     if (prepared) {
                         if (jobManager.runJob(fragments, form.createPreparedCutter(), form.isReturnsSingleFile(),
-                                filepathTextField.getText(), viewManager)) {
+                                filepathTextField.getText(), (ImgWriter) imageFormatComboBox.getSelectedItem(),
+                                viewManager)) {
                             ViewManager.showMessageDialog("UI.MainView.complete_message", frame);
                             frame.dispose();
                             return;
                         }
                     } else {
                         if (jobManager.runJob(urlTextField.getText().trim(), form.createPreparedCutter(),
-                                form.isReturnsSingleFile(), filepathTextField.getText(), viewManager)) {
+                                form.isReturnsSingleFile(), filepathTextField.getText(),
+                                (ImgWriter) imageFormatComboBox.getSelectedItem(), viewManager)) {
                             ViewManager.showMessageDialog("UI.MainView.complete_message", frame);
                         }
                     }
@@ -140,15 +148,23 @@ public class MainView {
 
         filepathButtonFileSelectorListener = e -> {
             String path = ViewManager.requestChooseSingleFile("PNG", frame);
-            if (path != null)
+            if (path != null) {
                 filepathTextField.setText(path);
+            }
         };
         filepathButtonDirSelectorListener = e -> {
             String path = ViewManager.requestChooseDir(frame);
-            if (path != null)
+            if (path != null) {
                 filepathTextField.setText(path);
+            }
         };
 
+        formSelector.setRenderer(new DefaultListCellRenderer() {
+            @Override
+            public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
+                return super.getListCellRendererComponent(list, ((Form) value).getDescription(), index, isSelected, cellHasFocus);
+            }
+        });
         formSelector.addItemListener(e -> {
             if (e.getStateChange() == ItemEvent.SELECTED) {
                 Form selectedForm = (Form) formSelector.getSelectedItem();
@@ -168,8 +184,15 @@ public class MainView {
                 }
             }
         });
-
         formSelector.setSelectedIndex(0);
+
+        imageFormatComboBox.setRenderer(new DefaultListCellRenderer() {
+            @Override
+            public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
+                return super.getListCellRendererComponent(list, ((ImgWriter) value).getDescription(), index, isSelected, cellHasFocus);
+            }
+        });
+        imageFormatComboBox.setSelectedIndex(0);
 
         frame.setVisible(true);
     }
@@ -333,7 +356,7 @@ public class MainView {
         panel3.setLayout(new GridLayoutManager(1, 1, new Insets(0, 0, 0, 0), -1, -1));
         gbc = new GridBagConstraints();
         gbc.gridx = 0;
-        gbc.gridy = 4;
+        gbc.gridy = 5;
         gbc.weightx = 1.0;
         gbc.weighty = 1.0;
         gbc.fill = GridBagConstraints.BOTH;
@@ -348,7 +371,7 @@ public class MainView {
         panel4.setLayout(new GridLayoutManager(1, 3, new Insets(0, 0, 0, 0), -1, -1));
         gbc = new GridBagConstraints();
         gbc.gridx = 0;
-        gbc.gridy = 5;
+        gbc.gridy = 6;
         gbc.weightx = 1.0;
         gbc.weighty = 1.0;
         gbc.fill = GridBagConstraints.BOTH;
@@ -381,6 +404,24 @@ public class MainView {
         filepathButton = new JButton();
         filepathButton.setText("Browse");
         panel5.add(filepathButton, new GridConstraints(0, 2, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        final JPanel panel6 = new JPanel();
+        panel6.setLayout(new GridLayoutManager(1, 2, new Insets(0, 0, 0, 0), -1, -1));
+        gbc = new GridBagConstraints();
+        gbc.gridx = 0;
+        gbc.gridy = 4;
+        gbc.fill = GridBagConstraints.BOTH;
+        gbc.insets = new Insets(3, 10, 3, 10);
+        mainPanel.add(panel6, gbc);
+        final JPanel panel7 = new JPanel();
+        panel7.setLayout(new GridLayoutManager(1, 2, new Insets(0, 0, 0, 0), -1, -1));
+        panel6.add(panel7, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_VERTICAL, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 0, false));
+        imageFormatLabel = new JLabel();
+        imageFormatLabel.setText("Image format:");
+        panel7.add(imageFormatLabel, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        imageFormatComboBox = new JComboBox();
+        panel7.add(imageFormatComboBox, new GridConstraints(0, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        final Spacer spacer2 = new Spacer();
+        panel6.add(spacer2, new GridConstraints(0, 1, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, 1, null, null, null, 0, false));
     }
 
     /**

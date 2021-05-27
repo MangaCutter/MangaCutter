@@ -2,10 +2,11 @@ package net.macu.disk;
 
 import net.macu.UI.ViewManager;
 import net.macu.settings.L;
+import net.macu.writer.ImgWriter;
 
-import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 
 public class MultiScanSaver implements ScanSaver {
@@ -17,7 +18,7 @@ public class MultiScanSaver implements ScanSaver {
     }
 
     @Override
-    public void saveToDisk(BufferedImage[] images, ViewManager viewManager) {
+    public void saveToDisk(BufferedImage[] images, ImgWriter imgWriter, ViewManager viewManager) {
         viewManager.startProgress(images.length, L.get("disk.MultiScanSaver.progress", 0, images.length));
         File directory = new File(path);
         try {
@@ -45,7 +46,7 @@ public class MultiScanSaver implements ScanSaver {
                         continue;
                     }
                 }
-                ImageIO.write(images[i], "PNG", f);
+                imgWriter.writeImage(images[i], new FileOutputStream(f));
 
                 images[i] = null;
                 System.gc();
