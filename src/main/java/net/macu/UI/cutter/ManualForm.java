@@ -1,12 +1,12 @@
-package net.macu.UI;
+package net.macu.UI.cutter;
 
 import net.macu.cutter.Cutter;
-import net.macu.cutter.SingleScanCutter;
+import net.macu.cutter.manual.ManualCutter;
 import net.macu.settings.L;
 
 import javax.swing.*;
 
-public class SinglePageForm implements Form {
+public class ManualForm implements Form {
 
     @Override
     public boolean validateInput() {
@@ -19,16 +19,16 @@ public class SinglePageForm implements Form {
     }
 
     public String getDescription() {
-        return L.get("UI.SinglePageForm.description");
+        return L.get("UI.cutter.ManualForm.description");
     }
 
     @Override
     public Cutter createPreparedCutter() {
-        return new SingleScanCutter();
+        return new ManualCutter();
     }
 
     @Override
     public boolean isReturnsSingleFile() {
-        return true;
+        return false;
     }
 }

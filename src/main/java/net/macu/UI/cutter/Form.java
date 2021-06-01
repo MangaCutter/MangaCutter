@@ -1,4 +1,4 @@
-package net.macu.UI;
+package net.macu.UI.cutter;
 
 import net.macu.cutter.Cutter;
 

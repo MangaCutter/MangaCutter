@@ -1,12 +1,16 @@
 package net.macu.core;
 
-import net.macu.UI.*;
+import net.macu.UI.IconManager;
+import net.macu.UI.MainView;
+import net.macu.UI.ViewManager;
+import net.macu.UI.cutter.*;
 import net.macu.browser.plugin.BrowserPlugin;
 import net.macu.browser.proxy.cert.CertificateAuthority;
 import net.macu.service.*;
 import net.macu.settings.L;
 import net.macu.settings.Settings;
 import net.macu.writer.ImgWriter;
+import net.macu.writer.PsbWriter;
 import net.macu.writer.StandardWriter;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
@@ -23,21 +27,15 @@ public class Main {
     private static List<Service> services;
     private static List<ImgWriter> imgWriters;
 
-    static {
-        System.setProperty("org.apache.commons.logging.Log",
-                "org.apache.commons.logging.impl.NoOpLog");
-    }
-
     public static void main(String[] args) {
         prepareContext();
-        IOManager.checkUpdates(false);
+        new Thread(() -> IOManager.checkUpdates(false)).start();
         new MainView();
         if (CertificateAuthority.getRootCA() != null)
             BrowserPlugin.getPlugin().start();
     }
 
     private static void prepareContext() {
-        System.setProperty("defaultLogLevel", "Info");
         Thread.setDefaultUncaughtExceptionHandler((t, e) -> {
             e.printStackTrace();
             StringWriter sw = new StringWriter();
@@ -58,7 +56,7 @@ public class Main {
                 new Naver(), new Rawdevart()));
         imgWriters = Collections.unmodifiableList(Arrays.asList(StandardWriter.createImageIOWriter("PNG"),
                 StandardWriter.createImageIOWriter("JPEG"), StandardWriter.createImageIOWriter("WEBP"),
-                StandardWriter.createImageIOWriter("GIF")));
+                StandardWriter.createImageIOWriter("GIF"), new PsbWriter()));
         ViewManager.initFileChoosers();
         IOManager.initClient();
     }

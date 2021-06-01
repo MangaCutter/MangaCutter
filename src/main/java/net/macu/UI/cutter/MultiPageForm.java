@@ -1,8 +1,9 @@
-package net.macu.UI;
+package net.macu.UI.cutter;
 
 import com.intellij.uiDesigner.core.GridConstraints;
 import com.intellij.uiDesigner.core.GridLayoutManager;
 import com.intellij.uiDesigner.core.Spacer;
+import net.macu.UI.ViewManager;
 import net.macu.cutter.Cutter;
 import net.macu.cutter.pasta.PastaCutter;
 import net.macu.settings.L;
@@ -18,6 +19,7 @@ public class MultiPageForm implements Form {
     private JLabel toleranceLabel;
     private JPanel form;
     private JLabel perfectHeightLabel;
+    private JLabel saveGradientLabel;
     private int savedTolerance = 15;
 
     public MultiPageForm() {
@@ -25,28 +27,28 @@ public class MultiPageForm implements Form {
         saveGradientCheckBox.addActionListener(e -> onGradientCheckBoxSwitched());
         toleranceSlider.addChangeListener(e -> toleranceLabel.setText(String.format("%3d", toleranceSlider.getValue())));
         onGradientCheckBoxSwitched();
-        perfectHeightLabel.setText(L.get("UI.MultiPageForm.perfect_height_label"));
-        saveGradientCheckBox.setText(L.get("UI.MultiPageForm.save_gradient"));
-        toleranceStaticLabel.setText(L.get("UI.MultiPageForm.tolerance_label"));
+        perfectHeightLabel.setText(L.get("UI.cutter.MultiPageForm.perfect_height_label"));
+        saveGradientLabel.setText(L.get("UI.cutter.MultiPageForm.save_gradient_label"));
+        toleranceStaticLabel.setText(L.get("UI.cutter.MultiPageForm.tolerance_label"));
     }
 
     @Override
     public boolean validateInput() {
         if (perfectHeightTextField.getText().isEmpty()) {
-            ViewManager.showMessageDialog("UI.MultiPageForm.validateInput.empty_height", null);
+            ViewManager.showMessageDialog("UI.cutter.MultiPageForm.validateInput.empty_height", null);
             return false;
         }
         try {
             if (Integer.parseInt(perfectHeightTextField.getText()) < 0) {
-                ViewManager.showMessageDialog("UI.MultiPageForm.validateInput.negative_height", null);
+                ViewManager.showMessageDialog("UI.cutter.MultiPageForm.validateInput.negative_height", null);
                 return false;
             }
         } catch (NumberFormatException e) {
-            ViewManager.showMessageDialog("UI.MultiPageForm.validateInput.nan_height", null, perfectHeightTextField.getText());
+            ViewManager.showMessageDialog("UI.cutter.MultiPageForm.validateInput.nan_height", null, perfectHeightTextField.getText());
             return false;
         }
         if (saveGradientCheckBox.isSelected() && toleranceSlider.getValue() > 0) {
-            ViewManager.showMessageDialog("UI.MultiPageForm.validateInput.conflicted_parameters", null);
+            ViewManager.showMessageDialog("UI.cutter.MultiPageForm.validateInput.conflicted_parameters", null);
             return false;
         }
         return true;
@@ -58,7 +60,7 @@ public class MultiPageForm implements Form {
     }
 
     public String getDescription() {
-        return L.get("UI.MultiPageForm.description");
+        return L.get("UI.cutter.MultiPageForm.description");
     }
 
     @Override
@@ -113,18 +115,21 @@ public class MultiPageForm implements Form {
         perfectHeightLabel.setText("Perfect height:");
         panel1.add(perfectHeightLabel, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         final JPanel panel2 = new JPanel();
-        panel2.setLayout(new GridLayoutManager(1, 2, new Insets(0, 0, 0, 0), -1, -1));
+        panel2.setLayout(new GridLayoutManager(1, 3, new Insets(0, 0, 0, 0), -1, -1));
         form.add(panel2, new GridConstraints(1, 0, 1, 3, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 0, false));
         saveGradientCheckBox = new JCheckBox();
         saveGradientCheckBox.setInheritsPopupMenu(false);
-        saveGradientCheckBox.setLabel("Save gradient");
+        saveGradientCheckBox.setLabel("");
         saveGradientCheckBox.setRequestFocusEnabled(true);
         saveGradientCheckBox.setRolloverEnabled(true);
         saveGradientCheckBox.setSelected(false);
-        saveGradientCheckBox.setText("Save gradient");
-        panel2.add(saveGradientCheckBox, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        saveGradientCheckBox.setText("");
+        panel2.add(saveGradientCheckBox, new GridConstraints(0, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         final Spacer spacer1 = new Spacer();
-        panel2.add(spacer1, new GridConstraints(0, 1, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, 1, null, null, null, 0, false));
+        panel2.add(spacer1, new GridConstraints(0, 2, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, 1, null, null, null, 0, false));
+        saveGradientLabel = new JLabel();
+        saveGradientLabel.setText("Save gradient");
+        panel2.add(saveGradientLabel, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         final JPanel panel3 = new JPanel();
         panel3.setLayout(new GridLayoutManager(1, 3, new Insets(0, 0, 0, 0), -1, -1));
         form.add(panel3, new GridConstraints(2, 0, 1, 3, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 0, false));

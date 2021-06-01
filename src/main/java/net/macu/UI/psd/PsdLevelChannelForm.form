@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<form xmlns="http://www.intellij.com/uidesigner/form/" version="1" bind-to-class="net.macu.UI.psd.PsdLevelChannelForm">
+  <grid id="27dc6" binding="root" layout-manager="GridLayoutManager" row-count="3" column-count="1" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
+    <margin top="0" left="0" bottom="0" right="0"/>
+    <constraints>
+      <xy x="20" y="20" width="448" height="389"/>
+    </constraints>
+    <properties/>
+    <border type="none"/>
+    <children>
+      <grid id="1120" layout-manager="FlowLayout" hgap="5" vgap="0" flow-align="0">
+        <constraints>
+          <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="3" hsize-policy="3" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
+        </constraints>
+        <properties/>
+        <border type="none"/>
+        <children>
+          <component id="cb33b" class="javax.swing.JLabel" binding="inputRangeLabel">
+            <constraints/>
+            <properties>
+              <text value="Input range:"/>
+            </properties>
+          </component>
+          <component id="91873" class="javax.swing.JTextField" binding="inputRangeFloorTextField" custom-create="true">
+            <constraints/>
+            <properties>
+              <columns value="3"/>
+            </properties>
+          </component>
+          <component id="19044" class="javax.swing.JLabel">
+            <constraints/>
+            <properties>
+              <text value="-"/>
+            </properties>
+          </component>
+          <component id="95230" class="javax.swing.JTextField" binding="inputRangeCeilingTextField" custom-create="true">
+            <constraints/>
+            <properties/>
+          </component>
+        </children>
+      </grid>
+      <grid id="4e00e" layout-manager="FlowLayout" hgap="5" vgap="0" flow-align="0">
+        <constraints>
+          <grid row="1" column="0" row-span="1" col-span="1" vsize-policy="3" hsize-policy="3" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
+        </constraints>
+        <properties/>
+        <border type="none"/>
+        <children>
+          <component id="ec75f" class="javax.swing.JLabel" binding="outputRangeLabel">
+            <constraints/>
+            <properties>
+              <text value="Output range:"/>
+            </properties>
+          </component>
+          <component id="16f50" class="javax.swing.JTextField" binding="outputRangeFloorTextField" custom-create="true">
+            <constraints/>
+            <properties/>
+          </component>
+          <component id="5a233" class="javax.swing.JLabel">
+            <constraints/>
+            <properties>
+              <text value="-"/>
+            </properties>
+          </component>
+          <component id="8ce1" class="javax.swing.JTextField" binding="outputRangeCeilingTextField" custom-create="true">
+            <constraints/>
+            <properties/>
+          </component>
+        </children>
+      </grid>
+      <grid id="639f6" layout-manager="FlowLayout" hgap="5" vgap="0" flow-align="0">
+        <constraints>
+          <grid row="2" column="0" row-span="1" col-span="1" vsize-policy="3" hsize-policy="3" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
+        </constraints>
+        <properties/>
+        <border type="none"/>
+        <children>
+          <component id="d4230" class="javax.swing.JLabel" binding="gammaLabel">
+            <constraints/>
+            <properties>
+              <text value="Gamma:"/>
+            </properties>
+          </component>
+          <component id="7ca9e" class="javax.swing.JTextField" binding="gammaTextField" custom-create="true">
+            <constraints/>
+            <properties/>
+          </component>
+        </children>
+      </grid>
+    </children>
+  </grid>
+</form>

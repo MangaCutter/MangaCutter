@@ -3,6 +3,8 @@ package net.macu.writer;
 import net.macu.settings.L;
 
 import javax.imageio.ImageIO;
+import javax.swing.*;
+import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -27,6 +29,11 @@ public class StandardWriter {
             @Override
             public String getDescription() {
                 return L.get("imgWriter.StandardWriter.description", ext.toUpperCase());
+            }
+
+            @Override
+            public Component getOptionsPanel() {
+                return new JPanel();
             }
         };
     }

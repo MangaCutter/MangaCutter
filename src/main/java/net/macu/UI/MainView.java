@@ -3,6 +3,7 @@ package net.macu.UI;
 import com.intellij.uiDesigner.core.GridConstraints;
 import com.intellij.uiDesigner.core.GridLayoutManager;
 import com.intellij.uiDesigner.core.Spacer;
+import net.macu.UI.cutter.Form;
 import net.macu.browser.plugin.BrowserPlugin;
 import net.macu.browser.proxy.cert.CertificateAuthority;
 import net.macu.core.IOManager;
@@ -45,6 +46,7 @@ public class MainView {
     private JLabel filepathLabel;
     private JLabel imageFormatLabel;
     private JComboBox<ImgWriter> imageFormatComboBox;
+    private JPanel selectableImgWriterFormPanel;
 
     private MainView(boolean prepared) {
         frame = History.createJFrameFromHistory("UI.ViewManager.main_frame_title", 0, 0);
@@ -119,27 +121,31 @@ public class MainView {
             Thread t = new Thread(() -> {
                 startButton.setEnabled(false);
                 cancelButton.setEnabled(true);
-                History.incrementUsage(localForms.get(formSelector.getSelectedIndex()).getClass().getName());
-                History.incrementUsage(localImgWriters.get(imageFormatComboBox.getSelectedIndex()).getClass().getName());
-                if (validateInput()) {
-                    Form form = (Form) formSelector.getSelectedItem();
-                    if (prepared) {
-                        if (jobManager.runJob(fragments, form.createPreparedCutter(), form.isReturnsSingleFile(),
-                                filepathTextField.getText(), (ImgWriter) imageFormatComboBox.getSelectedItem(),
-                                viewManager)) {
-                            ViewManager.showMessageDialog("UI.MainView.complete_message", frame);
-                            frame.dispose();
-                            return;
-                        }
-                    } else {
-                        if (jobManager.runJob(urlTextField.getText().trim(), form.createPreparedCutter(),
-                                form.isReturnsSingleFile(), filepathTextField.getText(),
-                                (ImgWriter) imageFormatComboBox.getSelectedItem(), viewManager)) {
-                            ViewManager.showMessageDialog("UI.MainView.complete_message", frame);
+                try {
+                    History.incrementUsage(localForms.get(formSelector.getSelectedIndex()).getClass().getName());
+                    History.incrementUsage(localImgWriters.get(imageFormatComboBox.getSelectedIndex()).getClass().getName());
+                    if (validateInput()) {
+                        Form form = (Form) formSelector.getSelectedItem();
+                        if (prepared) {
+                            if (jobManager.runJob(fragments, form.createPreparedCutter(), form.isReturnsSingleFile(),
+                                    filepathTextField.getText(), (ImgWriter) imageFormatComboBox.getSelectedItem(),
+                                    viewManager)) {
+                                ViewManager.showMessageDialog("UI.MainView.complete_message", frame);
+                                frame.dispose();
+                                return;
+                            }
+                        } else {
+                            if (jobManager.runJob(urlTextField.getText().trim(), form.createPreparedCutter(),
+                                    form.isReturnsSingleFile(), filepathTextField.getText(),
+                                    (ImgWriter) imageFormatComboBox.getSelectedItem(), viewManager)) {
+                                ViewManager.showMessageDialog("UI.MainView.complete_message", frame);
+                            }
                         }
                     }
+                    viewManager.resetProgress();
+                } catch (Exception ex) {
+                    ex.printStackTrace();
                 }
-                viewManager.resetProgress();
                 cancelButton.setEnabled(false);
                 startButton.setEnabled(true);
             });
@@ -147,7 +153,8 @@ public class MainView {
         });
 
         filepathButtonFileSelectorListener = e -> {
-            String path = ViewManager.requestChooseSingleFile("PNG", frame);
+            String path = ViewManager.requestChooseSingleFile(
+                    ((ImgWriter) imageFormatComboBox.getSelectedItem()).getExtension(), frame);
             if (path != null) {
                 filepathTextField.setText(path);
             }
@@ -192,8 +199,27 @@ public class MainView {
                 return super.getListCellRendererComponent(list, ((ImgWriter) value).getDescription(), index, isSelected, cellHasFocus);
             }
         });
+        imageFormatComboBox.addItemListener((e) -> {
+                    if (e.getStateChange() == ItemEvent.SELECTED) {
+                        if (!filepathTextField.getText().isEmpty() && ((Form) formSelector.getSelectedItem()).isReturnsSingleFile()) {
+                            String oldPath = filepathTextField.getText();
+                            if (oldPath.lastIndexOf('.') != -1) {
+                                filepathTextField.setText(oldPath.substring(0, oldPath.lastIndexOf(".")) + "." +
+                                        ((ImgWriter) imageFormatComboBox.getSelectedItem()).getExtension().toLowerCase());
+                            } else {
+                                filepathTextField.setText(oldPath + "." +
+                                        ((ImgWriter) imageFormatComboBox.getSelectedItem()).getExtension().toLowerCase());
+                            }
+                        }
+                        selectableImgWriterFormPanel.removeAll();
+                        selectableImgWriterFormPanel.add(((ImgWriter) imageFormatComboBox.getSelectedItem()).getOptionsPanel());
+                        frame.pack();
+                    }
+                }
+        );
         imageFormatComboBox.setSelectedIndex(0);
-
+//        selectableImgWriterFormPanel.add(new PsdForm().$$$getRootComponent$$$());
+        frame.pack();
         frame.setVisible(true);
     }
 
@@ -356,7 +382,7 @@ public class MainView {
         panel3.setLayout(new GridLayoutManager(1, 1, new Insets(0, 0, 0, 0), -1, -1));
         gbc = new GridBagConstraints();
         gbc.gridx = 0;
-        gbc.gridy = 5;
+        gbc.gridy = 6;
         gbc.weightx = 1.0;
         gbc.weighty = 1.0;
         gbc.fill = GridBagConstraints.BOTH;
@@ -371,7 +397,7 @@ public class MainView {
         panel4.setLayout(new GridLayoutManager(1, 3, new Insets(0, 0, 0, 0), -1, -1));
         gbc = new GridBagConstraints();
         gbc.gridx = 0;
-        gbc.gridy = 6;
+        gbc.gridy = 7;
         gbc.weightx = 1.0;
         gbc.weighty = 1.0;
         gbc.fill = GridBagConstraints.BOTH;
@@ -405,23 +431,29 @@ public class MainView {
         filepathButton.setText("Browse");
         panel5.add(filepathButton, new GridConstraints(0, 2, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         final JPanel panel6 = new JPanel();
-        panel6.setLayout(new GridLayoutManager(1, 2, new Insets(0, 0, 0, 0), -1, -1));
+        panel6.setLayout(new GridLayoutManager(1, 3, new Insets(0, 0, 0, 0), -1, -1));
         gbc = new GridBagConstraints();
         gbc.gridx = 0;
         gbc.gridy = 4;
         gbc.fill = GridBagConstraints.BOTH;
         gbc.insets = new Insets(3, 10, 3, 10);
         mainPanel.add(panel6, gbc);
-        final JPanel panel7 = new JPanel();
-        panel7.setLayout(new GridLayoutManager(1, 2, new Insets(0, 0, 0, 0), -1, -1));
-        panel6.add(panel7, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_VERTICAL, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 0, false));
+        final Spacer spacer2 = new Spacer();
+        panel6.add(spacer2, new GridConstraints(0, 2, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, 1, null, null, null, 0, false));
+        imageFormatComboBox = new JComboBox();
+        panel6.add(imageFormatComboBox, new GridConstraints(0, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         imageFormatLabel = new JLabel();
         imageFormatLabel.setText("Image format:");
-        panel7.add(imageFormatLabel, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
-        imageFormatComboBox = new JComboBox();
-        panel7.add(imageFormatComboBox, new GridConstraints(0, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
-        final Spacer spacer2 = new Spacer();
-        panel6.add(spacer2, new GridConstraints(0, 1, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, 1, null, null, null, 0, false));
+        panel6.add(imageFormatLabel, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        selectableImgWriterFormPanel = new JPanel();
+        selectableImgWriterFormPanel.setLayout(new BorderLayout(0, 0));
+        gbc = new GridBagConstraints();
+        gbc.gridx = 0;
+        gbc.gridy = 5;
+        gbc.weightx = 1.0;
+        gbc.weighty = 1.0;
+        gbc.fill = GridBagConstraints.BOTH;
+        mainPanel.add(selectableImgWriterFormPanel, gbc);
     }
 
     /**

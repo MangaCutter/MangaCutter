@@ -1,12 +1,12 @@
-package net.macu.UI;
+package net.macu.UI.cutter;
 
+import net.macu.cutter.AsIsCutter;
 import net.macu.cutter.Cutter;
-import net.macu.cutter.manual.ManualCutter;
 import net.macu.settings.L;
 
 import javax.swing.*;
 
-public class ManualForm implements Form {
+public class AsIsPageForm implements Form {
 
     @Override
     public boolean validateInput() {
@@ -19,12 +19,12 @@ public class ManualForm implements Form {
     }
 
     public String getDescription() {
-        return L.get("UI.ManualForm.description");
+        return L.get("UI.cutter.AsIsPageForm.description");
     }
 
     @Override
     public Cutter createPreparedCutter() {
-        return new ManualCutter();
+        return new AsIsCutter();
     }
 
     @Override

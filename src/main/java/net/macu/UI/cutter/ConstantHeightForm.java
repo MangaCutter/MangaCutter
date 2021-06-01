@@ -1,7 +1,8 @@
-package net.macu.UI;
+package net.macu.UI.cutter;
 
 import com.intellij.uiDesigner.core.GridConstraints;
 import com.intellij.uiDesigner.core.GridLayoutManager;
+import net.macu.UI.ViewManager;
 import net.macu.cutter.ConstantHeightCutter;
 import net.macu.cutter.Cutter;
 import net.macu.settings.L;
@@ -15,17 +16,17 @@ public class ConstantHeightForm implements Form {
     private JPanel form;
 
     public ConstantHeightForm() {
-        heightLabel.setText(L.get("UI.ConstantHeightForm.height_label"));
+        heightLabel.setText(L.get("UI.cutter.ConstantHeightForm.height_label"));
     }
 
     @Override
     public boolean validateInput() {
         try {
             if (Integer.parseInt(heightTextField.getText()) <= 0) {
-                ViewManager.showMessageDialog("UI.ConstantHeightForm.validateInput.positive_height", null);
+                ViewManager.showMessageDialog("UI.cutter.ConstantHeightForm.validateInput.positive_height", null);
             }
         } catch (NumberFormatException e) {
-            ViewManager.showMessageDialog("UI.ConstantHeightForm.validateInput.nan_height", null);
+            ViewManager.showMessageDialog("UI.cutter.ConstantHeightForm.validateInput.nan_height", null);
         }
         return true;
     }
@@ -36,7 +37,7 @@ public class ConstantHeightForm implements Form {
     }
 
     public String getDescription() {
-        return L.get("UI.ConstantHeightForm.description");
+        return L.get("UI.cutter.ConstantHeightForm.description");
     }
 
     @Override

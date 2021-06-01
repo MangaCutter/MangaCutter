@@ -68,7 +68,7 @@ public class History {
         fileChooser.addActionListener(e -> new Thread(() -> {
             if (fileChooser.getSelectedFile() != null && !fileChooser.getSelectedFile().getAbsolutePath().isEmpty()) {
                 Settings.preferences.put(FILE_CHOOSER_SELECTED_FILE_PREFIX + id,
-                        fileChooser.getSelectedFile().getAbsolutePath());
+                        fileChooser.getSelectedFile().getParentFile().getAbsolutePath());
                 try {
                     Settings.preferences.flush();
                 } catch (BackingStoreException backingStoreException) {

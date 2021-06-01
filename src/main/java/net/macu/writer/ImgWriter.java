@@ -1,5 +1,6 @@
 package net.macu.writer;
 
+import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.OutputStream;
 
@@ -9,4 +10,6 @@ public interface ImgWriter {
     String getExtension();
 
     String getDescription();
+
+    Component getOptionsPanel();
 }
