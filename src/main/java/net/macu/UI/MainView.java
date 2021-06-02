@@ -3,12 +3,12 @@ package net.macu.UI;
 import com.intellij.uiDesigner.core.GridConstraints;
 import com.intellij.uiDesigner.core.GridLayoutManager;
 import com.intellij.uiDesigner.core.Spacer;
-import net.macu.UI.cutter.Form;
 import net.macu.browser.plugin.BrowserPlugin;
 import net.macu.browser.proxy.cert.CertificateAuthority;
 import net.macu.core.IOManager;
 import net.macu.core.JobManager;
 import net.macu.core.Main;
+import net.macu.cutter.Cutter;
 import net.macu.service.ServiceManager;
 import net.macu.settings.History;
 import net.macu.settings.L;
@@ -35,18 +35,20 @@ public class MainView {
     private final JobManager jobManager = new JobManager();
     private JLabel urlLabel;
     private final ViewManager viewManager;
-    private JPanel selectableFormPanel;
+    private final FormContainer cutterFormContainer;
     private JButton clearButton;
     private final ActionListener filepathButtonFileSelectorListener;
-    private JComboBox<Form> formSelector;
+    private final FormContainer imgWriterFormContainer;
     private JTextField filepathTextField;
     private BufferedImage[] fragments;
     private final JFrame frame;
     private JButton filepathButton;
     private JLabel filepathLabel;
     private JLabel imageFormatLabel;
-    private JComboBox<ImgWriter> imageFormatComboBox;
-    private JPanel selectableImgWriterFormPanel;
+    private JPanel cutterFormPanel;
+    private JComboBox<Cutter> cutterSelector;
+    private JComboBox<ImgWriter> imgWriterSelector;
+    private JPanel imgWriterFormPanel;
 
     private MainView(boolean prepared) {
         frame = History.createJFrameFromHistory("UI.ViewManager.main_frame_title", 0, 0);
@@ -77,21 +79,26 @@ public class MainView {
         clearButton.setIcon(IconManager.getClearIcon());
         imageFormatLabel.setText(L.get("UI.MainView.imageformat_label"));
 
+        cutterFormContainer = new FormContainer();
+        cutterFormPanel.add(cutterFormContainer);
+        imgWriterFormContainer = new FormContainer();
+        imgWriterFormPanel.add(imgWriterFormContainer);
+
         if (prepared) urlTextField.setEnabled(false);
 
         viewManager = new ViewManager(this);
 
-        ArrayList<Form> localForms = new ArrayList<>(Main.getForms());
-        localForms.sort(Comparator.comparing((form) -> -History.getUsage(form.getClass().getName())));
-        Iterator<Form> forms = localForms.iterator();
-        for (int i = 0; forms.hasNext(); i++) {
-            formSelector.insertItemAt(forms.next(), i);
+        ArrayList<Cutter> cutters = new ArrayList<>(Main.getCutters());
+        cutters.sort(Comparator.comparing((cutter) -> -History.getUsage(cutter.getClass().getName())));
+        Iterator<Cutter> cutterIterator = cutters.iterator();
+        for (int i = 0; cutterIterator.hasNext(); i++) {
+            cutterSelector.insertItemAt(cutterIterator.next(), i);
         }
-        ArrayList<ImgWriter> localImgWriters = new ArrayList<>(Main.getImgWriters());
-        localImgWriters.sort(Comparator.comparing((imgWriter) -> -History.getUsage(imgWriter.getClass().getName())));
-        Iterator<ImgWriter> writers = localImgWriters.iterator();
-        for (int i = 0; writers.hasNext(); i++) {
-            imageFormatComboBox.insertItemAt(writers.next(), i);
+        ArrayList<ImgWriter> imgWriters = new ArrayList<>(Main.getImgWriters());
+        imgWriters.sort(Comparator.comparing((imgWriter) -> -History.getUsage(imgWriter.getClass().getName())));
+        Iterator<ImgWriter> imgWriterIterator = imgWriters.iterator();
+        for (int i = 0; imgWriterIterator.hasNext(); i++) {
+            imgWriterSelector.insertItemAt(imgWriterIterator.next(), i);
         }
 
         if (!prepared) {
@@ -122,22 +129,21 @@ public class MainView {
                 startButton.setEnabled(false);
                 cancelButton.setEnabled(true);
                 try {
-                    History.incrementUsage(localForms.get(formSelector.getSelectedIndex()).getClass().getName());
-                    History.incrementUsage(localImgWriters.get(imageFormatComboBox.getSelectedIndex()).getClass().getName());
+                    History.incrementUsage(((Cutter) cutterSelector.getSelectedItem()).getClass().getName());
+                    History.incrementUsage(((ImgWriter) imgWriterSelector.getSelectedItem()).getClass().getName());
                     if (validateInput()) {
-                        Form form = (Form) formSelector.getSelectedItem();
                         if (prepared) {
-                            if (jobManager.runJob(fragments, form.createPreparedCutter(), form.isReturnsSingleFile(),
-                                    filepathTextField.getText(), (ImgWriter) imageFormatComboBox.getSelectedItem(),
+                            if (jobManager.runJob(fragments, (Cutter) cutterSelector.getSelectedItem(),
+                                    filepathTextField.getText(), (ImgWriter) imgWriterSelector.getSelectedItem(),
                                     viewManager)) {
                                 ViewManager.showMessageDialog("UI.MainView.complete_message", frame);
                                 frame.dispose();
                                 return;
                             }
                         } else {
-                            if (jobManager.runJob(urlTextField.getText().trim(), form.createPreparedCutter(),
-                                    form.isReturnsSingleFile(), filepathTextField.getText(),
-                                    (ImgWriter) imageFormatComboBox.getSelectedItem(), viewManager)) {
+                            if (jobManager.runJob(urlTextField.getText().trim(), (Cutter) cutterSelector.getSelectedItem(),
+                                    filepathTextField.getText(), (ImgWriter) imgWriterSelector.getSelectedItem(),
+                                    viewManager)) {
                                 ViewManager.showMessageDialog("UI.MainView.complete_message", frame);
                             }
                         }
@@ -154,7 +160,7 @@ public class MainView {
 
         filepathButtonFileSelectorListener = e -> {
             String path = ViewManager.requestChooseSingleFile(
-                    ((ImgWriter) imageFormatComboBox.getSelectedItem()).getExtension(), frame);
+                    ((ImgWriter) imgWriterSelector.getSelectedItem()).getExtension(), frame);
             if (path != null) {
                 filepathTextField.setText(path);
             }
@@ -166,23 +172,22 @@ public class MainView {
             }
         };
 
-        formSelector.setRenderer(new DefaultListCellRenderer() {
+        cutterSelector.setRenderer(new DefaultListCellRenderer() {
             @Override
             public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
-                return super.getListCellRendererComponent(list, ((Form) value).getDescription(), index, isSelected, cellHasFocus);
+                return super.getListCellRendererComponent(list, ((Cutter) value).getDescription(), index, isSelected, cellHasFocus);
             }
         });
-        formSelector.addItemListener(e -> {
+        cutterSelector.addItemListener(e -> {
             if (e.getStateChange() == ItemEvent.SELECTED) {
-                Form selectedForm = (Form) formSelector.getSelectedItem();
-                selectableFormPanel.removeAll();
-                selectableFormPanel.add(selectedForm.getRootComponent());
+                Cutter selectedCutter = (Cutter) cutterSelector.getSelectedItem();
+                cutterFormContainer.setForm(selectedCutter.getOptionsForm());
                 frame.pack();
                 for (ActionListener actionListener : filepathButton.getActionListeners()) {
                     filepathButton.removeActionListener(actionListener);
                 }
                 filepathTextField.setText("");
-                if (selectedForm.isReturnsSingleFile()) {
+                if (selectedCutter.isReturnsSingleFile()) {
                     filepathLabel.setText(L.get("UI.MainView.filepath_save_as_label"));
                     filepathButton.addActionListener(filepathButtonFileSelectorListener);
                 } else {
@@ -191,34 +196,33 @@ public class MainView {
                 }
             }
         });
-        formSelector.setSelectedIndex(0);
+        cutterSelector.setSelectedIndex(0);
 
-        imageFormatComboBox.setRenderer(new DefaultListCellRenderer() {
+        imgWriterSelector.setRenderer(new DefaultListCellRenderer() {
             @Override
             public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
                 return super.getListCellRendererComponent(list, ((ImgWriter) value).getDescription(), index, isSelected, cellHasFocus);
             }
         });
-        imageFormatComboBox.addItemListener((e) -> {
+        imgWriterSelector.addItemListener((e) -> {
                     if (e.getStateChange() == ItemEvent.SELECTED) {
-                        if (!filepathTextField.getText().isEmpty() && ((Form) formSelector.getSelectedItem()).isReturnsSingleFile()) {
+                        if (!filepathTextField.getText().isEmpty() &&
+                                ((Cutter) cutterSelector.getSelectedItem()).isReturnsSingleFile()) {
                             String oldPath = filepathTextField.getText();
                             if (oldPath.lastIndexOf('.') != -1) {
                                 filepathTextField.setText(oldPath.substring(0, oldPath.lastIndexOf(".")) + "." +
-                                        ((ImgWriter) imageFormatComboBox.getSelectedItem()).getExtension().toLowerCase());
+                                        ((ImgWriter) imgWriterSelector.getSelectedItem()).getExtension().toLowerCase());
                             } else {
                                 filepathTextField.setText(oldPath + "." +
-                                        ((ImgWriter) imageFormatComboBox.getSelectedItem()).getExtension().toLowerCase());
+                                        ((ImgWriter) imgWriterSelector.getSelectedItem()).getExtension().toLowerCase());
                             }
                         }
-                        selectableImgWriterFormPanel.removeAll();
-                        selectableImgWriterFormPanel.add(((ImgWriter) imageFormatComboBox.getSelectedItem()).getOptionsPanel());
+                        imgWriterFormContainer.setForm(((ImgWriter) imgWriterSelector.getSelectedItem()).getOptionsForm());
                         frame.pack();
                     }
                 }
         );
-        imageFormatComboBox.setSelectedIndex(0);
-//        selectableImgWriterFormPanel.add(new PsdForm().$$$getRootComponent$$$());
+        imgWriterSelector.setSelectedIndex(0);
         frame.pack();
         frame.setVisible(true);
     }
@@ -292,7 +296,7 @@ public class MainView {
             ViewManager.showMessageDialog("UI.MainView.validateInput.empty_path", null);
             return false;
         }
-        return ((Form) formSelector.getSelectedItem()).validateInput();
+        return cutterFormContainer.validateInput() && imgWriterFormContainer.validateInput();
     }
 
     public void startProgress(int max, String message) {
@@ -359,7 +363,7 @@ public class MainView {
         gbc.fill = GridBagConstraints.BOTH;
         gbc.insets = new Insets(3, 10, 3, 10);
         mainPanel.add(panel2, gbc);
-        formSelector = new JComboBox();
+        cutterSelector = new JComboBox();
         gbc = new GridBagConstraints();
         gbc.gridx = 0;
         gbc.gridy = 0;
@@ -368,16 +372,17 @@ public class MainView {
         gbc.weighty = 1.0;
         gbc.anchor = GridBagConstraints.WEST;
         gbc.fill = GridBagConstraints.HORIZONTAL;
-        panel2.add(formSelector, gbc);
-        selectableFormPanel = new JPanel();
-        selectableFormPanel.setLayout(new BorderLayout(0, 0));
+        panel2.add(cutterSelector, gbc);
+        cutterFormPanel = new JPanel();
+        cutterFormPanel.setLayout(new BorderLayout(0, 0));
         gbc = new GridBagConstraints();
         gbc.gridx = 0;
         gbc.gridy = 2;
         gbc.weightx = 1.0;
         gbc.weighty = 1.0;
         gbc.fill = GridBagConstraints.BOTH;
-        mainPanel.add(selectableFormPanel, gbc);
+        gbc.insets = new Insets(0, 10, 0, 10);
+        mainPanel.add(cutterFormPanel, gbc);
         final JPanel panel3 = new JPanel();
         panel3.setLayout(new GridLayoutManager(1, 1, new Insets(0, 0, 0, 0), -1, -1));
         gbc = new GridBagConstraints();
@@ -440,20 +445,21 @@ public class MainView {
         mainPanel.add(panel6, gbc);
         final Spacer spacer2 = new Spacer();
         panel6.add(spacer2, new GridConstraints(0, 2, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, 1, null, null, null, 0, false));
-        imageFormatComboBox = new JComboBox();
-        panel6.add(imageFormatComboBox, new GridConstraints(0, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        imgWriterSelector = new JComboBox();
+        panel6.add(imgWriterSelector, new GridConstraints(0, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         imageFormatLabel = new JLabel();
         imageFormatLabel.setText("Image format:");
         panel6.add(imageFormatLabel, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
-        selectableImgWriterFormPanel = new JPanel();
-        selectableImgWriterFormPanel.setLayout(new BorderLayout(0, 0));
+        imgWriterFormPanel = new JPanel();
+        imgWriterFormPanel.setLayout(new BorderLayout(0, 0));
         gbc = new GridBagConstraints();
         gbc.gridx = 0;
         gbc.gridy = 5;
         gbc.weightx = 1.0;
         gbc.weighty = 1.0;
         gbc.fill = GridBagConstraints.BOTH;
-        mainPanel.add(selectableImgWriterFormPanel, gbc);
+        gbc.insets = new Insets(0, 10, 0, 10);
+        mainPanel.add(imgWriterFormPanel, gbc);
     }
 
     /**

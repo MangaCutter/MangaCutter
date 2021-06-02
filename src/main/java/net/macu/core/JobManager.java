@@ -17,7 +17,7 @@ public class JobManager {
     private ScanSaver saver;
     private boolean cancel = false;
 
-    public boolean runJob(String url, Cutter cutter, boolean isReturnsSingleFile, String path, ImgWriter imgWriter,
+    public boolean runJob(String url, Cutter cutter, String path, ImgWriter imgWriter,
                           ViewManager viewManager) {
         cancel = false;
         if (url != null)
@@ -34,7 +34,7 @@ public class JobManager {
         if (cancel) {
             return false;
         }
-        return runJob(fragments, cutter, isReturnsSingleFile, path, imgWriter, viewManager);
+        return runJob(fragments, cutter, path, imgWriter, viewManager);
     }
 
     private State state = State.NO_JOB;
@@ -62,7 +62,7 @@ public class JobManager {
         NO_JOB, PARSING, CUTTING, DROPPING_TO_DISK
     }
 
-    public boolean runJob(BufferedImage[] fragments, Cutter cutter, boolean isReturnsSingleFile, String path,
+    public boolean runJob(BufferedImage[] fragments, Cutter cutter, String path,
                           ImgWriter imgWriter, ViewManager viewManager) {
         cancel = false;
         if (fragments == null) return false;
@@ -72,7 +72,7 @@ public class JobManager {
         BufferedImage[] destImg = this.cutter.cutScans(fragments, viewManager);
         if (destImg == null) return false;
 
-        saver = isReturnsSingleFile ? new SingleScanSaver(path) : new MultiScanSaver(path);
+        saver = this.cutter.isReturnsSingleFile() ? new SingleScanSaver(path) : new MultiScanSaver(path);
         state = State.DROPPING_TO_DISK;
         saver.saveToDisk(destImg, imgWriter, viewManager);
 

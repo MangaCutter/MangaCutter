@@ -22,6 +22,7 @@ public class Settings {
     public static final IntSetting Handler_PoolSize = new IntSetting("browser.proxy.Handler.pool_size");
     public static final ListSetting ViewManager_LookAndFeel = new ListSetting("UI.ViewManager.laf", ViewManager.SUPPORTED_THEMES, true);
     public static final StringSetting PsbForm_LayerName = new StringSetting("UI.imgWriter.PsbForm.layer_name");
+    public static final StringSetting PsbForm_LevelsLayerName = new StringSetting("UI.imgWriter.PsbForm.levels_layer_name");
     //public static final IntSetting ManualCutterFrame_SmartSelectionThreshold = new IntSetting("UI.ManualCutterFrame.smart_selection_threshold");
     private static final ArrayList<Setting> allSettings = new ArrayList<>();
     static Preferences preferences;
@@ -59,6 +60,7 @@ public class Settings {
         allSettings.add(ViewManager_LookAndFeel);
         allSettings.add(Handler_PoolSize);
         allSettings.add(PsbForm_LayerName);
+        allSettings.add(PsbForm_LevelsLayerName);
         allSettings.sort(Comparator.comparing(Setting::getName));
         allSettings.forEach(setting -> {
             if (setting instanceof StringSetting)

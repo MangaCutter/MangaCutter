@@ -1,6 +1,7 @@
 package net.macu.writer;
 
-import java.awt.*;
+import net.macu.UI.Form;
+
 import java.awt.image.BufferedImage;
 import java.io.OutputStream;
 
@@ -11,5 +12,5 @@ public interface ImgWriter {
 
     String getDescription();
 
-    Component getOptionsPanel();
+    Form getOptionsForm();
 }

@@ -1,6 +1,8 @@
 package net.macu.cutter.pasta;
 
+import net.macu.UI.Form;
 import net.macu.UI.ViewManager;
+import net.macu.UI.cutter.MultiPageForm;
 import net.macu.cutter.Cutter;
 import net.macu.settings.L;
 import net.macu.settings.Settings;
@@ -13,18 +15,35 @@ public class PastaCutter implements Cutter {
     boolean cancel = false;
     int tolerance;
     private Frame current;
-    private final int perfectHeight;
-    private final boolean saveGradient;
+    private final MultiPageForm form;
+    private int perfectHeight;
+    private boolean saveGradient;
 
-    public PastaCutter(int perfectHeight, boolean saveGradient, int tolerance) {
-        this.perfectHeight = perfectHeight;
-        this.saveGradient = saveGradient;
-        this.tolerance = tolerance;
+    public PastaCutter() {
+        form = new MultiPageForm();
     }
 
     @Override
     public BufferedImage[] cutScans(BufferedImage[] fragments, ViewManager viewManager) {
+        perfectHeight = form.getPerfectHeight();
+        saveGradient = form.isSaveGradient();
+        tolerance = form.getTolerance();
         return drawFrames(recognizeFrames(fragments, viewManager), viewManager);
+    }
+
+    @Override
+    public String getDescription() {
+        return L.get("cutter.pasta.PastaCutter.description");
+    }
+
+    @Override
+    public boolean isReturnsSingleFile() {
+        return false;
+    }
+
+    @Override
+    public Form getOptionsForm() {
+        return form;
     }
 
     @Override

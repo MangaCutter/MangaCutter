@@ -2,9 +2,8 @@ package net.macu.UI.cutter;
 
 import com.intellij.uiDesigner.core.GridConstraints;
 import com.intellij.uiDesigner.core.GridLayoutManager;
+import net.macu.UI.Form;
 import net.macu.UI.ViewManager;
-import net.macu.cutter.ConstantHeightCutter;
-import net.macu.cutter.Cutter;
 import net.macu.settings.L;
 
 import javax.swing.*;
@@ -13,10 +12,14 @@ import java.awt.*;
 public class ConstantHeightForm implements Form {
     private JLabel heightLabel;
     private JTextField heightTextField;
-    private JPanel form;
+    private JPanel root;
 
     public ConstantHeightForm() {
         heightLabel.setText(L.get("UI.cutter.ConstantHeightForm.height_label"));
+    }
+
+    public int getImgHeight() {
+        return Integer.parseInt(heightTextField.getText());
     }
 
     @Override
@@ -36,18 +39,9 @@ public class ConstantHeightForm implements Form {
         return $$$getRootComponent$$$();
     }
 
-    public String getDescription() {
+    @Override
+    public String getName() {
         return L.get("UI.cutter.ConstantHeightForm.description");
-    }
-
-    @Override
-    public Cutter createPreparedCutter() {
-        return new ConstantHeightCutter(Integer.parseInt(heightTextField.getText()));
-    }
-
-    @Override
-    public boolean isReturnsSingleFile() {
-        return false;
     }
 
     {
@@ -65,11 +59,11 @@ public class ConstantHeightForm implements Form {
      * @noinspection ALL
      */
     private void $$$setupUI$$$() {
-        form = new JPanel();
-        form.setLayout(new GridLayoutManager(1, 1, new Insets(3, 10, 3, 10), -1, -1));
+        root = new JPanel();
+        root.setLayout(new GridLayoutManager(1, 1, new Insets(3, 0, 3, 0), -1, -1));
         final JPanel panel1 = new JPanel();
         panel1.setLayout(new GridLayoutManager(1, 2, new Insets(0, 0, 0, 0), -1, -1));
-        form.add(panel1, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 0, false));
+        root.add(panel1, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 0, false));
         heightLabel = new JLabel();
         heightLabel.setText("Height:");
         panel1.add(heightLabel, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
@@ -81,7 +75,7 @@ public class ConstantHeightForm implements Form {
      * @noinspection ALL
      */
     public JComponent $$$getRootComponent$$$() {
-        return form;
+        return root;
     }
 
 }

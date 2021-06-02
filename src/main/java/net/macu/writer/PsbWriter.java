@@ -1,11 +1,11 @@
 package net.macu.writer;
 
+import net.macu.UI.Form;
 import net.macu.UI.imgWriter.PsdForm;
 import net.macu.settings.L;
 import net.macu.writer.psd.UnsupportedColorSpaceTypeException;
 import psd.psdwiter.ImageDataWriter;
 
-import java.awt.*;
 import java.awt.color.ColorSpace;
 import java.awt.image.BufferedImage;
 import java.awt.image.ColorModel;
@@ -113,7 +113,7 @@ public class PsbWriter implements ImgWriter {
     }
 
     @Override
-    public Component getOptionsPanel() {
-        return options.$$$getRootComponent$$$();
+    public Form getOptionsForm() {
+        return options;
     }
 }

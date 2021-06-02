@@ -3,9 +3,14 @@ package net.macu.core;
 import net.macu.UI.IconManager;
 import net.macu.UI.MainView;
 import net.macu.UI.ViewManager;
-import net.macu.UI.cutter.*;
 import net.macu.browser.plugin.BrowserPlugin;
 import net.macu.browser.proxy.cert.CertificateAuthority;
+import net.macu.cutter.AsIsCutter;
+import net.macu.cutter.ConstantHeightCutter;
+import net.macu.cutter.Cutter;
+import net.macu.cutter.SingleScanCutter;
+import net.macu.cutter.manual.ManualCutter;
+import net.macu.cutter.pasta.PastaCutter;
 import net.macu.service.*;
 import net.macu.settings.L;
 import net.macu.settings.Settings;
@@ -23,7 +28,7 @@ import java.util.Collections;
 import java.util.List;
 
 public class Main {
-    private static List<Form> forms;
+    private static List<Cutter> cutters;
     private static List<Service> services;
     private static List<ImgWriter> imgWriters;
 
@@ -50,8 +55,8 @@ public class Main {
         ViewManager.setLookAndFeel();
         Security.addProvider(new BouncyCastleProvider());
         CertificateAuthority.loadRootCA();
-        forms = Collections.unmodifiableList(Arrays.asList(new AsIsPageForm(), new ManualForm(), new SinglePageForm(),
-                new ConstantHeightForm(), new MultiPageForm()));
+        cutters = Collections.unmodifiableList(Arrays.asList(new ManualCutter(), new PastaCutter(), new AsIsCutter(),
+                new ConstantHeightCutter(), new SingleScanCutter()));
         services = Collections.unmodifiableList(Arrays.asList(new AcQq(), new Daum(), new LocalFiles(), new ManhuaGui(),
                 new Naver(), new Rawdevart()));
         imgWriters = Collections.unmodifiableList(Arrays.asList(StandardWriter.createImageIOWriter("PNG"),
@@ -61,8 +66,8 @@ public class Main {
         IOManager.initClient();
     }
 
-    public static List<Form> getForms() {
-        return forms;
+    public static List<Cutter> getCutters() {
+        return cutters;
     }
 
     public static List<Service> getServices() {

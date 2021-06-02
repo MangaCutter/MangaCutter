@@ -3,9 +3,8 @@ package net.macu.UI.cutter;
 import com.intellij.uiDesigner.core.GridConstraints;
 import com.intellij.uiDesigner.core.GridLayoutManager;
 import com.intellij.uiDesigner.core.Spacer;
+import net.macu.UI.Form;
 import net.macu.UI.ViewManager;
-import net.macu.cutter.Cutter;
-import net.macu.cutter.pasta.PastaCutter;
 import net.macu.settings.L;
 
 import javax.swing.*;
@@ -30,6 +29,18 @@ public class MultiPageForm implements Form {
         perfectHeightLabel.setText(L.get("UI.cutter.MultiPageForm.perfect_height_label"));
         saveGradientLabel.setText(L.get("UI.cutter.MultiPageForm.save_gradient_label"));
         toleranceStaticLabel.setText(L.get("UI.cutter.MultiPageForm.tolerance_label"));
+    }
+
+    public int getPerfectHeight() {
+        return Integer.parseInt(perfectHeightTextField.getText());
+    }
+
+    public boolean isSaveGradient() {
+        return saveGradientCheckBox.isSelected();
+    }
+
+    public int getTolerance() {
+        return toleranceSlider.getValue();
     }
 
     @Override
@@ -59,19 +70,9 @@ public class MultiPageForm implements Form {
         return $$$getRootComponent$$$();
     }
 
-    public String getDescription() {
-        return L.get("UI.cutter.MultiPageForm.description");
-    }
-
     @Override
-    public Cutter createPreparedCutter() {
-        return new PastaCutter(Integer.parseInt(perfectHeightTextField.getText()),
-                saveGradientCheckBox.isSelected(), toleranceSlider.getValue());
-    }
-
-    @Override
-    public boolean isReturnsSingleFile() {
-        return false;
+    public String getName() {
+        return L.get("UI.cutter.MultiPageForm.name");
     }
 
     private void onGradientCheckBoxSwitched() {
@@ -105,7 +106,7 @@ public class MultiPageForm implements Form {
      */
     private void $$$setupUI$$$() {
         form = new JPanel();
-        form.setLayout(new GridLayoutManager(3, 3, new Insets(3, 10, 3, 10), -1, -1));
+        form.setLayout(new GridLayoutManager(3, 3, new Insets(3, 0, 3, 0), -1, -1));
         final JPanel panel1 = new JPanel();
         panel1.setLayout(new GridLayoutManager(1, 2, new Insets(0, 0, 0, 0), -1, -1));
         form.add(panel1, new GridConstraints(0, 0, 1, 3, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 0, false));

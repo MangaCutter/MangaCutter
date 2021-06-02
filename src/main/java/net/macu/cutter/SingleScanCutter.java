@@ -1,5 +1,7 @@
 package net.macu.cutter;
 
+import net.macu.UI.EmptyForm;
+import net.macu.UI.Form;
 import net.macu.UI.ViewManager;
 import net.macu.settings.L;
 
@@ -30,6 +32,21 @@ public class SingleScanCutter implements Cutter {
             viewManager.incrementProgress(L.get("cutter.SingleScanCutter.cutScans.progress", i + 1, fragments.length));
         }
         return new BufferedImage[]{dst};
+    }
+
+    @Override
+    public String getDescription() {
+        return L.get("cutter.SinglePageForm.description");
+    }
+
+    @Override
+    public boolean isReturnsSingleFile() {
+        return true;
+    }
+
+    @Override
+    public Form getOptionsForm() {
+        return new EmptyForm();
     }
 
     @Override

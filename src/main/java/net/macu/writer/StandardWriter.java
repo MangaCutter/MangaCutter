@@ -1,10 +1,10 @@
 package net.macu.writer;
 
+import net.macu.UI.EmptyForm;
+import net.macu.UI.Form;
 import net.macu.settings.L;
 
 import javax.imageio.ImageIO;
-import javax.swing.*;
-import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -32,8 +32,8 @@ public class StandardWriter {
             }
 
             @Override
-            public Component getOptionsPanel() {
-                return new JPanel();
+            public Form getOptionsForm() {
+                return new EmptyForm();
             }
         };
     }
