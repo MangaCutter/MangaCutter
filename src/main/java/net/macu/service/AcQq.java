@@ -21,6 +21,16 @@ public class AcQq implements Service {
     private boolean cancel = false;
 
     @Override
+    public boolean accept(String uri) {
+        return URI.create(uri).getHost().equals("ac.qq.com");
+    }
+
+    @Override
+    public boolean supportsNativeDownloading() {
+        return true;
+    }
+
+    @Override
     public BufferedImage[] parsePage(String uri, ViewManager viewManager) {
         viewManager.startProgress(1, L.get("service.AcQq.parsePage.progress"));
         try {
@@ -90,10 +100,17 @@ public class AcQq implements Service {
         return null;
     }
 
-    public boolean accept(String uri) {
-        return URI.create(uri).getHost().equals("ac.qq.com");
+    @Override
+    public boolean supportsBrowserDownloading() {
+        return false;
     }
 
+    @Override
+    public String getBrowserInjectingScript() {
+        return null;
+    }
+
+    @Override
     public String getInfo() {
         return "Ac.Qq: ac.qq.com";
     }

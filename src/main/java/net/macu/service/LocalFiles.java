@@ -26,6 +26,11 @@ public class LocalFiles implements Service {
     }
 
     @Override
+    public boolean accept(String uri) {
+        return isValidURI(uri);
+    }
+
+    @Override
     public BufferedImage[] parsePage(String uri, ViewManager viewManager) {
         viewManager.startProgress(1, L.get("service.LocalFiles.parsePage.progress"));
         File selected = new File(URI.create(uri));
@@ -44,16 +49,28 @@ public class LocalFiles implements Service {
         }).toArray(BufferedImage[]::new);
     }
 
-    public boolean accept(String uri) {
-        return isValidURI(uri);
+    @Override
+    public boolean supportsNativeDownloading() {
+        return true;
     }
 
-    public String getInfo() {
-        return "Local filesystem";
+    @Override
+    public boolean supportsBrowserDownloading() {
+        return false;
+    }
+
+    @Override
+    public String getBrowserInjectingScript() {
+        return null;
     }
 
     @Override
     public void cancel() {
         cancel = true;
+    }
+
+    @Override
+    public String getInfo() {
+        return "Local filesystem";
     }
 }

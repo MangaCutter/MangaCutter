@@ -6,22 +6,38 @@ import java.awt.image.BufferedImage;
 
 public interface Service {
     /**
-     * Parses manga page and return resolved URIs to images in logical order
-     *
-     * @param uri         link to manga chapter of this service
-     * @param viewManager
-     */
-    BufferedImage[] parsePage(String uri, ViewManager viewManager);
-
-    /**
-     * Whether the given uri is belongs to this service
+     * @return True if this Service can parse page from uri
      */
     boolean accept(String uri);
 
     /**
-     * Returns service name and address separated with colon
+     * @return True if this Service supports native downloading
+     */
+    boolean supportsNativeDownloading();
+
+    /**
+     * Natively parses page and returns array of {@link BufferedImage} in logical order
      *
-     * @return short oneline info about service parser
+     * @param uri         Link to manga chapter of this Service
+     * @param viewManager ViewManager instance to show interact with user
+     */
+    BufferedImage[] parsePage(String uri, ViewManager viewManager);
+
+    /**
+     * @return True if this service supports browser downloading
+     */
+    boolean supportsBrowserDownloading();
+
+    /**
+     * JS script for obtaining resolved URIs to images in logical order.
+     * Output on the same pages must be equal to {@link Service#parsePage(String, ViewManager)}
+     *
+     * @return Corresponding JS script
+     */
+    String getBrowserInjectingScript();
+
+    /**
+     * @return Short info about Service parser
      */
     String getInfo();
 

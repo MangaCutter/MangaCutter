@@ -18,6 +18,16 @@ public class Daum implements Service {
     private boolean cancel = false;
 
     @Override
+    public boolean accept(String uri) {
+        return URI.create(uri).getHost().equals("webtoon.daum.net");
+    }
+
+    @Override
+    public boolean supportsNativeDownloading() {
+        return true;
+    }
+
+    @Override
     public BufferedImage[] parsePage(String uri, ViewManager viewManager) {
         viewManager.startProgress(1, L.get("service.Daum.parsePage.progress"));
         String viewerImagesUrl = "http://webtoon.daum.net/data/pc/webtoon/viewer_images/" + uri.substring(uri.lastIndexOf("/") + 1);
@@ -39,10 +49,17 @@ public class Daum implements Service {
         return null;
     }
 
-    public boolean accept(String uri) {
-        return URI.create(uri).getHost().equals("webtoon.daum.net");
+    @Override
+    public boolean supportsBrowserDownloading() {
+        return false;
     }
 
+    @Override
+    public String getBrowserInjectingScript() {
+        return null;
+    }
+
+    @Override
     public String getInfo() {
         return "Webtoon Daum: webtoon.daum.net";
     }

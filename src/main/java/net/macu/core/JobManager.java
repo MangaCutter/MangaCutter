@@ -17,26 +17,6 @@ public class JobManager {
     private ScanSaver saver;
     private boolean cancel = false;
 
-    public boolean runJob(String url, Cutter cutter, String path, ImgWriter imgWriter,
-                          ViewManager viewManager) {
-        cancel = false;
-        if (url != null)
-            service = ServiceManager.getService(url);
-        else
-            service = null;
-        if (service == null) {
-            ViewManager.showMessageDialog("core.JobManager.runJob.unsupported_service", viewManager.getView());
-            return false;
-        }
-
-        state = State.PARSING;
-        BufferedImage[] fragments = service.parsePage(url, viewManager);
-        if (cancel) {
-            return false;
-        }
-        return runJob(fragments, cutter, path, imgWriter, viewManager);
-    }
-
     private State state = State.NO_JOB;
 
     public void cancel() {
@@ -62,9 +42,24 @@ public class JobManager {
         NO_JOB, PARSING, CUTTING, DROPPING_TO_DISK
     }
 
-    public boolean runJob(BufferedImage[] fragments, Cutter cutter, String path,
-                          ImgWriter imgWriter, ViewManager viewManager) {
+    public boolean runJob(String url, Cutter cutter, String path, ImgWriter imgWriter,
+                          ViewManager viewManager) {
         cancel = false;
+        if (url != null)
+            service = ServiceManager.getService(url);
+        else
+            service = null;
+        if (service == null) {
+            ViewManager.showMessageDialog("core.JobManager.runJob.unsupported_service", viewManager.getView());
+            return false;
+        }
+
+        state = State.PARSING;
+        BufferedImage[] fragments = service.parsePage(url, viewManager);
+        if (cancel) {
+            return false;
+        }
+
         if (fragments == null) return false;
 
         this.cutter = cutter;

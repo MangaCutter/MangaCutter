@@ -1,5 +1,6 @@
 package net.macu.service;
 
+import net.macu.browser.Browser;
 import net.macu.core.Main;
 
 public class ServiceManager {
@@ -7,12 +8,13 @@ public class ServiceManager {
         if (uri.isEmpty()) return null;
         for (Service s : Main.getServices()) {
             try {
-                if (s.accept(uri)) {
+                if (s.accept(uri) && (s.supportsNativeDownloading() || (s.supportsBrowserDownloading() && Browser.isInstalled()))) {
                     return s;
                 }
             } catch (Exception ignored) {
             }
         }
+        //todo return fallback common browser service
         return null;
     }
 

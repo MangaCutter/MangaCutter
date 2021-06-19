@@ -20,6 +20,16 @@ public class ManhuaGui implements Service {
     private boolean cancel = false;
 
     @Override
+    public boolean accept(String uri) {
+        return URI.create(uri).getHost().endsWith("manhuagui.com");
+    }
+
+    @Override
+    public boolean supportsNativeDownloading() {
+        return true;
+    }
+
+    @Override
     public BufferedImage[] parsePage(String uri, ViewManager viewManager) {
         viewManager.startProgress(1, L.get("service.AcQq.parsePage.progress"));
         try {
@@ -80,10 +90,17 @@ public class ManhuaGui implements Service {
         return null;
     }
 
-    public boolean accept(String uri) {
-        return URI.create(uri).getHost().endsWith("manhuagui.com");
+    @Override
+    public boolean supportsBrowserDownloading() {
+        return false;
     }
 
+    @Override
+    public String getBrowserInjectingScript() {
+        return null;
+    }
+
+    @Override
     public String getInfo() {
         return "ManhuaGui: manhuagui.com";
     }
