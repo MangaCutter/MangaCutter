@@ -1,8 +1,8 @@
 package net.macu.disk;
 
 import net.macu.UI.ViewManager;
+import net.macu.imgWriter.ImgWriter;
 import net.macu.settings.L;
-import net.macu.writer.ImgWriter;
 
 import java.awt.image.BufferedImage;
 import java.io.File;

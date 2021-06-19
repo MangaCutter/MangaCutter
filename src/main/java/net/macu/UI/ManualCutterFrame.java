@@ -294,9 +294,15 @@ public class ManualCutterFrame implements MouseListener, MouseMotionListener, Mo
                         try {
                             int y = MouseInfo.getPointerInfo().getLocation().y - c.getLocationOnScreen().y - viewportVerticalOffset;
                             if (y < 0) {
-                                scroll((Settings.ViewManager_MasterScrollSpeed.getValue() + Settings.ManualCutterFrame_ScrollSpeed.getValue()) * (Settings.ManualCutterFrame_ScrollInversion.getValue() ? 1 : -1));
+                                scroll((Settings.ViewManager_MasterScrollSpeed.getValue() +
+                                        Settings.ManualCutterFrame_ScrollSpeed.getValue()) *
+                                        (Settings.ManualCutterFrame_ScrollInversion.getValue() ? 1 : -1) *
+                                        (Settings.ViewManager_MasterScrollInversion.getValue() ? 1 : -1));
                             } else if (y >= viewportHeight - 1) {
-                                scroll((Settings.ViewManager_MasterScrollSpeed.getValue() + Settings.ManualCutterFrame_ScrollSpeed.getValue()) * (Settings.ManualCutterFrame_ScrollInversion.getValue() ? -1 : 1));
+                                scroll((Settings.ViewManager_MasterScrollSpeed.getValue() +
+                                        Settings.ManualCutterFrame_ScrollSpeed.getValue()) *
+                                        (Settings.ManualCutterFrame_ScrollInversion.getValue() ? -1 : 1) *
+                                        (Settings.ViewManager_MasterScrollInversion.getValue() ? 1 : -1));
                             }
                             updateDraggedBoxPos();
                             c.repaint();
@@ -554,7 +560,10 @@ public class ManualCutterFrame implements MouseListener, MouseMotionListener, Mo
             if (ctrlPressed || altPressed) {
                 zoom(-2 * e.getWheelRotation());
             } else {
-                scroll(e.getWheelRotation() * (Settings.ViewManager_MasterScrollSpeed.getValue() + Settings.ManualCutterFrame_ScrollSpeed.getValue()) * (Settings.ManualCutterFrame_ScrollInversion.getValue() ? 1 : -1));
+                scroll(e.getWheelRotation() * (Settings.ViewManager_MasterScrollSpeed.getValue() +
+                        Settings.ManualCutterFrame_ScrollSpeed.getValue()) *
+                        (Settings.ManualCutterFrame_ScrollInversion.getValue() ? 1 : -1) *
+                        (Settings.ViewManager_MasterScrollInversion.getValue() ? 1 : -1));
             }
             mouseMoved(e);
             c.repaint();

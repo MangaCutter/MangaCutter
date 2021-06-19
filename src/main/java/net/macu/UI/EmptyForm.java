@@ -17,4 +17,9 @@ public class EmptyForm implements Form {
     public String getName() {
         return "";
     }
+
+    @Override
+    public void saveChoice() {
+
+    }
 }

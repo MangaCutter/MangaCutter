@@ -5,11 +5,11 @@ import com.intellij.uiDesigner.core.GridLayoutManager;
 import com.intellij.uiDesigner.core.Spacer;
 import net.macu.UI.Form;
 import net.macu.UI.ViewManager;
-import net.macu.UI.psd.PsdLevelChannelForm;
+import net.macu.UI.imgWriter.psd.PsdLevelChannelForm;
+import net.macu.imgWriter.psd.ColorMode;
 import net.macu.settings.History;
 import net.macu.settings.L;
 import net.macu.settings.Settings;
-import net.macu.writer.psd.ColorMode;
 
 import javax.swing.*;
 import java.awt.*;
@@ -37,48 +37,6 @@ public class PsdForm implements Form {
 // >>> IMPORTANT!! <<<
 // DO NOT EDIT OR ADD ANY CODE HERE!
         $$$setupUI$$$();
-    }
-
-    public PsdForm() {
-        outputColorModeLabel.setText(L.get("UI.imgWriter.PsdForm.output_color_mode_label"));
-        layerNameLabel.setText(L.get("UI.imgWriter.PsdForm.layer_name_label"));
-        levelsLayerLabel.setText(L.get("UI.imgWriter.PsdForm.levels_layer_label"));
-        levelsLayerNameLabel.setText(L.get("UI.imgWriter.PsdForm.levels_layer_name_label"));
-        outputColorModeComboBox.setRenderer(new DefaultListCellRenderer() {
-            @Override
-            public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
-                return super.getListCellRendererComponent(list, L.get("writer.psd.ColorMode." + ((ColorMode) value).name()), index, isSelected, cellHasFocus);
-            }
-        });
-        channels = new ArrayList<>();
-        ArrayList<ColorMode> modes = new ArrayList<>(Arrays.asList(ColorMode.values()));
-        modes.sort(Comparator.comparingInt((mode) -> History.getUsage(ColorMode.class.getName() + mode.toString())));
-        for (int i = 0; i < modes.size(); i++) {
-            outputColorModeComboBox.insertItemAt(modes.get(i), i);
-        }
-        layerNameTextField.setText(Settings.PsbForm_LayerName.getValue());
-        levelsLayerNameTextField.setText(Settings.PsbForm_LevelsLayerName.getValue());
-        outputColorModeComboBox.addItemListener((e) -> {
-            if (e.getStateChange() == ItemEvent.SELECTED) {
-                levelsTabbedPane.removeAll();
-                channels.clear();
-                switch ((ColorMode) outputColorModeComboBox.getSelectedItem()) {
-                    case RGB:
-                    case RGBA:
-                        channels.add(addChannel("UI.imgWriter.PsdForm.master_channel_label"));
-                        channels.add(addChannel("UI.imgWriter.PsdForm.red_channel_label"));
-                        channels.add(addChannel("UI.imgWriter.PsdForm.green_channel_label"));
-                        channels.add(addChannel("UI.imgWriter.PsdForm.blue_channel_label"));
-                        break;
-                    case Grayscale:
-                        channels.add(addChannel("UI.imgWriter.PsdForm.master_channel_label"));
-                        break;
-                }
-                refreshAccessibilityInTabs();
-            }
-        });
-        outputColorModeComboBox.setSelectedIndex(0);
-        levelsCheckBox.addActionListener(e -> refreshAccessibilityInTabs());
     }
 
     @Override
@@ -110,6 +68,49 @@ public class PsdForm implements Form {
         return L.get("UI.imgWriter.PsdForm.name");
     }
 
+    public PsdForm() {
+        outputColorModeLabel.setText(L.get("UI.imgWriter.PsdForm.output_color_mode_label"));
+        layerNameLabel.setText(L.get("UI.imgWriter.PsdForm.layer_name_label"));
+        levelsLayerLabel.setText(L.get("UI.imgWriter.PsdForm.levels_layer_label"));
+        levelsLayerNameLabel.setText(L.get("UI.imgWriter.PsdForm.levels_layer_name_label"));
+        outputColorModeComboBox.setRenderer(new DefaultListCellRenderer() {
+            @Override
+            public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
+                return super.getListCellRendererComponent(list, L.get("imgWriter.psd.ColorMode." + ((ColorMode) value).name()), index, isSelected, cellHasFocus);
+            }
+        });
+        levelsCheckBox.setSelected(History.getUsage("UI.imgWriter.PsdForm.levels_layer_label_true") >
+                History.getUsage("UI.imgWriter.PsdForm.levels_layer_label_false"));
+        channels = new ArrayList<>();
+        ArrayList<ColorMode> modes = new ArrayList<>(Arrays.asList(ColorMode.values()));
+        modes.sort(Comparator.comparingInt((mode) -> History.getUsage(ColorMode.class.getName() + mode.toString())));
+        for (int i = 0; i < modes.size(); i++) {
+            outputColorModeComboBox.insertItemAt(modes.get(i), i);
+        }
+        layerNameTextField.setText(Settings.PsbForm_LayerName.getValue());
+        levelsLayerNameTextField.setText(Settings.PsbForm_LevelsLayerName.getValue());
+        outputColorModeComboBox.addItemListener((e) -> {
+            if (e.getStateChange() == ItemEvent.SELECTED) {
+                levelsTabbedPane.removeAll();
+                channels.clear();
+                switch ((ColorMode) outputColorModeComboBox.getSelectedItem()) {
+                    case RGB:
+                        channels.add(addChannel("UI.imgWriter.PsdForm.master_channel_label"));
+                        channels.add(addChannel("UI.imgWriter.PsdForm.red_channel_label"));
+                        channels.add(addChannel("UI.imgWriter.PsdForm.green_channel_label"));
+                        channels.add(addChannel("UI.imgWriter.PsdForm.blue_channel_label"));
+                        break;
+                    case Grayscale:
+                        channels.add(addChannel("UI.imgWriter.PsdForm.master_channel_label"));
+                        break;
+                }
+                refreshAccessibilityInTabs();
+            }
+        });
+        outputColorModeComboBox.setSelectedIndex(0);
+        levelsCheckBox.addActionListener(e -> refreshAccessibilityInTabs());
+    }
+
     private void setAccessibility(Component comp, boolean state) {
         if (comp != null) {
             comp.setEnabled(state);
@@ -129,6 +130,54 @@ public class PsdForm implements Form {
         levelsTabbedPane.setEnabled(isEnabled);
         channels.forEach(form -> setAccessibility(form.$$$getRootComponent$$$(), isEnabled));
         setAccessibility(levelsLayerNamePanel, isEnabled);
+    }
+
+    @Override
+    public void saveChoice() {
+        History.incrementUsage(ColorMode.class.getName() + outputColorModeComboBox.getSelectedItem().toString());
+        History.incrementUsage("UI.imgWriter.PsdForm.levels_layer_label_" + levelsCheckBox.isSelected());
+    }
+
+    public short getImageColorModeValue() {
+        switch ((ColorMode) outputColorModeComboBox.getSelectedItem()) {
+            case RGB:
+                return 0x3;
+            case Grayscale:
+                return 0x1;
+            default:
+                return 0x0;
+        }
+    }
+
+    public ColorMode getColorMode() {
+        return (ColorMode) outputColorModeComboBox.getSelectedItem();
+    }
+
+    public boolean hasLevelsLayer() {
+        return levelsCheckBox.isSelected();
+    }
+
+    public short getNumberOfChannels() {
+        switch ((ColorMode) outputColorModeComboBox.getSelectedItem()) {
+            case Grayscale:
+                return 2;
+            case RGB:
+                return 4;
+            default:
+                return 0;
+        }
+    }
+
+    public String getImageLayerName() {
+        return layerNameTextField.getText();
+    }
+
+    public String getLevelsLayerName() {
+        return levelsLayerNameTextField.getText();
+    }
+
+    public ArrayList<PsdLevelChannelForm> getLevels() {
+        return channels;
     }
 
     /**

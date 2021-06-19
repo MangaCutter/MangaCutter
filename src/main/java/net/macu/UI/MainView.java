@@ -3,16 +3,14 @@ package net.macu.UI;
 import com.intellij.uiDesigner.core.GridConstraints;
 import com.intellij.uiDesigner.core.GridLayoutManager;
 import com.intellij.uiDesigner.core.Spacer;
-import net.macu.browser.plugin.BrowserPlugin;
-import net.macu.browser.proxy.cert.CertificateAuthority;
 import net.macu.core.IOManager;
 import net.macu.core.JobManager;
 import net.macu.core.Main;
 import net.macu.cutter.Cutter;
+import net.macu.imgWriter.ImgWriter;
 import net.macu.service.ServiceManager;
 import net.macu.settings.History;
 import net.macu.settings.L;
-import net.macu.writer.ImgWriter;
 
 import javax.swing.*;
 import java.awt.*;
@@ -20,7 +18,6 @@ import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Iterator;
@@ -40,7 +37,6 @@ public class MainView {
     private final ActionListener filepathButtonFileSelectorListener;
     private final FormContainer imgWriterFormContainer;
     private JTextField filepathTextField;
-    private BufferedImage[] fragments;
     private final JFrame frame;
     private JButton filepathButton;
     private JLabel filepathLabel;
@@ -50,7 +46,7 @@ public class MainView {
     private JComboBox<ImgWriter> imgWriterSelector;
     private JPanel imgWriterFormPanel;
 
-    private MainView(boolean prepared) {
+    public MainView() {
         frame = History.createJFrameFromHistory("UI.ViewManager.main_frame_title", 0, 0);
         frame.setTitle(L.get("UI.ViewManager.main_frame_title"));
         frame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
@@ -61,13 +57,8 @@ public class MainView {
             public void windowClosing(WindowEvent e) {
                 new Thread(() -> {
                     jobManager.cancel();
-                    if (!prepared) {
-                        if (!BrowserPlugin.getPlugin().hasActiveRequests() || ViewManager.showConfirmDialog("UI.MainView.confirm_exit", frame)) {
-                            System.exit(0);
-                        }
-                    } else {
-                        frame.dispose();
-                    }
+                    frame.dispose();
+                    System.exit(0);
                 }).start();
             }
         });
@@ -84,8 +75,6 @@ public class MainView {
         imgWriterFormContainer = new FormContainer();
         imgWriterFormPanel.add(imgWriterFormContainer);
 
-        if (prepared) urlTextField.setEnabled(false);
-
         viewManager = new ViewManager(this);
 
         ArrayList<Cutter> cutters = new ArrayList<>(Main.getCutters());
@@ -100,20 +89,15 @@ public class MainView {
         for (int i = 0; imgWriterIterator.hasNext(); i++) {
             imgWriterSelector.insertItemAt(imgWriterIterator.next(), i);
         }
+        setupMenuBar();
 
-        if (!prepared) {
-            setupMenuBar();
+        clearButton.addActionListener(e -> new Thread(() -> {
+            urlTextField.setText("");
+            urlTextField.requestFocusInWindow();
+        }).start());
 
-            clearButton.addActionListener(e -> new Thread(() -> {
-                urlTextField.setText("");
-                urlTextField.requestFocusInWindow();
-            }).start());
-
-            urlTextField.setTransferHandler(new FileTransferHandler(urlTextField));
-            urlTextField.setToolTipText(L.get("UI.MainView.urlTextField.tooltip"));
-        } else {
-            clearButton.setEnabled(false);
-        }
+        urlTextField.setTransferHandler(new FileTransferHandler(urlTextField));
+        urlTextField.setToolTipText(L.get("UI.MainView.urlTextField.tooltip"));
 
         cancelButton.addActionListener(e -> {
             Thread t = new Thread(() -> {
@@ -131,21 +115,13 @@ public class MainView {
                 try {
                     History.incrementUsage(((Cutter) cutterSelector.getSelectedItem()).getClass().getName());
                     History.incrementUsage(((ImgWriter) imgWriterSelector.getSelectedItem()).getClass().getName());
+                    imgWriterFormContainer.saveChoice();
+                    cutterFormContainer.saveChoice();
                     if (validateInput()) {
-                        if (prepared) {
-                            if (jobManager.runJob(fragments, (Cutter) cutterSelector.getSelectedItem(),
-                                    filepathTextField.getText(), (ImgWriter) imgWriterSelector.getSelectedItem(),
-                                    viewManager)) {
-                                ViewManager.showMessageDialog("UI.MainView.complete_message", frame);
-                                frame.dispose();
-                                return;
-                            }
-                        } else {
-                            if (jobManager.runJob(urlTextField.getText().trim(), (Cutter) cutterSelector.getSelectedItem(),
-                                    filepathTextField.getText(), (ImgWriter) imgWriterSelector.getSelectedItem(),
-                                    viewManager)) {
-                                ViewManager.showMessageDialog("UI.MainView.complete_message", frame);
-                            }
+                        if (jobManager.runJob(urlTextField.getText().trim(), (Cutter) cutterSelector.getSelectedItem(),
+                                filepathTextField.getText(), (ImgWriter) imgWriterSelector.getSelectedItem(),
+                                viewManager)) {
+                            ViewManager.showMessageDialog("UI.MainView.complete_message", frame);
                         }
                     }
                     viewManager.resetProgress();
@@ -253,38 +229,7 @@ public class MainView {
 
         bar.add(fileMenu);
 
-        JMenu pluginMenu = new JMenu(L.get("UI.ViewManager.plugin_menu"));
-
-        JMenuItem generateCertificateItem =
-                new JMenuItem(L.get("UI.ViewManager.generate_certificate_menu"));
-        generateCertificateItem.addActionListener(e -> new Thread(CertificateAuthority::openGenerateCertFrame).start());
-        pluginMenu.add(generateCertificateItem);
-        JMenuItem pluginConnectionItem = new JMenuItem(L.get("UI.ViewManager.plugin_connection_menu"));
-        pluginConnectionItem.addActionListener(e -> new Thread(() ->
-                ViewManager.showMessageDialogForced("UI.ViewManager.plugin_connection", frame,
-                        BrowserPlugin.getPlugin().isConnected() ?
-                                L.get("UI.ViewManager.plugin_connection_true") :
-                                L.get("UI.ViewManager.plugin_connection_false"))).start());
-        pluginMenu.add(pluginConnectionItem);
-
-        JMenuItem exportCertificateItem = new JMenuItem(L.get("UI.ViewManager.certificate_export_menu"));
-        exportCertificateItem.addActionListener(e ->
-                new Thread(CertificateAuthority::openExportCertificateFrame).start());
-        pluginMenu.add(exportCertificateItem);
-
-        bar.add(pluginMenu);
-
         frame.setJMenuBar(bar);
-    }
-
-    public MainView() {
-        this(false);
-    }
-
-    public MainView(BufferedImage[] fragments, String url) {
-        this(true);
-        this.fragments = fragments;
-        urlTextField.setText(url);
     }
 
     public boolean validateInput() {
@@ -316,6 +261,10 @@ public class MainView {
         progressBar.setMaximum(1);
         progressBar.setString("");
         progressBar.setEnabled(false);
+    }
+
+    public JFrame getFrame() {
+        return frame;
     }
 
     {
@@ -467,9 +416,5 @@ public class MainView {
      */
     public JComponent $$$getRootComponent$$$() {
         return mainPanel;
-    }
-
-    public JFrame getFrame() {
-        return frame;
     }
 }

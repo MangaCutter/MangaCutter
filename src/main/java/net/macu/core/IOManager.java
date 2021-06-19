@@ -4,13 +4,19 @@ import net.macu.UI.ViewManager;
 import net.macu.settings.Settings;
 import net.macu.util.SelfUpdater;
 import org.apache.http.HttpEntity;
+import org.apache.http.HttpHost;
+import org.apache.http.HttpRequest;
+import org.apache.http.HttpResponse;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpUriRequest;
+import org.apache.http.concurrent.FutureCallback;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.client.LaxRedirectStrategy;
+import org.apache.http.impl.nio.client.CloseableHttpAsyncClient;
+import org.apache.http.impl.nio.client.HttpAsyncClients;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
@@ -18,10 +24,12 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URISyntaxException;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 public class IOManager {
     private static CloseableHttpClient client = null;
+    private static CloseableHttpAsyncClient asyncClient = null;
     public static final String RELEASE_REPOSITORY = "https://github.com/MangaCutter/MangaCutter/releases";
     public static final String LATEST_SUFFIX = "/latest";
     public static final String DOWNLOAD_SUFFIX = "/download";
@@ -38,6 +46,11 @@ public class IOManager {
         bf.close();
         response.close();
         return sb.toString();
+    }
+
+    public static Future<HttpResponse> sendRawAsyncRequest(HttpHost host, HttpRequest request,
+                                                           FutureCallback<HttpResponse> callback) throws IOException {
+        return asyncClient.execute(host, request, callback);
     }
 
     public static HttpEntity sendRawRequest(HttpUriRequest rawRequest) throws IOException {
@@ -63,6 +76,13 @@ public class IOManager {
                     .setUserAgent(Settings.IOManager_UserAgent.getValue())
                     .setConnectionTimeToLive(20, TimeUnit.SECONDS)
                     .build();
+        }
+        if (asyncClient == null) {
+            asyncClient = HttpAsyncClients.custom()
+                    .setRedirectStrategy(LaxRedirectStrategy.INSTANCE)
+                    .setUserAgent(Settings.IOManager_UserAgent.getValue())
+                    .build();
+            asyncClient.start();
         }
     }
 

@@ -5,9 +5,9 @@ import net.macu.cutter.Cutter;
 import net.macu.disk.MultiScanSaver;
 import net.macu.disk.ScanSaver;
 import net.macu.disk.SingleScanSaver;
+import net.macu.imgWriter.ImgWriter;
 import net.macu.service.Service;
 import net.macu.service.ServiceManager;
-import net.macu.writer.ImgWriter;
 
 import java.awt.image.BufferedImage;
 

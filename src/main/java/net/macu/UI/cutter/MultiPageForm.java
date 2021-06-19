@@ -75,6 +75,11 @@ public class MultiPageForm implements Form {
         return L.get("UI.cutter.MultiPageForm.name");
     }
 
+    @Override
+    public void saveChoice() {
+
+    }
+
     private void onGradientCheckBoxSwitched() {
         if (saveGradientCheckBox.isSelected()) {
             toleranceLabel.setEnabled(false);

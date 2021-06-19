@@ -25,4 +25,8 @@ public class FormContainer extends JPanel {
     public boolean validateInput() {
         return form.validateInput();
     }
+
+    public void saveChoice() {
+        form.saveChoice();
+    }
 }

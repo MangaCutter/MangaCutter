@@ -19,6 +19,7 @@ public class Settings {
     public static final IntSetting PastaCutter_BordersWidth = new IntSetting("cutter.pasta.PastaCutter.borders_width");
     public static final ListSetting L_Lang = new ListSetting("settings.L.LANG", L.SUPPORTED_LANGUAGES, true);
     public static final IntSetting ViewManager_MasterScrollSpeed = new IntSetting("UI.ViewManager.master_scroll_speed");
+    public static final BooleanSetting ViewManager_MasterScrollInversion = new BooleanSetting("UI.ViewManager.master_scroll_inversion");
     public static final IntSetting Handler_PoolSize = new IntSetting("browser.proxy.Handler.pool_size");
     public static final ListSetting ViewManager_LookAndFeel = new ListSetting("UI.ViewManager.laf", ViewManager.SUPPORTED_THEMES, true);
     public static final StringSetting PsbForm_LayerName = new StringSetting("UI.imgWriter.PsbForm.layer_name");
@@ -57,6 +58,7 @@ public class Settings {
         allSettings.add(PastaCutter_BordersWidth);
         allSettings.add(L_Lang);
         allSettings.add(ViewManager_MasterScrollSpeed);
+        allSettings.add(ViewManager_MasterScrollInversion);
         allSettings.add(ViewManager_LookAndFeel);
         allSettings.add(Handler_PoolSize);
         allSettings.add(PsbForm_LayerName);

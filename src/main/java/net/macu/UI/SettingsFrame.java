@@ -30,7 +30,8 @@ public class SettingsFrame {
         root.setLayout(new BoxLayout(root, BoxLayout.Y_AXIS));
         JPanel viewportRoot = new JPanel();
         JScrollPane scrollPane = new JScrollPane(viewportRoot);
-        scrollPane.getVerticalScrollBar().setUnitIncrement(Settings.ViewManager_MasterScrollSpeed.getValue());
+        scrollPane.getVerticalScrollBar().setUnitIncrement(Settings.ViewManager_MasterScrollSpeed.getValue() *
+                (Settings.ViewManager_MasterScrollInversion.getValue() ? 1 : -1));
         viewportRoot.setLayout(new BoxLayout(viewportRoot, BoxLayout.PAGE_AXIS));
         List<Setting> allParameters = Settings.getAllSettings();
         JPanel panel = new JPanel();

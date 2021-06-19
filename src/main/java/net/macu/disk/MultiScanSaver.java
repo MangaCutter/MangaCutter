@@ -1,8 +1,8 @@
 package net.macu.disk;
 
 import net.macu.UI.ViewManager;
+import net.macu.imgWriter.ImgWriter;
 import net.macu.settings.L;
-import net.macu.writer.ImgWriter;
 
 import java.awt.image.BufferedImage;
 import java.io.File;
@@ -40,7 +40,7 @@ public class MultiScanSaver implements ScanSaver {
         for (int i = 0; i < images.length; i++) {
             try {
                 if (cancel) return;
-                File f = new File(directory, String.format(format, (i + 1)) + ".png");
+                File f = new File(directory, String.format(format, (i + 1)) + "." + imgWriter.getExtension());
                 if (f.exists()) {
                     if (!ViewManager.showConfirmDialog("disc.MultiScanSaver.confirm_rewrite", viewManager.getView(), f.getName())) {
                         continue;

@@ -228,7 +228,8 @@ public class ViewManager {
             JFrame f = History.createJFrameFromHistory("UI.ViewManager.preview_frame_title", 600, 600);
             f.setTitle(L.get("UI.ViewManager.preview_frame_title"));
             JScrollPane pane = new JScrollPane(new JLabel(new ImageIcon(image)));
-            pane.getVerticalScrollBar().setUnitIncrement(Settings.ViewManager_MasterScrollSpeed.getValue());
+            pane.getVerticalScrollBar().setUnitIncrement(Settings.ViewManager_MasterScrollSpeed.getValue() *
+                    (Settings.ViewManager_MasterScrollInversion.getValue() ? 1 : -1));
             pane.getHorizontalScrollBar().setUnitIncrement(Settings.ViewManager_MasterScrollSpeed.getValue());
             f.add(pane);
             f.setIconImage(IconManager.getBrandImage());

@@ -9,4 +9,6 @@ public interface Form {
     JComponent getRootComponent();
 
     String getName();
+
+    void saveChoice();
 }

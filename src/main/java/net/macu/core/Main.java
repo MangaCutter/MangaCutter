@@ -3,26 +3,22 @@ package net.macu.core;
 import net.macu.UI.IconManager;
 import net.macu.UI.MainView;
 import net.macu.UI.ViewManager;
-import net.macu.browser.plugin.BrowserPlugin;
-import net.macu.browser.proxy.cert.CertificateAuthority;
 import net.macu.cutter.AsIsCutter;
 import net.macu.cutter.ConstantHeightCutter;
 import net.macu.cutter.Cutter;
 import net.macu.cutter.SingleScanCutter;
 import net.macu.cutter.manual.ManualCutter;
 import net.macu.cutter.pasta.PastaCutter;
+import net.macu.imgWriter.ImgWriter;
+import net.macu.imgWriter.PsbWriter;
+import net.macu.imgWriter.StandardWriter;
 import net.macu.service.*;
 import net.macu.settings.L;
 import net.macu.settings.Settings;
-import net.macu.writer.ImgWriter;
-import net.macu.writer.PsbWriter;
-import net.macu.writer.StandardWriter;
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
 import javax.swing.*;
 import java.io.*;
 import java.nio.file.Files;
-import java.security.Security;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -36,8 +32,6 @@ public class Main {
         prepareContext();
         new Thread(() -> IOManager.checkUpdates(false)).start();
         new MainView();
-        if (CertificateAuthority.getRootCA() != null)
-            BrowserPlugin.getPlugin().start();
     }
 
     private static void prepareContext() {
@@ -53,8 +47,6 @@ public class Main {
         L.loadLanguageData();
         IconManager.loadIcons();
         ViewManager.setLookAndFeel();
-        Security.addProvider(new BouncyCastleProvider());
-        CertificateAuthority.loadRootCA();
         cutters = Collections.unmodifiableList(Arrays.asList(new ManualCutter(), new PastaCutter(), new AsIsCutter(),
                 new ConstantHeightCutter(), new SingleScanCutter()));
         services = Collections.unmodifiableList(Arrays.asList(new AcQq(), new Daum(), new LocalFiles(), new ManhuaGui(),
@@ -152,7 +144,6 @@ public class Main {
                     }
                 }
             }
-
         } catch (IOException var38) {
             throw new RuntimeException("Could not load native WebP library", var38);
         }

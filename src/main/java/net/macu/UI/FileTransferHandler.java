@@ -39,7 +39,7 @@ public class FileTransferHandler extends TransferHandler {
                 e.printStackTrace();
                 return false;
             }
-            if (files.size() == 1 && files.get(0).isDirectory()) {
+            if (files.size() == 1) {
                 target.setText(files.get(0).toURI().toString());
                 return true;
             } else

@@ -1,0 +1,28 @@
+{
+    "build_systems": [{
+        "cancel": {
+            "kill": true
+        },
+        "file_regex": "^([^:]+):(\\d+):(\\d+):(.*)$",
+        "name": "Maven",
+        "quiet": true,
+        "variants": [{
+            "cmd": ["mvn", "-B", "compiler:compile@pack-compile", "dependency:copy@pack-copy", "dependency:unpack-dependencies@pack-unpack-dependencies", "resources:resources@pack-resources", "jar:jar@pack-jar"],
+            "name": "Build",
+            "working_dir": "$project_path"
+        }, {
+            "cmd": ["java", "-jar", "target/MangaCutter.jar"],
+            "name": "Run main",
+            "working_dir": "$project_path"
+        }, {
+            "cmd": ["java", "-jar", "target/MangaCutter.jar", "--test"],
+            "name": "Run test",
+            "working_dir": "${project_path}"
+        }]
+    }],
+    "folders":[
+        {
+            "path":"."
+        }
+    ]
+}
