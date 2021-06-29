@@ -41,12 +41,12 @@ public class Naver implements Service {
 
     @Override
     public boolean supportsBrowserDownloading() {
-        return false;
+        return true;
     }
 
     @Override
     public String getBrowserInjectingScript() {
-        return null;
+        return "() => Array.from(document.getElementsByClassName(\"wt_viewer\")[0].querySelectorAll(\"img\")).map(x=>x.src)";
     }
 
     @Override
