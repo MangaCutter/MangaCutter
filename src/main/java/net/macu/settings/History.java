@@ -33,7 +33,7 @@ public class History {
         frame.setLocation(posX, posY);
         frame.addWindowListener(new WindowAdapter() {
             @Override
-            public void windowClosed(WindowEvent e) {
+            public void windowClosing(WindowEvent e) {
                 new Thread(() -> {
                     try {
                         Settings.preferences.flush();

@@ -3,6 +3,7 @@ package net.macu.core;
 import net.macu.UI.IconManager;
 import net.macu.UI.MainView;
 import net.macu.UI.ViewManager;
+import net.macu.browser.Client;
 import net.macu.cutter.AsIsCutter;
 import net.macu.cutter.ConstantHeightCutter;
 import net.macu.cutter.Cutter;
@@ -29,9 +30,17 @@ public class Main {
     private static List<ImgWriter> imgWriters;
 
     public static void main(String[] args) {
+        System.out.println("entered Main");
         prepareContext();
-        new Thread(() -> IOManager.checkUpdates(false)).start();
-        new MainView();
+        System.out.println("context is prepared");
+        Thread updateThread = new Thread(() -> IOManager.checkUpdates(false));
+        updateThread.start();
+        System.out.println("update thread is started");
+//        Client.getInstance();
+//        Thread clientLoadingThread = new Thread(Client::getInstance);
+//        clientLoadingThread.start();
+        MainView view = new MainView();
+        System.out.println("main view is created");
     }
 
     private static void prepareContext() {
@@ -42,20 +51,31 @@ public class Main {
             e.printStackTrace(pw);
             JOptionPane.showMessageDialog(null, "Error: " + sw);
         });
+        System.out.println("uncaught exception handler is set");
         loadNativeFromJar();
+        System.out.println("webp natives are loaded");
         Settings.loadSettings();
+        System.out.println("settings are loaded");
         L.loadLanguageData();
+        System.out.println("language data is loaded");
+        Client.initialise();
+        System.out.println("client is initialised");
         IconManager.loadIcons();
+        System.out.println("icons are loaded");
         ViewManager.setLookAndFeel();
+        System.out.println("set laf");
         cutters = Collections.unmodifiableList(Arrays.asList(new ManualCutter(), new PastaCutter(), new AsIsCutter(),
                 new ConstantHeightCutter(), new SingleScanCutter()));
         services = Collections.unmodifiableList(Arrays.asList(new AcQq(), new Daum(), new LocalFiles(), new ManhuaGui(),
-                new Naver(), new Rawdevart()));
+                new Naver(), new Rawdevart(), new ExampleBrowserService()));
         imgWriters = Collections.unmodifiableList(Arrays.asList(StandardWriter.createImageIOWriter("PNG"),
                 StandardWriter.createImageIOWriter("JPEG"), StandardWriter.createImageIOWriter("WEBP"),
                 StandardWriter.createImageIOWriter("GIF"), new PsbWriter()));
+        System.out.println("collectios created");
         ViewManager.initFileChoosers();
+        System.out.println("file choosers are initialised");
         IOManager.initClient();
+        System.out.println("io client initialised");
     }
 
     public static List<Cutter> getCutters() {

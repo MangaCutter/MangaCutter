@@ -113,11 +113,11 @@ public class MainView {
                 startButton.setEnabled(false);
                 cancelButton.setEnabled(true);
                 try {
-                    History.incrementUsage(((Cutter) cutterSelector.getSelectedItem()).getClass().getName());
-                    History.incrementUsage(((ImgWriter) imgWriterSelector.getSelectedItem()).getClass().getName());
-                    imgWriterFormContainer.saveChoice();
-                    cutterFormContainer.saveChoice();
                     if (validateInput()) {
+                        History.incrementUsage(((Cutter) cutterSelector.getSelectedItem()).getClass().getName());
+                        History.incrementUsage(((ImgWriter) imgWriterSelector.getSelectedItem()).getClass().getName());
+                        imgWriterFormContainer.saveChoice();
+                        cutterFormContainer.saveChoice();
                         if (jobManager.runJob(urlTextField.getText().trim(), (Cutter) cutterSelector.getSelectedItem(),
                                 filepathTextField.getText(), (ImgWriter) imgWriterSelector.getSelectedItem(),
                                 viewManager)) {

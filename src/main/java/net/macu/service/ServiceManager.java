@@ -1,20 +1,21 @@
 package net.macu.service;
 
-import net.macu.browser.Browser;
 import net.macu.core.Main;
 
 public class ServiceManager {
     public static Service getService(String uri) {
-        if (uri.isEmpty()) return null;
+        if (uri == null) {
+            throw new NullPointerException();
+        }
         for (Service s : Main.getServices()) {
             try {
-                if (s.accept(uri) && (s.supportsNativeDownloading() || (s.supportsBrowserDownloading() && Browser.isInstalled()))) {
+                //the second part of check is just for case of developers stupidity
+                if (s.accept(uri) && (s.supportsNativeDownloading() || s.supportsBrowserDownloading())) {
                     return s;
                 }
             } catch (Exception ignored) {
             }
         }
-        //todo return fallback common browser service
         return null;
     }
 

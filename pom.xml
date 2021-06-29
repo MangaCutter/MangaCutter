@@ -7,6 +7,13 @@
     <groupId>net.macu</groupId>
     <artifactId>MangaCutter</artifactId>
     <version>5.3.1</version>
+    <repositories>
+        <repository>
+            <id>jcef-maven</id>
+            <name>JCef Maven Repository</name>
+            <url>https://friwi.me/jcef/maven</url>
+        </repository>
+    </repositories>
     <build>
         <plugins>
             <plugin>
@@ -230,6 +237,21 @@
             <groupId>org.w3c.css</groupId>
             <artifactId>sac</artifactId>
             <version>1.3</version>
+        </dependency>
+        <dependency>
+            <groupId>org.cef</groupId>
+            <artifactId>jcef-api</artifactId>
+            <version>84.3.8+gc8a556f+chromium-84.0.4147.105-build-17</version>
+        </dependency>
+        <dependency>
+            <groupId>org.jogamp.gluegen</groupId>
+            <artifactId>gluegen-rt-main</artifactId>
+            <version>2.3.2</version>
+        </dependency>
+        <dependency>
+            <groupId>org.jogamp.jogl</groupId>
+            <artifactId>jogl-all-main</artifactId>
+            <version>2.3.2</version>
         </dependency>
     </dependencies>
 </project>

@@ -2,6 +2,7 @@ package net.macu.settings;
 
 
 import net.macu.UI.ViewManager;
+import net.macu.core.JobManager;
 
 import java.io.IOException;
 import java.util.*;
@@ -24,6 +25,9 @@ public class Settings {
     public static final ListSetting ViewManager_LookAndFeel = new ListSetting("UI.ViewManager.laf", ViewManager.SUPPORTED_THEMES, true);
     public static final StringSetting PsbForm_LayerName = new StringSetting("UI.imgWriter.PsbForm.layer_name");
     public static final StringSetting PsbForm_LevelsLayerName = new StringSetting("UI.imgWriter.PsbForm.levels_layer_name");
+    public static final ListSetting JobManager_MethodPriority = new ListSetting("core.JobManager.method_priority", Arrays.stream(JobManager.Method.values()).map(Enum::toString).toArray(String[]::new), true);
+    public static final StringSetting Client_InstallationFolder = new StringSetting("browser.Client.installation_folder");
+    public static final IntSetting OffscreenBrowser_Timeout = new IntSetting("browser.OffscreenBrowser.timeout");
     //public static final IntSetting ManualCutterFrame_SmartSelectionThreshold = new IntSetting("UI.ManualCutterFrame.smart_selection_threshold");
     private static final ArrayList<Setting> allSettings = new ArrayList<>();
     static Preferences preferences;
@@ -63,6 +67,9 @@ public class Settings {
         allSettings.add(Handler_PoolSize);
         allSettings.add(PsbForm_LayerName);
         allSettings.add(PsbForm_LevelsLayerName);
+        allSettings.add(JobManager_MethodPriority);
+        allSettings.add(Client_InstallationFolder);
+        allSettings.add(OffscreenBrowser_Timeout);
         allSettings.sort(Comparator.comparing(Setting::getName));
         allSettings.forEach(setting -> {
             if (setting instanceof StringSetting)
