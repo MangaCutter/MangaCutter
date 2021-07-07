@@ -1,42 +1,28 @@
 package net.macu.browser.interceptor;
 
 import java.awt.image.BufferedImage;
-import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.concurrent.CompletableFuture;
 
 public class Interceptor {
-    private static final ArrayList<InterceptedImage> interceptedImages = new ArrayList();
+    public static final HashMap<String, CompletableFuture<BufferedImage>> images = new HashMap<>();
 
-    public static void removeImages(int identifier) {
-        for (int i = 0; i < interceptedImages.size(); i++) {
-            if (interceptedImages.get(i).browserId == identifier) {
-                interceptedImages.remove(i);
-                i--;
-            }
-        }
-    }
-
-    public static void addImage(int browserId, String url, BufferedImage image) {
+    public static void addImage(String url, BufferedImage image) {
         System.out.println(url);
-        interceptedImages.add(new InterceptedImage(browserId, url, image));
+        getImageFuture(url).complete(image);
     }
 
-    public static BufferedImage getImage(String url) {
-        for (InterceptedImage interceptedImage : interceptedImages) {
-            if (interceptedImage.url.endsWith(url))
-                return interceptedImage.image;
+    public static CompletableFuture<BufferedImage> getImageFuture(String url) {
+        synchronized (images) {
+            if (!images.containsKey(url))
+                images.put(url, new CompletableFuture<>());
+            return images.get(url);
         }
-        return null;
     }
 
-    private static class InterceptedImage {
-        private final long browserId;
-        private final String url;
-        private final BufferedImage image;
-
-        private InterceptedImage(int browserId, String url, BufferedImage image) {
-            this.browserId = browserId;
-            this.url = url;
-            this.image = image;
+    public static void removeImageRecord(String url) {
+        synchronized (images) {
+            images.remove(url);
         }
     }
 }

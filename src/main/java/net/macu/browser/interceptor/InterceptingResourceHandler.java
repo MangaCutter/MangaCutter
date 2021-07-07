@@ -157,7 +157,7 @@ public class InterceptingResourceHandler implements CefResourceHandler {
                             byte[] imageData = baos.toByteArray();
                             content = new ByteArrayInputStream(imageData);
                             BufferedImage img = ImageIO.read(new ByteArrayInputStream(imageData));
-                            Interceptor.addImage(browserId, url, img);
+                            Interceptor.addImage(url, img);
                         } catch (IOException e) {
                             e.printStackTrace();
                         }
