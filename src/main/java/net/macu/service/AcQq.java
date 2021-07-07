@@ -102,12 +102,35 @@ public class AcQq implements Service {
 
     @Override
     public boolean supportsBrowserDownloading() {
-        return false;
+        return true;
     }
 
     @Override
     public String getBrowserInjectingScript() {
-        return null;
+        return "async function() {\n" +
+                "  images = Array.from(document.querySelector(\"ul#comicContain\").querySelectorAll(\"img\")).filter(img => img.id !== \"adTop\")\n" +
+                "  for (const img of images) {\n" +
+                "    result = new Promise(resolve => {\n" +
+                "      if (img.className === \"loaded\") {\n" +
+                "        resolve(img)\n" +
+                "      } else {\n" +
+                "        observer = new MutationObserver(mutations => {\n" +
+                "          for (const mutation of mutations) {\n" +
+                "            if (mutation.target.nodeName.toLowerCase() === \"img\" && mutation.target.className === \"loaded\") {\n" +
+                "              resolve(img)\n" +
+                "            }\n" +
+                "          }\n" +
+                "        })\n" +
+                "        observer.observe(img, {\n" +
+                "          attributeFilter: [\"class\"]\n" +
+                "        })\n" +
+                "      }\n" +
+                "    })\n" +
+                "    img.scrollIntoView()\n" +
+                "    await result\n" +
+                "  }\n" +
+                "  return images.map(img => img.src)\n" +
+                "}";
     }
 
     @Override
